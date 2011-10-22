@@ -1,0 +1,113 @@
+
+<class name="AppTabs" extends="basetabs">
+  	
+  	<method name="setSelected" args="tabid">
+  		this.bar.subviews[tabid].setAttribute('selected',true);
+	</method>
+  		
+</class>
+
+										//if we should be playing, lets do that
+
+											//if we have not started , start
+											if (!ms.playing){																
+												if (ms.paused) {
+													ms.setAttribute("paused",false);
+													}
+												ms.play(); 										
+												ms.seek(start);	
+												doRecord();
+												
+												lz.Idle.onidle.addDelegate(this.stopDelegate);	
+												lz.Idle.onidle.addDelegate(this.muteHandlerDelegate);	
+				
+												Debug.write("sought",start);
+											//if we are paused, resume	
+											}else if(ms.playing && ms.paused){																
+												ms.setAttribute("paused",false);
+												//ms.play(); 										
+												ms.seek(start);		
+
+												lz.Idle.onidle.addDelegate(this.stopDelegate);	
+												lz.Idle.onidle.addDelegate(this.muteHandlerDelegate);	
+															
+											}else{
+												if(ms.playing && !ms.paused){
+													//ms.stop();
+													ms.seek(start);	
+													ms.setAttribute("paused",true);
+
+													lz.Idle.onidle.removeDelegate(
+													                    this.stopDelegate);
+													lz.Idle.onidle.removeDelegate(
+													                    this.muteHandlerDelegate);
+													Debug.write("removed delegate:","muteHandler");							
+													Debug.write("removed delegate:","stopHandler");	
+
+														
+												}
+											}
+							<attribute name="autostopDelegate" value="$once{new LzDelegate(this, 'handleStop')}" />
+
+									<handler name="onengaged"><![CDATA[								
+										var ms = player.vscreen.ms;
+										var start = this.parent.parent.parent.datapath.xpathQuery('start/text()');
+										//if we should be playing, lets do that
+
+											//if we have not started , start
+											if (!ms.playing){																
+												if (ms.paused) {
+													ms.setAttribute("paused",false);
+													}
+												ms.play(); 										
+												ms.seek(start);	
+												
+												lz.Idle.onidle.addDelegate(this.autostopDelegate);	
+												//Unregister muteDelegate for mute button, sometimes it sticks
+												//when mediastream doesn't fire events properly
+												lz.Idle.onidle.removeDelegate(this.parent.muteHandlerDelegate);
+												Debug.write("unreistering mute from simpleplay");
+				
+												Debug.write("sought",start);
+											//if we are paused, resume	
+											}else if(ms.playing && ms.paused){																
+												ms.setAttribute("paused",false);
+												//ms.play(); 										
+												ms.seek(start);		
+
+												lz.Idle.onidle.addDelegate(this.autostopDelegate);	
+												//Unregister muteDelegate for mute button, sometimes it sticks
+												//when mediastream doesn't fire events properly
+												lz.Idle.onidle.removeDelegate(this.parent.muteHandlerDelegate);
+												Debug.write("unreistering mute from simpleplay");
+				
+												Debug.write("sought",start);											
+											}else{
+												if(ms.playing && !ms.paused){
+													//ms.stop();
+													ms.seek(start);	
+													ms.setAttribute("paused",true);
+
+													lz.Idle.onidle.removeDelegate(
+													                    this.autostopDelegate);
+
+														
+												}
+											}
+								 
+										  ]]>
+									</handler>
+									<method name="handleStop" args="ignore = null"><![CDATA[
+										var ms = player.vscreen.ms;
+										var end = this.parent.parent.parent.datapath.xpathQuery('end/text()');
+										var start = this.parent.parent.parent.datapath.xpathQuery('start/text()');
+											
+										if (ms.time > end && ms.playing){
+											Debug.write("bingo:",ms.time);								
+											ms.seek(start);	
+											ms.setAttribute("paused",true);
+											lz.Idle.onidle.removeDelegate(
+											                    this.autostopDelegate);
+										}
+										 ]]>
+									</method>

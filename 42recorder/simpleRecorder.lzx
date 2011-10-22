@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas debug="false">
+ <goldstyle name="defaultstyle" isdefault="true"/>
+ <greenstyle name="specialstyle"/>
+
+	<include href="lz"/>
+
+	<!-- The URL of the Red5 server -->
+	<attribute name="red5url" />
+
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename" />
+
+	<!-- The course id (parent will pass -1 if there is no course id) -->
+	<attribute name="course" />
+	
+	<!-- The id of the control on the enclosing HTMLpage to update with the ilename -->
+	<attribute name="updatecontrol"/>
+
+	<!-- camera attributes -->
+	<attribute name="camsize" value="1"/>
+	<attribute name="camfps" value="17" />
+	<attribute name="camaspect" value="true" />
+	<attribute name="camquality" value="0" />
+	<attribute name="cambandwidth" value="32000" />
+	
+	<!-- The save name of our file. Added Justin 2009/06/12 -->
+	<attribute name="savefilename" value="''" />
+
+	<!-- This method is used to call in from javascript(editor:mediacoursefiles) and start playing Added Justin 2009/07/04 -->
+	<!-- This p attribute is for protocol, of course rtmp, so we ignore. For compat with simple vid player Add Justin 2009/07/06 -->
+	<method name="seturl" args="a,p">
+			<![CDATA[
+				stopButton.stop();
+				Debug.write("setting url now:", a);
+				//Sometimes the course id ges passed in (ie from editor)
+				//we don't want this, so we test and truncate it.
+				if (course!=-1){
+					var strPatternOne= course + '/';
+					var strPatternTwo= '/' + course + '/';
+					if(a.indexOf(strPatternOne)==0){
+						a= a.substr(strPatternOne.length);
+					}else if(a.indexOf(strPatternTwo)==0){
+						a= a.substr(strPatternTwo.length);
+					}					
+				}
+				fileid.setAttribute("text",a);
+				playButton.playRecording();
+			]]>
+	</method>
+
+
+	<!-- Justin 2000/06/12-->
+	<!-- Had many problems keeping this logic central and used with constraints-->
+	<!-- This is not elegant but it works. The job is to start from courseid, if we have one-->
+	<handler name="onfilename">
+		<![CDATA[
+			
+			if (course!=-1){
+				canvas.setAttribute("savefilename", course + '/' + canvas.filename);
+			}else{ 
+				canvas.setAttribute("savefilename",canvas.filename);
+			}
+		]]>
+	</handler>
+	
+	<!-- The server connection -->
+	<rtmpconnection name="rtmpc" id="rtmpc" src="${red5url}"  debug="true">	
+
+		<handler name="oninit" >
+			Debug.write("filename:" + filename);
+			Debug.write("course:" + course);
+			//Justin 2009/06/12 Now tell me this is not a bug.
+			//If we don't do this, the course attribute is not accessible from the same level
+			//as it was defined. It will say "undefined" no matter canvas this or what.			
+			canvas.setAttribute("course", course );
+			canvas.setAttribute("filename", filename );
+		</handler>
+		    
+		
+	</rtmpconnection>
+
+	<!-- The media streams -->
+	<mediastream id="recordstream" type="rtmp" url="${canvas.savefilename}" rtmp="${rtmpc}" />
+	<mediastream id="playstream" type="rtmp"   url="${canvas.savefilename}" rtmp="${rtmpc}" />
+	
+
+	
+	
+	<!-- The layout structure
+		canvas layout: top=toptabs bottom=buttonbar
+		tabs are: main / audio / video / device
+		main tab: view:videosview:  leftcol=vview_tslider (record/play/snapshot tabslider)
+		main tab: view:videosview:  rightcol=sesset1 and sesset2
+		audio tab: left col(view:audiosettings1) and right col(view:audiosettings2)
+		video tab: left col(view:videosettings1) and right col(view:videosettings2)
+		device tab: 
+		button bar = record/play/stop/snapshot buttons | mic volume | record time		
+	-->
+
+	
+
+    <simplelayout inset="10" spacing="10"/>
+	<basetabs id="toptabs" y="10" bordersize="5" tabclass="tab">
+	   <basetabpane id="maintab" text="Main" selected="true" bgcolor="#bdbdbd">
+		<!-- Start of videos-->
+		<view name="videosview"  layout="axis:x; inset:10; spacing:10" >
+			 <tabslider id="vview_tslider" width="160" height="160" spacing="2" slideduration="200">
+					<tabelement id="record_tpane" text="Record" selected="true">
+						<videoview bgcolor="#c0f4ad" name="recordview" id="recordview" height="${parent.height}" width="${parent.width}" stream="${recordstream}">
+							<!-- The camera object -->
+							<camera id="mycam" show="${gShowing.value}" />									
+							
+							<!-- The microphone object -->
+							<microphone id="mymic" capturing="${gCapturing.value}">
+								<handler name="oninit">
+									this.setAttribute("gain",50);
+									this.setAttribute("rate",22);
+									Debug.write("on init Mike Rate: " + this.rate);
+									Debug.write("on init Mike Gain: " + this.gain);
+									// getMicrophone().setRate("22");
+								</handler>
+							</microphone>
+						</videoview>
+				</tabelement>
+				<tabelement id="playback_tpane" text="Playback" >
+					<videoview bgcolor="#c0f4ad" name="playview" id="playview"  height="${parent.height}" width="${parent.width}" stream="${playstream}" />
+				</tabelement>	
+			</tabslider>
+			<view name="sessset2">
+			<simplelayout axis="y" spacing="10"/>	
+			<checkbox id="gCapturing" onvalue="mymic.setAttribute('capturing', value)" text="Record Audio" value="true"/>
+			<checkbox id="gShowing" onvalue="mycam.setAttribute('show', value)" text="Record Video"  value="true" />
+			<checkbox id="gBroadcasting"  text="Broadcast Test"  value="false" />
+			<view name="sessset1">
+			<simplelayout axis="y" spacing="10"/>	
+			<text>Filename:</text>
+			<view name="topview">
+				<simplelayout axis="x" spacing="5"/>	
+				<!-- Connection status light -->
+				 <rtmpstatus rtmpc="${canvas.rtmpc}" />				 
+				<edittext id="fileid" text="${filename}" />				 		
+			</view>			
+		</view>
+		
+			
+		</view>
+		<!-- end of videos-->	
+		</view>
+	</basetabpane>	
+	<basetabpane text="Audio" bgcolor="#bdbdbd">
+		<simplelayout axis="x"  spacing="20" />
+		<view name="audiosettings1">
+			<simplelayout axis="y"/>
+			
+			<text>Audio Gain:</text>
+			<slider name="gainSlider" value="50">
+				<handler name="onvalue" args="v">
+					//mymic.getMicrophone().setGain(v);
+					if (v) {
+						mymic.setAttribute("gain",v);
+						Debug.write("Gain: " +  mymic.gain);
+					}
+				</handler>
+			</slider>
+
+			<text>Silence Level:</text>
+			<slider name="silenceSlider" value="10">
+				<handler name="onvalue" args="v">
+					//mymic.getMicrophone().setSilenceLevel(v);
+						if (v) {
+							mymic.setAttribute("silencelevel",v);
+							Debug.write("SilenceLevel:"  + mymic.silencelevel);
+						}
+				</handler>
+			</slider>
+		</view>
+		<view name="audiosettings2">
+			<simplelayout axis="y"/>
+			<text>Echo suppression:</text>
+			<radiogroup name="echoGroup">
+				<radiobutton value="true" text="On" selected="true"/>
+				<radiobutton value="false" text="Off"/>
+				<handler name="onvalue" args="v">
+					Debug.write("EchSuppression Before: " + mymic.useechosuppression);
+					//mymic.getMicrophone().setUseEchoSuppression(v);
+					mymic.setAttribute("useechosuppression",v);
+					Debug.write("EchoSuppression After: " + mymic.useechosuppression);
+				</handler>
+			</radiogroup>
+			
+			<text>Audio Rate:</text>
+			<radiogroup name="rateGroup" height="40" layout="class:wrappinglayout; axis:y">
+				<radiobutton value="5" text="5"/>
+				<radiobutton value="8" text="8"/>
+				<radiobutton value="11" text="11"/>
+				<radiobutton value="22" text="22" selected="true"/>
+				<radiobutton value="44" text="44"/>
+				<handler name="onvalue" args="v">
+					Debug.write("Rate before: " + mymic.rate);
+					//mymic.getMicrophone().setRate(v);
+					mymic.setAttribute("rate",v);
+					Debug.write("Rate after: " + mymic.rate);
+				</handler>
+			</radiogroup>
+		</view>
+</basetabpane>		
+<basetabpane text="Video" bgcolor="#bdbdbd">
+<simplelayout axis="x" spacing="20" />
+	<view id="videosettings1">
+			<simplelayout axis="y"/>			  
+			<text>Bandwidth:</text>
+			<slider id="bandwidthSlider" maxvalue="32000" value="${canvas.cambandwidth}">
+				<handler name="onvalue" args="v">
+					videosettings1.updateCameraQuality();					
+				</handler>
+			</slider>						
+		<text>Camera Frames:</text>
+		<slider id="framesSlider" maxvalue="30" value="${canvas.camfps}">
+			<handler name="onvalue" args="v">
+				videosettings2.updateCameraMode();
+			</handler>
+		</slider>
+		<method name="updateCameraQuality">
+					var q = picqual.value;
+					var b = bandwidthSlider.value;
+					mycam.setQuality(b,q);
+					Debug.write("Bandwidth:" +  mycam.bandwidth);
+					Debug.write("Pic Quality:" +  mycam.picturequality);
+		</method>
+</view>
+<view id="videosettings2">	
+<simplelayout axis="y"/>	
+		<text>Picture Quality:</text>
+		<combobox id="picqual" name="picqual" width="130" editable="false" defaultselection="${canvas.camquality}">
+				  <textlistitem text="0 (auto)" value="0" selected="true"/>				  
+				  <textlistitem text="2" value="0.2"/>
+				  <textlistitem text="4" value="0.4"/>
+				  <textlistitem text="6" value="0.6"/>
+				  <textlistitem text="8" value="0.8"/>
+				  <textlistitem text="10" value="1"/>
+				  <handler name="onselect" args="v">
+					videosettings1.updateCameraQuality();
+				  </handler>
+		</combobox>	
+		<text>Image Size:</text>
+		<combobox id="shotsize"  width="130" editable="false" defaultselection="${canvas.camsize}">
+		      <textlistitem text="160x120" value="0"/>
+              <textlistitem text="320x240" value="1"/>
+              <textlistitem text="640x480" value="2"/>
+              <textlistitem text="1280x1024" value="3"/>
+			  <textlistitem text="1600x1200" value="4"/>
+			  <handler name="onselect" args="v">
+					videosettings2.updateCameraMode();					
+			</handler>
+        </combobox>
+		<text>Keep Aspect:</text>
+		<radiogroup id="aspectGroup" height="40" layout="axis:x; inset:10; spacing:10">
+			<radiobutton value="true" text="Yes" selected="${canvas.camaspect}"/>
+			<radiobutton value="false" text="No" selected="${canvas.camaspect == false}"/>
+			<handler name="onvalue" args="v">
+				videosettings2.updateCameraMode();
+			</handler>
+		</radiogroup>
+		<method name="updateCameraMode">
+					var v = shotsize.value;
+					if (v == 0){
+						mycam.setMode(160,120,framesSlider.value,aspectGroup.value);	
+					}else if (v == 1 ){								
+						mycam.setMode(320,240,framesSlider.value,aspectGroup.value);
+					}else if (v == 2 ){			
+						mycam.setMode(640,480,framesSlider.value,aspectGroup.value);
+					}else if (v == 3){								
+						mycam.setMode(1280,1024,framesSlider.value,aspectGroup.value);
+					}else if (v == 4){								
+						mycam.setMode(1600,1200,framesSlider.value,aspectGroup.value);
+					}
+					Debug.write("width: " + mycam.width);
+					Debug.write("height: " + mycam.height);
+					Debug.write("fps: " + mycam.fps);
+					Debug.write("aspect: " + mycam.favorsize);
+					Debug.write("quality: " + mycam.picturequality);
+					Debug.write("bandwidth: " + mycam.bandwidth);
+		
+		</method>
+	</view>	
+	</basetabpane>	
+	<basetabpane text="Device" bgcolor="#bdbdbd">
+		<simplelayout axis="y" spacing="10" />
+		<text>Cameras:</text>
+		   <combobox   id="availableCams" width="280" editable="false">
+			<handler name="oninit">
+				<![CDATA[
+				//Get all availible Cam's
+				var tw = Camera.names;
+				var t = "";
+				this.addItem("default(" + mycam.devicename + ")",-1);
+				for (var eg=0;eg<tw.length;eg++){
+					this.addItem(tw[eg],eg);
+					t=eg;
+				}   
+				this.selectItem(-1); 			  
+				]]>
+			</handler>
+			<handler name="onselect" args="v">
+					if(v == -1){
+						mycam.deviceindex=null;
+					}else{
+						mycam.deviceindex=v;
+					}
+					Debug.write("camera: " + mycam.devicename);					
+			</handler>
+		</combobox>
+		<text>Microphones:</text>		
+		<combobox id="availableMics" width="280" editable="false">
+			<handler name="oninit">
+				<![CDATA[
+				//Get all availible Mike's
+				var tw = Microphone.names;
+				var t = "";
+				this.addItem("default(" + mymic.devicename + ")",-1);
+				for (var eg=0;eg<tw.length;eg++){
+					this.addItem(tw[eg],eg);
+					t=eg;
+				}   
+				this.selectItem(-1);    
+				]]>
+			</handler>
+			<handler name="onselect" args="v">		
+					if(v == -1){
+						mymic.deviceindex=null;
+					}else{
+						mymic.deviceindex=v;
+					}
+					Debug.write("mike: " + mymic.devicename);					
+			</handler>
+		</combobox>
+	</basetabpane>
+	</basetabs>
+
+	
+	
+	
+	 
+	 <view id="buttonbar" bgcolor="#bdbdbd" valign="middle" width="${parent.width}" height="${recordButton.height + 8}">
+      <simplelayout axis="x" spacing="5" />
+	  	
+    
+        <button id="recordButton" valign="middle"  width="30" height="30" enabled="${recordstream.recording == false  &amp;&amp; playstream.playing == false}">
+        	<handler name="onclick" >
+				//use textbox here for filename simplerecorder
+				canvas.setAttribute("filename",fileid.text);
+				
+				//this should work but doesnt
+				//need to extand tabs. search forum for programmatically tab select
+				//toptabs.select(maintab);
+				
+				vview_tslider.select(record_tpane);
+				recordstream.setAttribute("url",canvas.savefilename);
+				Debug.write("course from record:" + course);
+				Debug.write("recordstream.url:" + recordstream.url);
+        		recordstream.setAttribute("totaltime", 0);
+				
+				if(gBroadcasting.value){					
+					playstream.setAttribute("url","broadcasttest");
+					recordstream.setAttribute("url",playstream.url);
+					recordstream.broadcast();
+					playstream.play();
+				}else{
+					recordstream.record();
+					
+					//Update enclosing pages "alltext"(filename) field
+					//we do not add the courseid here. The moodle filter will add the relative course id				
+					var js2	= 'document.getElementById(\"' + updatecontrol + '\").value=\"'  + canvas.filename + '\"';  				
+					lz.Browser.loadJS(js2);
+					}
+				
+        	</handler>
+			<view id="recordicon" width="24" height="24"  x="3" y="3" opacity="${0.2 + ((recordButton.enabled)  * 0.8)}" resource="icons/24x24/PlainGreen/RecordNormalRed.png" ></view>	
+        </button>
+		
+		<button id = "playButton" valign="middle"  width="30" height="30" enabled="${playstream.playing == false &amp;&amp; recordstream.recording == false }" onclick="playRecording()">
+			<method name="playRecording" args="">
+				canvas.setAttribute("filename",fileid.text);	
+				vview_tslider.select(playback_tpane);			
+				playstream.setAttribute("url",canvas.savefilename);
+				Debug.write("playstream.url:" + playstream.url);
+				playstream.setAttribute("paused",false);
+				playstream.play();
+			</method>
+			<view id="playicon" width="24" height="24"  x="3" y="3" opacity="${0.2 + ((playButton.enabled)  * 0.8)}" resource="icons/24x24/CircleBlue/Play1Normal.png" ></view>	
+		</button>
+
+        <button
+			id = "stopButton"
+			width="30" 
+			height="30" 
+			valign="middle"            
+			enabled="${playstream.playing  || recordstream.recording || recordstream.broadcasting}"
+            onclick="stop()">
+       		<method name="stop" args="">
+				if (recordstream.recording || recordstream.broadcasting){								
+					recordstream.stop();
+					Debug.write("recordstream stopped");
+					Debug.write("recordstream recording:" + recordstream.recording);
+					Debug.write("recordstream broadcasting:" + recordstream.broadcasting);
+					Debug.write("playstream playing:" + playstream.playing);
+					Debug.write("playstream paused:" + playstream.paused);
+				}
+				if (playstream.playing ){								
+					playstream.stop();
+					Debug.write("playstream stopped");
+					Debug.write("recordstream recording:" + recordstream.recording);
+					Debug.write("recordstream broadcasting:" + recordstream.broadcasting);
+					Debug.write("playstream playing:" + playstream.playing);
+					Debug.write("playstream paused:" + playstream.paused);
+				}   			       			
+       		</method>
+			<view id="stopicon" width="24" height="24"  x="3" y="3" opacity="${0.2 + (stopButton.enabled  * 0.8)}" resource="icons/24x24/CircleBordered/Stop1NormalOrange.png" ></view>	
+        </button>	
+		<button id="snapshotButton" valign="middle"  enabled="true" width="30" height="30" >	
+					<view id="snapshoticon" width="24" height="24"  x="3" y="3" resource="icons/24x24/CircleBordered/YellowCamera.png" ></view>	
+					<handler name="onclick" >
+						if (playstream.playing){
+							captureAndCopyView(playview,snapshotview);
+							Debug.write("capturing playview:");
+						}else{
+							captureAndCopyView(recordview,playview);
+							Debug.write("capturing recordview:");
+						}
+						vview_tslider.select(playback_tpane);		
+					</handler>
+					<method name="captureAndCopyView" args="sourceView, destinationView">
+						<![CDATA[
+						// sourceView is the view we are going to capture and copy
+						//
+						var sourceView_mc = sourceView.getMCRef();
+
+						// create the BitmapData object
+						//
+						var x = 0;
+						var y = 0;
+						var w = sourceView.width;
+						var h = sourceView.height;
+						var bitmap = new flash.display.BitmapData(w, h, false);
+
+						// draw the source view into the BitmapData object
+						//
+						var matrix = new flash.geom.Matrix();
+						matrix.translate(-x, -y)
+						var colorTransform = new flash.geom.ColorTransform();
+						var rect = new flash.geom.Rectangle(0, 0, w, h);
+						bitmap.draw(sourceView_mc, matrix, colorTransform, 1, rect);
+
+						// load the bitmap into a destination view
+						//
+						var destinationView_mc = destinationView.getMCRef();
+						destinationView_mc.createEmptyMovieClip("bitmap_mc", 1);
+						destinationView_mc.bitmap_mc.attachBitmap(bitmap, 1);
+						//destinationView_mc.bitmap_mc.removeBitmap();
+						//showsnapshot
+						//vview_tslider.select(snapshot_tpane);	
+
+						]]>
+					</method> 					
+		</button>
+		
+		<view name="recordinfo">
+			<simplelayout axis="y"/>
+			<text text="${'recording time: ' + recordstream.totaltime}"/>
+			<!-- Indicator for microphone level -->
+			<view width="184" resource="volumemeter.gif" height="12" bgcolor="black">       
+				<view x="${parent.width - this.width}" y="0"  bgcolor="black" width="${parent.width - (mymic.level * 1.8 * recordstream.recording)}" height="12"/>
+			</view>
+		</view>
+      
+        <text valign="middle" fgcolor="red" id="errorText" width="200"/>
+
+    </view>
+
+   
+</canvas>
+
+
+
+
+
+
+
+

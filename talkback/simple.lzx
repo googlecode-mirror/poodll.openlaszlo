@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+		<!-- The dataset containing info about the media resource -->
+	<dataset name="mediaresource" type="http" src="mediaresource" request="true"/>
+	<simplelayout axis="y" spacing="5"/>
+	<view datapath="mediaresource:/mediaresource/segment" width="100" height="100" stretches="both"  resource="$path{'splash/text()'}"/>
+    
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006 Laszlo Systems, Inc. All Rights Reserved.                    *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->
+

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- X_LZ_COPYRIGHT_BEGIN ************************************************
+* Copyright 2007-2008 Laszlo Systems, Inc.  All Rights Reserved.         *
+* Use is subject to license terms.                                       *
+* X_LZ_COPYRIGHT_END ************************************************** -->
+
+
+<library>
+    <include href="./justinvideoscreen.lzx"/>
+    <include href="./justinvideoslider.lzx"/>
+    <include href="../../utils/youtubelib.lzx" />
+
+    <class name="justinvideoplayer">
+	
+	<attribute name="fontcolor" value="0x000000"/>
+		
+	<attribute name="bgcolor" value="0x808080"/>
+		
+	<attribute name="slidercolor" value="0x808080"/>
+		
+	<attribute name="progresscolor" value="0x00ff00"/>
+		
+        <attribute name="type" type="string" value="http"/>
+
+        <attribute name="url" type="string" value=""/>
+		
+	<attribute name="rtmp" value="null" />
+
+        <attribute name="autoplay" value="false"/>
+
+        <attribute name="showscreen" value="true"/>
+
+        <attribute name="showslider" value="true"/>
+
+        <attribute name="borderLeft" value="5"/>
+
+        <attribute name="borderRight" value="5"/>
+
+        <attribute name="borderTop" value="5"/>
+
+        <attribute name="sliderGap" value="5"/>
+		
+	<attribute name="sliderHeightVal" value="34"/>
+
+        <attribute name="sliderHeight" value="${
+            this.showslider ? this.sliderHeightVal : 0}"/>        
+
+        <attribute name="borderBottom" value="5"/>
+
+        <attribute name="screenWidth" value="${
+            this.width - (this.borderLeft + this.borderRight)}"/>
+
+        <attribute name="sliderTop" value="${
+            this.height - (this.borderBottom + this.sliderHeight)}"/>
+
+        <attribute name="videoBottom" value="${
+            this.sliderTop - (this.showslider ? this.sliderGap : 0)}"/>
+
+	<attribute name="vscreen" value="null" />
+
+
+	<method name="init">
+		<![CDATA[
+		if (this.type == "yutu"){
+			Debug.write("got to yutu");
+			this.vscreen = this.ytscreen;
+		}else{
+			Debug.write("got to past yutu");
+			this.vscreen = this.jvscreen;
+			//'playvolume:', this.vscreenslider.volume
+			
+
+
+		}
+
+		
+		]]>
+	</method>	
+
+	    <justinvideoscreen name="jvscreen"
+            x="${parent.borderLeft}"
+            y="${parent.borderTop}"
+            width="${parent.screenWidth}"
+            height="${parent.videoBottom - parent.borderTop}"
+            visible="${parent.showscreen &amp;&amp; classroot.type != 'yutu'}"
+            type="${classroot.type}"
+            autoplay="${classroot.autoplay}"
+            url="${classroot.url}"
+            playvolume="${parent.vscreenslider.volume}"
+			rtmp="${classroot.rtmp}"
+        />		
+
+	<youtubeview name="ytscreen" 
+		starttime="0"
+		x="${parent.borderLeft}"
+		y="${parent.borderTop}"
+                autoplay="${classroot.autoplay}" 
+		width="${parent.screenWidth}"
+		height="${parent.videoBottom - parent.borderTop}"
+		playvolume="${parent.vscreenslider.volume}"
+		visible="${parent.showscreen &amp;&amp; classroot.type=='yutu'}"
+		url="${classroot.url}"				
+		bgcolor="#dddddd" 
+		enabled="${classroot.type=='yutu'}"
+	/>
+
+     <justinvideoslider name="vscreenslider" 
+			fontcolor="${parent.fontcolor}"
+			bgcolor="${parent.bgcolor}"
+            x="${parent.borderLeft}"
+            y="${parent.height - (parent.borderBottom + parent.sliderHeight)}"
+            width="${parent.screenWidth}"
+            height="${parent.sliderHeight}"
+            visible="${parent.showslider}"
+            ms="$once{classroot.type == 'yutu' ? classroot.ytscreen.stream : classroot.jvscreen.stream}"
+            time="${ms.time}"
+            totaltime="${ms.totaltime}"
+			slidercolor="${classroot.slidercolor}"
+			progresscolor="${classroot.progresscolor}"			
+        />
+
+   
+   
+
+
+    </class>
+
+
+</library>

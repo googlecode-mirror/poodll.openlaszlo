@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+ <goldstyle name="defaultstyle" isdefault="true"/>
+ <greenstyle name="specialstyle"/>
+
+	<include href="../42recorder/PoodLLTeachersRecorderLib.lzx"/>
+	
+	<!-- The URL of the Red5 server -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  	
+
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename" value="lz.Browser.getInitArg('filename')" />  	
+
+	<!-- The course id (parent will pass -1 if there is no course id) -->
+	<attribute name="course"  value="lz.Browser.getInitArg('course')" />  	
+	
+	<!-- The id of the control on the enclosing HTMLpage to update with the ilename -->
+	<attribute name="updatecontrol"  value="lz.Browser.getInitArg('updatecontrol')" /> 
+
+	<!-- The delegate we use to hook into red5 messages -->
+	<attribute name="red5MessageDel" value="null" />
+	<attribute name="red5recordMessageDel" value="null" />
+	<attribute name="red5Messages" value="''" />
+	<attribute name="red5recordMessages" value="''" />
+	
+	
+	<method name="printred5Message" args="message">
+		this.setAttribute("red5Messages",this.red5Messages + '\n' + message);
+		this.messageboxes.messages.setAttribute("text", this.red5Messages);
+		this.messageboxes.iscroll.page(1);
+	</method>
+	<method name="printred5recordMessage" args="message">
+		this.setAttribute("red5recordMessages",this.red5recordMessages + '\n' + message);
+		this.messageboxes.recordmessages.setAttribute("text", this.red5recordMessages);
+		this.messageboxes.iscroll.page(1);
+	</method>
+	
+	<handler name="oninit">
+		this.red5MessageDel = new LzDelegate(this, 'printred5Message');
+		this.red5recordMessageDel = new LzDelegate(this, 'printred5recordMessage');
+		 this.red5MessageDel.register(this.recorder.playstream, 'onred5message');
+		  this.red5recordMessageDel.register(this.recorder.recordstream, 'onred5message');
+		// this.red5MessageDel.register(this.recorder.recordstream, 'onstatus');
+	</handler>
+	<simplelayout axis="y" spacing="10" />
+	<view name="messageboxes" clip="true">	
+		<simplelayout axis="x" spacing="5" />
+		<edittext name="messages" multiline="true" width="300" height="250" bgcolor="0xFFFFFF" /> 
+		<edittext name="recordmessages" multiline="true" width="300" height="250" bgcolor="0xFFFFFF" /> 
+		<button name="clear" text="clear">
+			<handler name="onclick">
+				parent.messages.setAttribute("text","");
+				parent.recordmessages.setAttribute("text","");
+				canvas.setAttribute("red5Messages","");
+				canvas.setAttribute("red5recordMessages","");
+			</handler>
+		</button>
+		<scrollbar name="iscroll"/>
+	</view>
+	<poodllteachersrecorder name="recorder" red5url="${canvas.red5url}" filename="${canvas.filename}" course="${canvas.course}" updatecontrol="canvas.updatecontrol" width="${parent.width}" height="${parent.height}" />
+	
+</canvas>

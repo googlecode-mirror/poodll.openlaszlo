@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="500" height="500">
+<include href="scribblepalette.lzx" />	
+<include href="../interview/sharedObject.lzx" />	
+<include href="../messaging/MessagingRtmpConnection.lzx" />
+
+		<attribute name="red5url" value="lz.Browser.getInitArg('red5url')"/>  	
+		<attribute name="mename"  value="lz.Browser.getInitArg('mename')" /> 
+		<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />  	
+		<attribute name="imageurl" value="lz.Browser.getInitArg('imageurl')" /> 
+		<attribute name="boardname" value="lz.Browser.getInitArg('boardname')" />
+		<attribute name="headeridtag" value="'scribble01'" />
+
+<!--rtmp connection -->
+		<!-- we set altsrc and src to the same value, to force a reconnect if timeouts, seems to happen, -->
+		<MessagingRtmpConnection name="rtmpc" userid="${canvas.mename}" appprofileid="${canvas.headeridtag}" 
+			src="${unescape(canvas.red5url) + '/' + canvas.courseid +  '/' + canvas.headeridtag}"  
+			altsrc="${unescape(canvas.red5url) + '/' + canvas.courseid +  '/' + canvas.headeridtag}" 
+			debug="false" autoconnect="true">
+
+			<!--on connecting we init the whiteboard shared object with the boardname -->
+			<handler name="onconnect">
+				
+				if(canvas.boardname==null || canvas.boardname==''){canvas.setAttribute('boardname','scribbleslave');}
+				Debug.write("connecting to SO:", canvas.boardname);
+				parent.scribbleview.scribble.api.connectSO(canvas.boardname);				
+				Debug.write("connected to SO");
+			</handler>
+			
+		</MessagingRtmpConnection>
+
+<!--Beginning of scribble view -->
+<view name="scribbleview"  width="${canvas.width}" height="${canvas.height}" bgcolor="green">
+	<simplelayout axis="x" spacing="5" inset="10"/>
+	<scribblepalette name="scribble" y="10" slavemode="true" rtmpc="${canvas.rtmpc}" imageurl="${canvas.imageurl}" width="${parent.width-20}" height="${parent.height-20}"  />
+		
+
+</view>
+
+
+</canvas>

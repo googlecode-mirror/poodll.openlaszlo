@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+    <!--
+        Scribble for Poodll
+        Copyright (C) 2009 Justin Hunt (bitwalkerjapan@gmail.com)
+
+        This program is free software: you can redistribute it and/or modify
+        it under the terms of the GNU General Public License as published by
+        the Free Software Foundation, either version 3 of the License, or
+        any later version.
+
+        This program is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU General Public License for more details.
+
+        You should have received a copy of the GNU General Public License
+        along with this program.  If not, see http://www.gnu.org/licenses/.
+    -->
+	
+<include href="lz"/>
+<include href="../interview/sharedObject.lzx"/>
+	
+<class name="scribblepalette" width="100%" height="100%" extends="view">
+
+<!-- allow or disallow mousey stuff	-->
+<attribute name="slavemode" value="false" />
+
+
+<!-- mousey stuff	-->
+<attribute name="moustracker_del" 
+    value="$once{ new lz.Delegate( this, 'trackmouse' )}" />
+
+<attribute name="oldx" type="number" value="-1" />
+<attribute name="oldy" type="number" value="-1" />
+
+<!-- do we have a background image -->
+<attribute name="imageurl" value="null" />
+
+	
+<!-- draw color and sizes	-->
+<attribute name="drawcolor" type="color" value="0x000000" />	
+<attribute name="pensize" type="number" value="4" />
+
+<!-- the rtmpc we use to connect to server -->	
+<attribute name="rtmpc" value="null" />
+
+<!-- the dataset that will hold all the points. Gets big! -->	
+<!-- a single point looks like this -->	
+<!-- line a="29" b="44" x="29" y="150" color="0xFF0000" linewidth="5" -->
+<dataset name="dsPoints">
+	<drawing>	
+	</drawing>
+</dataset>	
+<dataset name="dsTempPoints">
+	<drawing>	
+	</drawing>
+</dataset>	
+
+<!-- an all purpose data pointer we use to get at the data in the dataset -->	
+<datapointer name="dp" />
+
+<!-- The shared object for making it a shared whiteboard	-->
+<sharedobject name="scribbleso" rtmpc="${classroot.rtmpc}" persist="${false}" >
+	<handler name="datachanged" args="field">
+		<![CDATA[
+		Debug.write("updating from so:" );
+		Debug.write("field:", field );
+		Debug.write("field:", this.getProperty(field));
+		
+		switch (field){
+			case "newnode":
+				var newNode =  lz.DataElement.stringToLzData(this.getProperty(field));
+				var dpPoints = parent.dsPoints.getPointer();		
+				dpPoints.setXPath("/drawing");
+				Debug.write("appending child");
+				dpPoints.p.appendChild(newNode);
+				
+				//Fetch the last child node od drawing (ie the last stroke)
+				var nodeCount = dpPoints.getNodeCount();
+				dpPoints.selectChild();
+				dpPoints.selectNext(nodeCount-1);
+				
+				//then pass it in and start drawing it
+				parent.drawStroke(dpPoints);				
+				
+				break;
+				
+			case "goback":
+				parent.goback();
+				parent.d_view.clear();
+				parent.drawFromDS();
+				break;
+			
+			case "reset":
+				parent.reset();
+				break;			
+			
+			default:
+				break;
+		
+		
+		}
+		]]>
+			
+	</handler>
+</sharedobject>
+
+<!-- handlers -->
+
+<!-- When user starts drawing, we open a new stroke node on the dsPoints-->
+<!-- And we start the delegate to record and draw points based on mouse posn -->
+<handler name="onmousedown">
+<![CDATA[
+	//if we are in slave mode, quit. No ouse events allowod
+	if (this.slavemode) {return;}
+
+	this.oldx = this.getMouse('x');
+	this.oldy = this.getMouse('y');
+	
+	//set the pen and color we should use on the drawview
+	this.temp_view.setAttribute("strokeStyle",this.drawcolor);
+	this.temp_view.setAttribute("lineWidth",this.pensize);
+	
+	//begin path at current mouse point
+	this.temp_view.beginPath();
+	this.temp_view.moveTo(this.oldx, this.oldy);
+
+	//start recording our new "stroke"
+	var dpPoints = this.dsTempPoints.getPointer();		
+	dpPoints.setXPath("/drawing");
+	dpPoints.addNode("stroke", null,  {'startX': this.oldx, 'startY': this.oldy, 'strokeStyle': this.drawcolor , 'lineWidth': this.pensize } );
+		
+	//on idle we will check for more mouse movements and draw them
+	moustracker_del.register(lz.Idle,'onidle');
+
+]]>
+</handler>
+
+<!-- When user releases mouse we stop drawing and send the entire stroke to any interested parties-->
+<handler name="onmouseup">
+<![CDATA[
+
+	//if we are in slave mode, quit. No ouse events allowod
+	if (this.slavemode) {return;}
+
+
+	//Stop recording and drawing from mouse movements
+	moustracker_del.unregisterAll();
+  
+
+  
+	//get a pointer to each of the datasets
+	var dpTempPoints = this.dsTempPoints.getPointer();		
+  	var dpPoints = this.dsPoints.getPointer();		
+	dpTempPoints.setXPath("/drawing");
+	dpPoints.setXPath("/drawing");
+	
+	//Should only be one node, but just in case we fetch the "last" node
+	//Then we copy that point over to the main dataset
+	var nodeCount = dpTempPoints.getNodeCount();
+	dpTempPoints.selectChild();
+	dpTempPoints.selectNext(nodeCount-1);
+	dpPoints.addNodeFromPointer(dpTempPoints);
+	
+  //post data to shared objects(other partners) if we are connected
+  if(this.scribbleso.connected){
+
+	//We send the data over the sharedobject to other clients.
+	Debug.write("sending data:", dpTempPoints.p.serialize());
+	this.scribbleso.setProperty("newnode", dpTempPoints.p.serialize());
+  }
+  
+	//update our own draw view and clear our temp view
+	this.drawStroke(dpTempPoints);
+	
+	//reinit the temp view and dataset
+	this.temp_view.clear();
+	dpTempPoints.deleteNode();
+	
+	
+
+  
+  ]]>
+</handler>
+
+<!-- This follows the mouse and adds points to dsPoints and to drawview-->
+<!-- called in lz.onidle event -->
+<method name="trackmouse" args="ignore=null"><![CDATA[
+
+  //first make sure the mouse actually moved
+  var newx = this.getMouse('x');
+  var newy = this.getMouse('y');
+  if(this.oldx == newx && this.oldy == newy){
+	return;
+  }
+  
+  	//add to dataset
+	var dpTempPoints = this.dsTempPoints.getPointer();		
+	dpTempPoints.setXPath("/drawing");
+	
+	//create the node we will draw
+	var newNode = lz.DataElement.stringToLzData("<point x='" + newx + "' y='" + newy + "'/>");
+	
+	//append node to the last child (last "stroke") of the drawing
+	newNode = dpTempPoints.p.getLastChild().appendChild(newNode);
+	
+	
+  //record the line, then draw it
+  //Debug.write(this.oldx + " " + this.oldy + " "+ newx + " " + newy );
+  this.temp_view.lineTo(newx, newy);
+  this.temp_view.stroke();
+
+  //keep note of added points to avoid adding the same point next time around
+  this.oldx = newx;
+  this.oldy = newy;
+
+	
+]]></method>
+
+<method name="goback" args="ignore=null">
+<![CDATA[
+	//remove from dataset
+	var dpPoints = this.dsPoints.getPointer();		
+	dpPoints.setXPath("/drawing");
+	var nodeTotal = dpPoints.getNodeCount();
+	Debug.write("totalnodecount:",nodeTotal);
+	if (nodeTotal >0){
+		if (dpPoints.selectChild()){
+			dpPoints.selectNext(nodeTotal-1);
+			//Debug.write("pointcount:",dpPoints.getNodeCount());
+			//Debug.inspect(dpPoints.p);
+			dpPoints.deleteNode();
+			Debug.write("deleted node " + nodeTotal);
+		}else{
+			Debug.write("unable to select child node ");
+		}
+	}
+]]>
+</method>
+
+
+<method name="drawStroke" args="dpStroke">
+	<![CDATA[
+	var pointCount = dpStroke.getNodeCount();
+	Debug.write("totalpointcount:" , pointCount);
+
+	//Set Pen and Color
+	this.d_view.setAttribute("strokeStyle",dpStroke.p.getAttr("strokeStyle"));
+	this.d_view.setAttribute("lineWidth",dpStroke.p.getAttr("lineWidth"));
+		
+	//initialise the stroke
+	//move pen to our start position. This should NOT draw a line 
+	this.d_view.beginPath();		
+	this.d_view.moveTo(dpStroke.p.getAttr("startX"),dpStroke.p.getAttr("startY"));	
+	
+	//Select the first point to be drawn, so we can draw and loop through children (strokes)
+	dpStroke.selectChild();		
+	
+	for(var i=0;i < pointCount;i++)
+		{					
+			this.drawNode(dpStroke);
+			dpStroke.selectNext();
+		
+		}
+		
+	//finally we actually draw the points that we have till now been recording
+	this.d_view.stroke();
+
+
+		]]>
+</method>
+<!-- We use this method to draw a single node-->	
+<method name="drawNode" args="dpNode">
+<![CDATA[
+			this.d_view.lineTo(dpNode.getNodeAttribute('x'),dpNode.getNodeAttribute('y'));
+]]>
+</method>
+
+<!-- We use this method to restore the canvas to the state described in the dataset -->	
+<method name="drawFromDS" args="ignore=null">
+<![CDATA[
+	var dpStrokes = this.dsPoints.getPointer();	
+	dpStrokes.setXPath("/drawing");
+	var strokeCount = dpStrokes.getNodeCount();
+	Debug.write("totalstrokecount:" , strokeCount);
+	dpStrokes.selectChild();
+
+	for(var i=0;i < strokeCount;i++)
+		{
+		
+			
+			this.drawStroke(dpStrokes.dupePointer());
+			dpStrokes.selectNext();
+		
+		}
+		Debug.write("just drawn stroke no.=", i);
+
+		]]>
+</method>
+
+<!-- We use this method to remove all data in the dataset -->	
+<method name="reset" args="ignore=null">
+<![CDATA[
+	var dpPoints = this.dsPoints.getPointer();
+	dpPoints.setXPath("/drawing");
+	dpPoints.setAttribute("rerunxpath",false);
+	dpPoints.selectChild();
+	while(dpPoints.isValid()){
+		dpPoints.deleteNode();
+	}
+	this.d_view.clear()
+	Debug.write("deleted nodes");
+	]]>
+</method>
+
+<!-- A BackGround Image -->
+<image name="image_view" width="${parent.d_view.width}" stretches="both" height="${parent.d_view.height}" src="${classroot.imageurl}" visible="$once{classroot.imageurl!=null}">
+	<handler name="onload" >
+		Debug.write("loading scribbler image view");
+		if(classroot.imageurl != null){				
+			this.sendBehind(parent.d_view);
+			parent.d_view.setAttribute("bgcolor",null);
+		}	
+	</handler>
+</image>
+
+<!-- the draw view. ie the guts of the palette -->
+<drawview name="d_view" width="${parent.width}" height="${parent.height}" 
+    bgcolor="white" />
+<!-- Only a factor while drawing,. This prevents wierdnes when we receive shared updates and are drawing at same time.-->
+<drawview name="temp_view" width="${parent.d_view.width}" height="${parent.d_view.height}"  />
+
+<!-- We use this methods in this 'view' to access the internals of this class from the cpanel -->	
+<view name="api">
+	<method name="drawFromDS">
+		parent.drawFromDS();
+	</method>
+	<method name="bigger">
+		parent.d_view.setAttribute('lineWidth', parent.d_view.lineWidth+1)
+	</method>
+	<method name="smaller">
+		parent.d_view.setAttribute('lineWidth', parent.d_view.lineWidth-1)
+	</method>
+	<method name="changecolor" args="newcolor">
+		parent.setAttribute('drawcolor',newcolor)
+	</method>
+	<method name="changepensize" args="newsize">
+		parent.setAttribute('pensize',newsize)
+	</method>
+
+	<method name="clear">
+		parent.d_view.clear();
+	</method>
+	<method name="goback">
+		parent.goback();
+		parent.d_view.clear();
+		parent.drawFromDS();
+		if (parent.scribbleso.uniquename=="solo")return;
+		parent.scribbleso.setProperty("goback", new Date());
+	</method>
+	<method name="reset">
+		parent.reset();
+		if (parent.scribbleso.uniquename=="solo")return;
+		parent.scribbleso.setProperty("reset", new Date());
+	</method> 
+	<method name="connectSO" args="uniquename">
+		parent.scribbleso.setAttribute("uniquename", uniquename);
+		if (uniquename!="solo"){
+			parent.scribbleso.connect();
+			Debug.write("connectedSO");
+		}
+		
+	</method>
+	<method name="reconnect">
+		Debug.write("attempting reconnected");
+		if (parent.scribbleso.uniquename!="solo"){
+			parent.scribbleso.connect();
+			Debug.write("reconnectedSO");
+		}
+		
+	</method> 
+</view>
+
+</class>
+</library>

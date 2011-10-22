@@ -1,0 +1,45 @@
+<mediaresource>
+	<mediapath>audio_success/02Unit-Conversation.mp3</mediapath>
+	<roleAName>Boy</roleAName>	
+	<roleBName>Girl</roleBName>	
+	<segment recordable="true">
+		<splash>splash1.jpg</splash>
+		<speechstart><A>13</A><B>15</B></speechstart>
+		<speechend><A>15</A><B>16.9</B></speechend>
+		<start>13</start>
+		<end>16.9</end>
+		<script>Boy: Who's that?
+Girl: The man in the plaid jacket?</script>
+		<title>One</title>
+	</segment>
+	<segment recordable="true">
+		<splash>splash2.jpg</splash>
+		<speechstart><A>17</A><B>19</B></speechstart>
+	        <speechend><A>19</A><B>20.5</B></speechend>
+	        <start>17</start>
+	        <end>20.5</end>
+		<script>Boy: Yeah, the one wearing the striped pants.
+Girl: And the purple shirt?</script>
+		<title>Two</title>
+	</segment>
+	<segment>
+		<splash>splash3.jpg</splash>
+		<speechstart><A>20.6</A><B>21</B></speechstart>
+	        <speechend><A>21</A><B>22.5</B></speechend>
+	        <start>20.6</start>
+	        <end>22.5</end>
+		<script>Boy: Right.
+Girl: That's my neighbour.</script>
+		<title>Three</title>
+	</segment>
+	<segment recordable="true">
+		<splash>splash4.jpg</splash>
+		<speechstart><A>22.6</A><B>24.4</B></speechstart>
+		<speechend><A>24.4</A><B>26</B></speechend>
+	        <start>22.6</start>
+	        <end>26</end>
+		<script>Boy: Does he always dress like that?
+Girl: Oh, yeah.</script>
+		<title>Four</title>
+	</segment>
+</mediaresource>

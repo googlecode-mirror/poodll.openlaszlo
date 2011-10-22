@@ -1,0 +1,62 @@
+view {
+	opacity: 1.0;
+	bgcolor: #AAAAAA;
+	fgcolor: #FFFFFF;
+}
+
+view[name="opacityfilter"] {
+	opacity: 0.6;
+	bgcolor: #FFFFFF;
+}
+
+view[name="canvasbackground"] {
+	opacity: 1.0;
+	/* backgroundimage: "abc.jpg"; */
+	backgroundimage: null;
+	bgcolor: #111111;
+}
+
+boxview[name="assigned"] {
+	opacity: 1.0;
+}
+
+boxview[name="unassigned"] {
+	opacity: 1.0;
+}
+
+boxview[name="offline"] {
+	opacity: 1.0;
+}
+
+
+view[name="background"] {
+	opacity: 0.6;
+	bgcolor: #AAAAAA; 
+}
+
+view[name="topbuttoncontainer"] consoleiconbutton text{
+   fgcolor: #FFFFFF;
+}
+
+
+animatedview {
+	opacity: 1.0;
+	flatopacity: 0.6;
+	screencastcolor: #3333FF;
+	jumpcolor: #FF3333;
+	paircolor: #FFCCFF;
+	interviewcolor: #99CCCC;	
+	soundcolor: #3F3F3F;	
+	scribblecolor: #33FF33;
+	settingscolor: #FFFF99;
+	moodlestatuscolor: #CC6666;
+}
+
+screensubscribe {
+	bgcolor: #FF0000;
+}
+
+animator {
+	/* This needs to be the same as animated view opacity */
+	fadeopacity: 1.0;
+}

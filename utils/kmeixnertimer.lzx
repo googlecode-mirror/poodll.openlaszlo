@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+   <!-- 
+   loopingtimer class by Sarolta Technologies Inc. copyright  2007
+
+   Accurate looping timer class by Kevin Meixner, Lead Web Software   
+   Developer, Sarolta Technologies (www.sarolta.com / www.mixandmash.tv )
+
+   This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see http://www.gnu.org/licenses/
+  
+  -->
+
+  <!---
+  Class: <loopingtimer>
+  Extends: N/A (base class)
+  Version: OpenLaszlo 3.3.3/3.4.0
+
+  This class is a looping timer that can be used to call a method to peform
+  an action repeatedly after a specified number of milliseconds.
+
+  Override the abstract method reactToTimeChange(theTime) to do something
+  useful in your application, theTime will be the time elapsed since the
+  timer's last firing, it will be close to the 'timer_resolution' set but
+  will be off from about 47ms-78ms in FireFox 2 and 47ms-94ms in IE6
+  (see note below for explanation).
+
+  NOTE:
+
+  This class originally used the LzTimer class but it was firing up to 256ms
+  late, so this has been replaced with a setTimeout() method and embedded
+  JavaScript which is more accurate, but still fires about 59ms late on
+  average.
+
+  For this reason the firing times of this class are approximate but will
+  probably fire 47ms to 78ms (about 59ms) on average late. As a workaround
+  for this problem the timer uses the system time to calculate how much time
+  has actually elapsed since the last timer firing and passes the actual time
+  elapsed ('theTime') in milliseconds to the abstract 'reactToTimeChange()'
+  method.
+
+  -->
+  <class name="loopingtimer">
+
+    <!-- *** ATTRIBUTES *** -->
+
+    <!-- Public Attributes -->
+
+    <!---
+    @param numnber timer_resolution: number of milliseconds between timer
+    firings (default: 40ms)
+
+    Note: OpenLaszlo seems to typically have a lower limit of 47-78
+    milliseconds between firings, so setting below this may be useless.
+    -->
+    <attribute name="timer_resolution" type="number" value="40" />
+
+    <!-- Private Attributes -->
+
+    <!--- @keywords private -->
+    <!---
+    @param number formertime: used internally to calculate the number of
+    elapsed milliseconds since playback was started
+    -->
+    <attribute name="formertime" type="number" value="0" />
+
+    <!--- @keywords private -->
+    <!---
+    Used internally for tracking virtual current time in milliseconds
+    for pause functionality.
+    -->
+    <attribute name="currenttime" type="number" value="0" />
+
+    <!--- @keywords private -->
+    <!--- @param string timer_state: 'PAUSED' | 'COUNTING' | 'STOPPED' | 'READY'-->
+    <attribute name="timer_state" type="string" value="READY" />
+	
+	<event name="timeevent" />
+
+
+    <!-- *** METHODS *** -->
+
+
+    <!-- Public Methods -->
+
+
+    <!--- @keywords abstract -->
+    <!---
+    ABSTRACT METHOD: overwrite to do something useful in your program
+
+    @param number theTime: the time in milliseconds elapsed since playback
+    was  started
+    -->
+    <method name="reactToTimeChange" args="theTime">
+      //if ($debug){
+      //  Debug.write('WARNING: reactToTimeChange(): This is an abstract method that should be overridden to do something useful in your application');
+       // Debug.write('reactToTimeChange(): Time elapsed since last firing in milliseconds: '+theTime);
+     // }
+	  this.timeevent.sendEvent();
+    </method>
+
+    <!--- Start Timer (Note: This will reset timer to 0) -->
+    <method name="startTimer">
+      this.setAttribute('timer_state', 'COUNTING');
+      var now = new Date();
+      var rawTime = now.getTime();
+      this.setAttribute('formertime', rawTime);
+      this.doForTime();
+    </method>
+
+    <!--- Pauses timer at current time -->
+    <method name="pauseTimer">
+      this.setAttribute('timer_state', 'PAUSED');
+    </method>
+
+    <!--- Resumes timer from time it is paused at -->
+    <method name="unpauseTimer">
+      this.setAttribute('timer_state', 'COUNTING');
+      var now = new Date();
+      var rawTime = now.getTime();
+      this.setAttribute('formertime', rawTime-this.currenttime);
+      this.repeat();
+    </method>
+
+    <!--- Stop Timer - stops timer and resets to 0  -->
+    <method name="stopTimer">
+      this.setAttribute('timer_state', 'STOPPED');     
+    </method>
+
+    <!--- Resets Timer to 0 -->
+    <method name="resetTimer">
+      this.setAttribute('formertime', 0);
+      this.setAttribute('currenttime', 0);
+      this.setAttribute('timer_state', 'READY');
+     this.reactToTimeChange(0);		
+    </method>
+
+
+    <!-- Private Methods -->
+
+
+    <!--- @keywords private -->
+    <!---
+    Called Internally By Timer
+
+    @param number theTime: the actual time in milliseconds that has passed
+    since the last timer firing (will usually be 16-100ms more than timer
+    firing interval)
+    -->
+    <method name="doForTime" args="ignore=null">
+
+      // Prevent Timer Incrementing When Paused
+      if (this.timer_state == 'PAUSED' || this.timer_state == 'STOPPED' || this.timer_state == 'READY' )
+        return;  
+
+      var now = new Date();
+
+      var rawTime = now.getTime();
+
+      if (this.formertime != 0)
+        var currentTime = rawTime - this.formertime;
+
+      this.setAttribute('currenttime', currentTime);
+
+      // Call Abstract Method:
+      this.reactToTimeChange(currentTime);
+
+      this.repeat();
+
+    </method>
+
+    <!--- @keywords private -->
+    <!---
+    Used internally for timer looping.
+    -->
+    <method name="repeat">
+
+      // This function uses an embedded JavaScript function which
+      // can be called via the standard JavaScript setTimeout()
+      // method which results in more accurate timer firing then the
+      // standard OpenLaszlo LzTimer() class. LzTimer() fired up to
+      // 256ms late, while setTimeout() usually fires from
+      // only 47ms-78ms
+
+
+	//on $as3 it says setTimeout may be unavailable(though i think it is)
+	//whatever
+	if($as3){
+		 lz.Timer.addTimer( new LzDelegate( this, "doForTime" ), this.timer_resolution);
+	}else{
+      		//this caused errors in ol50, why..?, so used the same as as3
+			//setTimeout(function(){doForTime()}, this.timer_resolution);
+			 lz.Timer.addTimer( new LzDelegate( this, "doForTime" ), this.timer_resolution);
+	}
+    </method>
+
+  </class>
+
+</library>

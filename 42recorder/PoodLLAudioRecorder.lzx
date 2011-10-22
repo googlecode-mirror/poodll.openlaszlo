@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas >
+
+	<include href="PoodLLAudioRecorderLib.lzx"/>
+	
+	<!-- The size of the buttons et al. -->
+	<attribute name="iconsize" value="128" />
+	
+	<!-- The URL of the Red5 server -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  	
+
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename" value="lz.Browser.getInitArg('filename')" />
+	
+	<!-- The id of the control on the enclosing HTMLpage to update with the  filename -->
+	<attribute name="updatecontrol" value="lz.Browser.getInitArg('updatecontrol')" />
+
+	<!-- UID for ensuring filenames  are unique-->
+	<attribute name="uid" value="lz.Browser.getInitArg('uid')" />
+	<attribute name="assigname" value="lz.Browser.getInitArg('assigName')" />
+
+	<!-- The course id (parent will pass -1 if there is no course id) -->
+	<attribute name="course" value="lz.Browser.getInitArg('course')" />
+	
+	<!-- Audio Settings -->
+	<attribute name="gain" value="lz.Browser.getInitArg('gain')" />
+	<attribute name="rate" value="lz.Browser.getInitArg('rate')"  />
+	<attribute name="echosuppression" value="lz.Browser.getInitArg('echosuppression')" />
+	<attribute name="loopback" value="lz.Browser.getInitArg('loopback')" />
+	<attribute name="silencelevel" value="lz.Browser.getInitArg('silencelevel')" />
+	<attribute name="prefdevice" value="lz.Browser.getInitArg('prefdevice')" />
+
+	
+	<!-- A flag to tell us if we should be overwriting files -->
+	<attribute name="overwritefile" value="true"/>
+
+
+    <simplelayout inset="10" axis="y" spacing="5"/>
+	<poodllaudiorecorder 
+		width="${parent.width}" 
+		height="${parent.iconsize + 18}"
+		filename="${parent.filename}"
+		updatecontrol="${parent.updatecontrol}"
+		uid="${parent.uid}"
+		assigname="${parent.assigname}"
+		red5url="${parent.red5url}"
+		course="${parent.course}"
+		overwritefile="${parent.overwritefile}"	
+		iconsize="${parent.iconsize}"	
+		gain="$once{parent.gain ? Number(parent.gain) : 50}"
+		silencelevel="$once{parent.silencelevel ? Number(parent.silencelevel) : 10}"		
+		rate="$once{parent.rate ? Number(parent.rate) : 22}"
+		echosuppression="$once{parent.echosuppression ? parent.echosuppression=='yes' : true}"	
+		loopback="$once{parent.loopback ? parent.loopback=='yes' : false}"	
+		prefdevice="$once{parent.prefdevice}"
+		/>
+	 
+	
+</canvas>

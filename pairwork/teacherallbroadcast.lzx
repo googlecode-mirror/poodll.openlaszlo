@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="100%" height="100%"  >
+<goldstyle name="defaultstyle" isdefault="true"/>
+
+<attribute name="red5url" /> 
+<attribute name="teacherstreamname" /> 
+<attribute name="mefullname" /> 
+<attribute name="mepictureurl" />
+  
+
+
+<!--mediastreams -->
+  <mediastream name="mestream" type="rtmp">
+	<microphone name="mic" id="mic" capturing="${broadcastButton.enabled==false}"> 
+		<handler name="oninit">
+			this.setAttribute("rate",22);
+			this.setAttribute("gain",50);
+		</handler>
+	</microphone>
+  </mediastream>
+
+<!-- The server connection -->
+  <rtmpconnection name="autocon" src="${unescape(red5url)}" autoconnect="true">
+		<handler name="oninit">		
+			mestream.setAttribute("url",teacherstreamname);
+			Debug.write("mestream.url:" + mestream['url']);
+        </handler>
+  </rtmpconnection>   
+
+  <simplelayout axis="x" spacing="15"/>	
+
+		<button id="broadcastButton"  width="58" height="58" name="broadcastButton" enabled="${mestream.broadcasting==false}" text="" onclick="broadcast()">
+        	<method name="broadcast" args="" >
+					//mestream.mic.setAttribute("capturing",true);
+					mestream.broadcast();
+					Debug.write("bcast started");					
+        	</method>
+			<view id="micicon" width="48" height="48" x="5" y="5" opacity="${1 - (mestream.broadcasting * 0.8)}" resource="icons/48x48/PlainBlue/MicrophoneHot.png" ></view>	
+        </button>
+		<button id="stopButton"  width="58" height="58" name="stopButton"  enabled="${mestream.broadcasting}" text="" onclick="stop()">
+        	<method name="stop" args="" >
+					mestream.stop();					
+					Debug.write("bcast stopped");				
+        	</method>
+			<view id="stopicon" width="48" height="48"  x="5" y="5" opacity="${0.2 + (mestream.broadcasting * 0.8)}" resource="icons/48x48/CircleBordered/Stop1NormalRed.png" ></view>	
+        </button>		
+</canvas>

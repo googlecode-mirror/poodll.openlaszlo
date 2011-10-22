@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas  width="100%" height="100%" >
+
+<include href="screensubscribelib.lzx" />
+<include href="../poodllheader/canvasheadercommunications.lzx" />
+	   
+<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />   
+<attribute name="broadcastkey" value="lz.Browser.getInitArg('broadcastkey')" />  
+<attribute name="showwidth" value="lz.Browser.getInitArg('showwidth')" />  
+<attribute name="showheight" value="lz.Browser.getInitArg('showheight')"/>  
+<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />  
+<attribute name="mename" value="lz.Browser.getInitArg('mename')" />  
+
+	<!--object that handle communications with adminconsole  -->
+	<!--This crazily confused the screensubscribe *sometimes* which used it instead of its own rtmp so just commented it  -->
+	<canvasheadercommunications 
+			name="headercomm" 
+			mename="${canvas.mename}" 
+			courseid="${canvas.courseid}" 
+			red5url="${canvas.red5url}" 
+			headeridtag="'header01'" />
+			
+<view name="blueview" bgcolor="blue" width="${canvas.width}" height="${canvas.height}">
+	<screensubscribe 
+		name="subscriber"
+		x="1"
+		y="1"
+		bgcolor="0xCCCCCC"
+		red5url="${canvas.red5url}" 	
+		broadcastkey="${canvas.broadcastkey}"
+		showwidth="${canvas.showwidth}"
+		showheight="${canvas.showheight}"
+		courseid="${canvas.courseid}"
+		mename="${canvas.mename}"
+		width="${canvas.width-2}"
+		height="${canvas.height-2}"
+	/>	
+	</view>
+ 
+ 
+</canvas>

@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+		<include href="lz"/>
+		<include href="../messaging/MessagingRtmpConnection.lzx" />
+	<class name="clientheadercommunications" >
+
+		
+		<!-- general attributes -->
+		<attribute name="red5url" />  	
+		<attribute name="mename"  /> 
+		<attribute name="courseid" />  	
+		<attribute name="headeridtag" value="'header01'" />
+
+		<!-- attributes for presence updates. Only presenceinterval should be set from outside -->
+		<!-- presenceinterval =0, is presence checking off-->
+		<attribute name="checkPresenceDelegate" value="$once{ new LzDelegate(this, 'checkPresence') }" />  	
+		<attribute name="presenceinterval" value="0" />
+		<attribute name="_onlineusers" />
+		
+		<!-- We fire this event to offer other classes the opportunity to know who is online and who is offline -->
+		<event name="presenceupdate" />		
+
+
+		<!--A timer is added to the checkpresence delegate which calls this -->
+		<!--We keep reseting the timer to  get regulare presence updates -->
+		<!--The result of the presence update arrives in rtmpc.ongetpeersresult -->
+		<method name="checkPresence" args="ignore = null">
+			<![CDATA[
+				//commented to make debugging less of a PIA
+				//this.rtmpc.getPeers();
+				lz.Timer.resetTimer(this.checkPresenceDelegate, this.presenceinterval);
+			]]>
+		</method>
+
+		<!--We use this to update our presence delegate, to check more or less frequently or not at all-->
+		<handler name="onpresenceinterval">
+				if (this.presenceinterval > 0){
+					lz.Timer.resetTimer(this.checkPresenceDelegate, this.presenceinterval);
+				}
+		</handler>
+
+		<!--client classes use these methods to get lists of on and offline users-->
+		<!--They can subscribe to the presenceupdate event to get "realtime" notifications of presence updates-->
+		<!--TODO: centralise calls to get php getcourse data in this class. 200912-->
+		<method name="getOnlineUsers">
+			<![CDATA[
+				return this._onlineusers
+			]]>
+		</method>			 
+		<method name="getOfflineUsers" args="allusers">
+			<![CDATA[
+				//there is no trim in javascript
+				//but allusers contains trailing and leaading white space
+				//why(?)
+				allusers= allusers.replace(' ', '');
+				allusers =  allusers.replace('\n', '');
+				allusers =  allusers.replace('\t', '');
+
+				//arrayify the string data we have
+				var offlineUsersArray = allusers.split("\;");
+				var onlineUsersArray = this._onlineusers.split("\;");
+					
+			//remove the online users from the offlineUsersArray
+			//so it lives up to its name.
+			var peername="";
+			for (var peer in onlineUsersArray){
+				peername =  onlineUsersArray[peer];
+				var offlinePeerIndex = -1;
+				for (var offlinepeer in offlineUsersArray){
+					if (offlineUsersArray[offlinepeer] == peername){
+						offlinePeerIndex = offlinepeer;
+						break;
+					}
+				}
+				
+				if(offlinePeerIndex > -1){
+					offlineUsersArray.splice(offlinePeerIndex,1);
+				}
+				return offlineUsersArray.join(";");
+
+			}
+			]]>
+		</method>			 
+
+
+		
+	
+		<!--  open widget code -->
+		<method name="openWidget" args="url,height">
+			<![CDATA[
+					Debug.write("openwidget called");	
+					//js to open the widget frame					
+					var somejs ="var poodllFrame = document.getElementById(\'poodllframe'\);"; 
+					somejs = somejs + "poodllFrame.src=\'" + url + "\'; ";
+					somejs = somejs + "poodllFrame.style.height=\'" + height + "\'; ";
+					somejs = somejs + "poodllFrame.style.display=\'block\'; ";
+					
+					//js to jump to the top of the page, to show this thing
+					var morejs="window.location.hash='POODLLANCHOR'; ";
+					
+					//send the js to browser
+					somejs = morejs + somejs;
+					lz.Browser.loadJS(somejs);
+
+					]]>
+		</method>
+
+		<!--close widget code -->
+		<method name="closeWidget">
+			<![CDATA[
+				var somejs ="var poodllFrame = document.getElementById(\'poodllframe'\);"; 
+				somejs = somejs + "poodllFrame.src=\'about:blank\'; ";
+				somejs = somejs + "poodllFrame.style.display=\'none\'; ";
+				lz.Browser.loadJS(somejs);				
+			]]>
+		</method>
+
+		<!-- Open Interview Panel on Client -->
+		<method name="sendData" args="receiptUser">
+
+			var messageKey = "data:";
+			var sendUser = receiptUser;
+			var messageBody = "blank"; 
+			var messagestring = sendUser + "@" + this.rtmpc.appprofileid + "," + messageKey + messageBody;
+			this.rtmpc.sendMessage([messagestring]);
+			Debug.write("sent Data");									
+			
+		</method>
+
+
+
+
+					<!--Subviews start here -->
+		<!--rtmp connection -->
+		<!-- we set altsrc and src to the same value, to force a reconnect if timeouts, seems to happen, -->
+		<MessagingRtmpConnection name="rtmpc" userid="${classroot.mename}" appprofileid="${classroot.headeridtag}" 
+			src="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}"  
+			altsrc="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}" 
+			debug="false" autoconnect="true">
+
+			<handler name="onpeermessage" args="message">
+				<![CDATA[
+					Debug.write("ConsoleMessage", message);						
+				]]>
+			</handler>
+
+			<!--on connecting we kick off our presence check timer -->
+			<handler name="onconnect">
+				<![CDATA[
+				Debug.write("classroot.presenceinterval",classroot.presenceinterval)
+				if (classroot.presenceinterval > 0){
+					Debug.write("Starting Presence Timer: ", classroot.presenceinterval);
+					lz.Timer.addTimer(classroot.checkPresenceDelegate,classroot.presenceinterval);	
+				}
+				]]>
+			</handler>
+
+			<!--results from the timer started presence checks, will come in here -->
+			<!--to get this information a class needs to listen for the presenceupdate event declared above -->
+			<handler name="ongetpeersresult" args="peerinfo">
+				<![CDATA[
+					Debug.write("Got Peers: ", peerinfo);
+					var peerinfoArray = peerinfo.split("\;");			
+					var peernames="";
+					for (var peer in peerinfoArray){
+						//peerinfo looks like this "user1@pairclient01;user2@interview01"
+						//But we return a string like this "user1,user2,user3"
+						var peername= peerinfoArray[peer].split("@")[0];
+						
+						//remake our peernames string
+						if (peernames ==""){
+							peernames =  peername;
+						}else{
+							peernames = peernames + ";" + peername;
+						}
+					}
+
+					classroot.setAttribute("_onlineusers",peernames);
+					classroot.presenceupdate.sendEvent(peernames);
+
+				]]>
+			</handler>
+		</MessagingRtmpConnection>
+			
+							
+
+			
+	</class>
+</library>

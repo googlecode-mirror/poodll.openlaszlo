@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<class name="ExtendedMediaStream" extends="mediastream">
+	
+		<attribute name="rtmpConnection" setter="this.setConnection"/>
+		
+		<handler name="oninit">
+		
+			Debug.write("New media stream. Url: " + this.url);
+		
+		</handler>
+	
+		<method name="setConnection" args="rtmpConnection">
+		
+			Debug.write("Setting connection " + rtmpConnection);
+			Debug.write("nc before: " + this._nc);
+			Debug.write("url before: " + this.url);
+		
+			this.rtmpConnection = rtmpConnection;
+			_findnc();
+			
+			Debug.write("nc afterwards: " + this._nc);
+			Debug.write("url afterwards: " + this.url);
+		
+		</method>
+		
+		<method name="_findnc">
+		<![CDATA[		
+		
+//			if(this.type == "rtmp" && !this.rtmpConnection){
+			
+				Debug.write("setting nc");
+				Debug.write("url: " + this.url);
+			
+				this._nc = this.rtmpConnection._nc;
+//			} else {
+//			
+//				Debug.write("not setting nc");
+//				super._findnc();
+//			}
+		]]>
+	</method>
+
+
+	</class>
+
+
+</library>

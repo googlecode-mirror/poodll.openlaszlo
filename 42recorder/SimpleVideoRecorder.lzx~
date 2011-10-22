@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas debug="false">
+ <goldstyle name="defaultstyle" isdefault="true"/>
+
+	<include href="VCLibrary.lzx"/>
+
+	<!-- The URL of the Red5 server -->
+	<attribute name="red5url" />
+
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename" />
+	
+	<!-- The id of the control on the enclosing HTMLpage to update with the  filename -->
+	<attribute name="updatecontrol" />
+
+	<!-- UID for ensuring filenames  are unique-->
+	<attribute name="uid" />
+	<attribute name="assigName" />
+
+	<!-- The course id (parent will pass -1 if there is no course id) -->
+	<attribute name="course" />
+
+	<!-- Some camera settings-->
+	<attribute name="capturewidth"/>
+	<attribute name="captureheight"/>
+	<attribute name="capturefps" value="17" />
+
+	<!-- The save name of our file. Added Justin 2009/06/12 -->
+	<attribute name="savefilename" value="''" />
+
+	<!-- Justin 2000/06/12-->
+	<!-- Had many problems keeping this logic central and used with constraints-->
+	<!-- This is not elgant but it works. The job is to start from courseid, if we have one-->
+	<handler name="onfilename">
+		<![CDATA[
+			
+			if (course!=-1){
+				canvas.setAttribute("savefilename", course + '/' + canvas.filename);
+			}else{ 
+				canvas.setAttribute("savefilename",canvas.filename);
+			}
+		]]>
+	</handler>
+	
+	<!-- The server connection -->
+	<rtmpconnection id="rtmpc" src="${unescape(red5url)}"  debug="false">	
+   
+		    
+		<handler name="oninit" >
+		
+			//Justin 2009/06/12 Now tell me this is not a bug.
+			//If we don't do this, the course attribute is not accessible from the same level
+			//as it was defined. It will say "undefined" no matter canvas this or what.			
+			canvas.setAttribute("course", course );
+			canvas.setAttribute("filename", "media/" + assigName + "/" + uid + "/" + Math.floor(Math.random()*100001) + ".flv");
+
+		</handler>
+		
+	   		
+	</rtmpconnection>
+
+	<!-- The recording media stream -->
+	<mediastream id="ms" rtmp="${rtmpc}" type="rtmp" url="${canvas.savefilename}" />
+	<!-- The playing media stream -->
+	 <mediastream id="playstream" rtmp="${rtmpc}" type="rtmp" url="${ms.url}"/>	
+
+	<simplelayout axis="y" spacing="5"/>
+	<tabslider id="vview_tslider" width="${parent.width}" height="${parent.height - (recordButton.height + 8) - 20}" spacing="2" slideduration="300">
+	<!-- tabslider id="vview_tslider" width="400" height="400" spacing="2" slideduration="300" -->
+		<tabelement id="record_tpane" text="Record" selected="true">
+			<videoview bgcolor="#c0f4ad" name="recordview" id="recordview" width="${parent.width}" 
+					height="${parent.height}" stream="${ms}">
+				<!-- The camera object -->
+				<camera id="mycam" show="true">
+					<handler name="oninit">
+						this.setMode(capturewidth,captureheight,canvas.capturefps,true);
+						Debug.write("capturewidth: " + capturewidth);
+						Debug.write("captureheight: " + captureheight);
+						Debug.write("capturefps: " + canvas.capturefps);
+					</handler>
+				</camera>									
+				
+				<!-- The microphone object -->
+				<microphone id="mymic" capturing="true">
+					<handler name="oninit">
+						//this.setAttribute("gain",50);
+						this.setAttribute("rate",22);
+						Debug.write("on init Mike Rate: " + this.rate);
+						//Debug.write("on init Mike Gain: " + this.gain);
+						// getMicrophone().setRate("22");
+					</handler>
+				</microphone>
+			</videoview>
+	</tabelement>
+	<tabelement id="playback_tpane" text="Playback" >
+		<videoview bgcolor="#c0f4ad" name="playview" id="playview"  height="${parent.height}" width="${parent.width}" stream="${playstream}" />
+	</tabelement>
+	</tabslider> 
+
+    
+	 
+	 <view id="bottombar" bgcolor="#bdbdbd" valign="middle" width="${vview_tslider.width}" height="${recordButton.height + 8}">
+      <simplelayout axis="x" spacing="0"  />
+	<rtmpstatus id="statuslight" rtmpc="${canvas.rtmpc}" />	
+	<view id="buttonbar" width="${parent.width-statuslight.width}" height="${parent.height}" valign="middle" >	 
+        <simplelayout axis="x" spacing="5" inset="${(vview_tslider.width- statuslight.width - (recordButton.width * 3) - (5 * 2)) * 0.5}"  />
+        <button id="recordButton" 
+			x="${(vview_tslider.width - (recordButton.width * 3) - (5 * 2)) * 0.5}"
+			width="42" height="42"
+			valign="middle" 
+			enabled="${playstream.playing == false}" 
+			onclick="record()">
+        	<method name="record">
+				canvas.setAttribute("filename", "media/" + assigName + "/" + uid + "/" + Math.floor(Math.random()*100001) + ".flv");
+				ms.setAttribute("url",canvas.savefilename);
+				Debug.write("ms.url:" + ms.url);
+        		mymic.capturing=true;
+        		ms.setAttribute("totaltime", 0);
+			vview_tslider.select(record_tpane);
+        		ms.record();
+				
+				//record the url on the html page	
+				//be careful here, we want moodle to save filename NOT savefilename					
+				//moodle will add the courseid to the filename at runtime.								
+				var somejs='var cbox = document.getElementById(\"' + updatecontrol + '\"); ';
+				somejs = somejs + 'cbox.checked=\"true\"; ';
+				somejs = somejs + 'cbox.value=\"' + canvas.filename +'\"; ';							
+				lz.Browser.loadJS(somejs);					
+				
+        	</method>
+			<view id="micicon" width="32" height="32" x="5" y="5" opacity="${1 - ((ms.recording || playstream.playing ) * 0.8)}" resource="icons/32x32/PlainGreen/RecordNormal.png" ></view>	
+        </button>
+		
+		<button id = "playButton" width="42" height="42" valign="middle" enabled="${!(playstream.playing  || ms.recording  || ms.totaltime == 0)}" onclick="playRecording()">
+			<method name="playRecording" args="">
+				playstream.setAttribute("url",canvas.savefilename);
+				Debug.write("playstream.url:" + playstream.url);
+				vview_tslider.select(playback_tpane);
+				playstream.play();
+			</method>
+			<view id="speakericon" width="32" height="32" x="5" y="5" opacity="${1 - (!playButton.enabled * 0.8)}" resource="icons/32x32/CircleBlue/Play1Normal.png" ></view>	
+		</button>	
+
+		<button
+			id = "stopButton"
+			width="42" 
+			height="42"
+			valign="middle"
+			enabled="${playstream.playing || ms.recording}"
+            onclick="stop()">
+       		<method name="stop" args="">
+				if (playstream.playing){
+					playstream.stop();
+					Debug.write("stopped playing");
+				}else if (ms.recording){
+					ms.stop();
+					Debug.write("stopped recording");
+				}
+       			
+       			
+       		</method>
+			<view id="stopicon" width="32" height="32"  x="5" y="5" opacity="${0.2 + ((playstream.playing || ms.recording) * 0.8)}" resource="icons/32x32/CircleBordered/Stop1NormalRed.png" ></view>	
+        </button>		
+		
+	</view>
+    </view>
+  
+
+</canvas>

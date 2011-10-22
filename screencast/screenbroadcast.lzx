@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+<!-- Library for basetabs component -->
+<include href="lz"/>
+	
+<!-- Use messaging rtmp class to manage peer to remote calls -->
+<include href="../messaging/MessagingRtmpConnection.lzx" />
+<include href="../talkback/justinav/videosettings.lzx" />
+
+<class width="100%" height="100%" name="screenbroadcast" extends="view">
+
+		   
+	<attribute name="red5url" />   
+	<attribute name="broadcastkey" />  
+	<attribute name="capturedevice" />   
+	<attribute name="coursedataurl" />   
+	<attribute name="courseid" />  
+	<attribute name="mename" />  
+	<attribute name="loadjava" />
+	<attribute name="capturesizeindex" value="1" />
+	<attribute name="screencastidtag" value="'screencast01'" />  	
+	
+	
+	<!-- our class for communicating with header clients -->
+	<attribute name="headercomm" />
+
+	<!-- only load up the java when user turns it on 
+	<handler name="onloadjava">
+			Debug.write("onloadjava=", this.loadjava);
+			if (this.loadjava==true){
+				Debug.write("this.onloadjava:completing instantiation");
+				this.poodllcastwidget.completeInstantiation();
+			}
+	</handler>
+	-->
+
+	<!-- 	rtmpconnection  -->	
+	<MessagingRtmpConnection name="screenbroadcastcon" userid="${classroot.mename}" appprofileid="${classroot.screencastidtag}" src="${unescape(classroot.red5url) + '/' + classroot.courseid + '/' + classroot.screencastidtag}" altsrc="${unescape(classroot.red5url) + '/' + classroot.courseid + '/' + classroot.screencastidtag}" debug="false" autoconnect="true">
+		<handler name="onpeermessage" args="message">
+			Debug.write("peermessage_received:",message);
+		</handler>
+		<handler name="onconnect">
+	        Debug.write("connected");
+				<!-- Here we should make sure cameras are set up and clients have been informed; -->
+	    </handler>
+	    <handler name="onerror" >
+	        Debug.write("error ",this.status);
+	    </handler>  
+	</MessagingRtmpConnection>
+		
+	<!-- The media stream -->
+	 <mediastream name="thestream" type="rtmp" url="${classroot.broadcastkey}" rtmp="${classroot.screenbroadcastcon}" />	
+	  
+	<simplelayout axis="y" spacing="2" />
+	<!-- html name="poodllcastwidget" src="${classroot.coursedataurl + 'datatype=poodllcastapplet&amp;courseid=' + classroot.courseid}" 
+			width="${parent.width - 10}" height="${parent.height - 10}" 
+			visible="${parent.visible}"  -->	     
+
+	<html name="poodllcastwidget" src="${classroot.coursedataurl + 'datatype=poodllcastjnlpapplet&amp;courseid=' + classroot.courseid}" 
+		width="${parent.width - 10}" height="${parent.height - 10}" 
+		visible="${parent.visible}" 
+		/>	     
+	 
+	</class>
+</library>

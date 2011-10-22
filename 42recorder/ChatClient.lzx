@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- The chat client. It shows a view per speaker and includes a speakers panel if the chat is moderated -->
+
+<library>
+
+	<!-- The chat streaming client. It is invoked after the
+	invitation process has been handled -->
+
+	<include href="VCLibrary.lzx"/>
+
+	<!-- Initial width and height, necessary to show the modal dialog in all its beauty -->
+	<class name="ChatClient" height="200" width="400">
+	
+		<!-- Flag, if true, we are streaming -->
+		<attribute name="streaming" type="boolean"/>
+		
+		<!-- The Url of the streaming server -->
+		<attribute name="url" type="string" setter="setUrl(url)"/>
+		<!-- The ID of this client -->
+		<attribute name="clientId" type="string" setter="setId"/>
+		<!-- The prefix for the stream -->
+		<attribute name="streamPrefix" type="string" value="videostream_"/>
+		<!-- The room connection -->
+		<attribute name="roomConnection" setter="setRoomConnection"/>
+		<!-- The username -->
+		<attribute name="userName" setter="setUserName"/>
+		
+		<!-- The id of the moderator -->
+		<attribute name="moderatorId" type="string"/>
+		
+		<!-- For an explanation of the strange array notation see http://forum.openlaszlo.org/showthread.php?t=2724 -->
+		<!-- Array of the playviews (the views that show the other users), index: uri -->
+		<attribute name="playViews" value="${[]}"/>
+		<!-- Array of the playviews, index: clientId -->
+		<attribute name="playViewsById" value="${[]}"/>
+		
+		<!-- The clientId of the current speaker -->
+		<attribute name="currentSpeaker" type="string" value=""/>
+		
+		<!-- The x axis offset for the next playview -->
+		<attribute name="xoffset" value="180"/>
+		<!-- The y axis offset for the next playview -->
+		<attribute name="yoffset" value="0"/>
+		<!-- Width of one view -->
+		<attribute name="videoWidth" value="180"/>
+		<!-- Height of one view -->
+		<attribute name="videoHeight" value="200"/>
+		<!-- Number of views in current row -->
+		<attribute name="viewsInCurrentRow" value="0" type="number"/>
+		<!-- maximum number of views in one row -->
+		<attribute name="viewsInOneRow" value="3"/>
+
+		<!-- (Only for moderated chat): Flag that indicates, if we are speaking currently -->
+		<attribute name="speaking" type="boolean" value="false"/>
+		<!-- If true, the chat is moderated -->
+		<attribute name="moderated" type="boolean"/>
+		<!-- The speakers panel -->
+		<attribute name="speakersPanel"/>
+		
+		<!-- The role (invitor/invitee) -->
+		<attribute name="role" setter="setRole"/>
+		
+		<!-- The sendview -->
+		<attribute name="sendView"/>
+
+		<simplelayout axis="x"/>
+
+		<view name="videoContainer">
+			<goldstyle id="mystyle"/>
+			<bluestyle id="speakingstyle"/>
+			<greenstyle id="adminstyle"/>
+			<whitestyle id="defaultstyle" isdefault="true"/>	
+	
+			<simplelayout axis="x" spacing="10"/>
+		</view>		
+
+
+			
+		<modaldialog id="videoDialog" title="Chat Mode">
+			<attribute name="cam" value="false"/>
+			<simplelayout axis="y" spacing="10"/>
+			<text>How do you want to chat?</text>
+			<radiogroup name="videoGroup">
+				<radiobutton value="$once{Camera.get() != null}" selected="true" enabled="$once{Camera.get() != null}">
+					Video/Audio (camera and microphone needed)
+				</radiobutton>
+				<radiobutton value="$once{Camera.get() == null}" text="Audio only (microphone needed)"/>
+				<method event="onvalue" args="v">
+					parent.cam = v;
+				</method>
+			</radiogroup>
+			<button onclick="parent.startChat()">
+				Start chat
+			</button>
+			
+			<method name="startChat">
+				close();
+				parent.sendView = new SendView(parent.videoContainer, 
+					{
+						moderated: parent.moderated,
+						role:parent.role, 
+						cam: this.cam,
+						x: parent.xoffset,
+						y: parent.yoffset,
+						style: mystyle,
+						title: parent.userName,
+						speaking:false
+					}
+				);
+				
+				parent.updateOffsets();				
+				
+				parent.sendView.setRoomConnection(parent.roomConnection);
+				if(streaming){
+					parent.sendView.startStream();
+				}
+			</method>
+			
+		</modaldialog>			
+		
+		<method name="finishInitialisation">
+			<![CDATA[
+				Debug.write("ChatClient: finishInitialisation, moderated: " + this.moderated);
+				streaming = false;				
+				if(this.moderated){
+					this.speakersPanel = new SpeakersPanel(videoContainer,
+						{
+							clientId: id,
+							role: role
+						}
+					);
+					this.speakersPanel.setChatClient(this);
+				}
+				videoDialog.open();
+				if(this.moderated){
+					speakersPanel.setRoomConnection(roomConnection);
+					roomConnection.setQueueHandler(this.speakersPanel);
+				}
+			]]>
+		</method>
+
+		<!-- setter for the URL -->			
+		<method name="setUrl" args="url">
+			this.url = url;
+		</method>
+		
+		<method name="setModerated" args="moderated">
+			this.moderated= moderated;
+			Debug.write("##### moderated: " + this.moderated);
+		</method>
+	
+		<method name="setSpeaking" args="speaking">
+			this.speaking = speaking;
+		</method>
+		
+		<!-- Setter for the user name -->
+		<method name="setUserName" args="userName">
+			this.userName = userName;
+		</method>
+		
+		<!-- Setter for the room connection -->
+		<method name="setRoomConnection" args="roomConnection">
+			this.roomConnection = roomConnection;
+		</method>
+		
+		<method name="roomConnected">
+			Debug.write("roomConnected");
+			if(moderated){
+				if(role=="invitee"){
+					Debug.write("getting invitor");
+					roomConnection.getInvitor();
+				} else {
+					speakersPanel.setModerator(userName + " (you)");
+					this.moderatorId = this.clientId;
+				}
+			}
+			Debug.write("moderatorId: " + moderatorId);
+			Debug.write("clientId: " + clientId);
+		</method>
+
+		<!-- Sets the invitor, args: id, name.
+			 Called by the room connection as a result of getInvitor.
+		 -->
+		<method name="setInvitor" args="id, name">
+			if(this.moderated){
+				Debug.write("*** chatClient.setInvitor *** id: " + id + " name: " + name);
+				speakersPanel.setModerator(name);
+				moderatorId = id;
+				
+				Debug.write("PlayviewsbyId: " + playViewsById);
+				this.moderatorView = playViewsById[id];
+				if(this['moderatorView']){
+					moderatorView.setStyle(adminstyle);
+				}
+			}
+		</method>
+
+		
+		<!-- Setter for the ID -->
+		<method name="setId" args="id">
+			Debug.write("set id: " + id);
+			this.clientId = id;
+			setUrl(this.url + "/" + this.streamPrefix + this.clientId);
+			Debug.write("Setting url: " + this.url);
+		</method>
+		
+		
+		<!-- Someone else enters the room. Start streaming, 
+			 if we don't do it already.
+		 -->
+		<method name="handleRoomJoin" args="clientName">		
+			<![CDATA[
+				Debug.write("handleRoomJoin");		
+				startStream();
+			]]>
+		</method>
+		
+		<!-- A new stream was initiated -->
+		<method name="handleNewStream" args="uri, name, streamId">
+			<![CDATA[
+				Debug.write("New stream with the uri: " + uri + " name: " + name + " streamId " + streamId);
+			
+				startStream();
+				
+				
+				Debug.write("xoffset: " + xoffset);
+				Debug.write("yoffset: " + yoffset);
+				
+				var playView = new PlayVideoView(videoContainer);
+				playView.setX(xoffset);
+				playView.setY(yoffset);
+				updateOffsets();
+				playView.setConnection(roomConnection);
+				playView.playStream(uri, name);
+				playViews[uri] = playView;		
+				playViewsById[streamId] = playView;
+				if(this.moderated && streamId == moderatorId){
+					Debug.write("Setting admin. streamId: " + streamId + " moderatorId: " + moderatorId);
+					playView.setStyle(adminstyle);
+				}
+			]]>
+		</method>
+		
+		<!-- Updates the offsets for the video views -->
+		<method name="updateOffsets">
+			Debug.write("Before updateOffsets. viewsInCurrentRow: "+ this.viewsInCurrentRow + ", xoffset: " + xoffset + ", yoffset: " + yoffset);
+			if(this.viewsInCurrentRow + 1 == viewsInOneRow){
+				this.xoffset = 180;
+				this.yoffset += this.videoHeight;
+				this.viewsInCurrentRow = 0;
+			} else {
+				this.xoffset += this.videoWidth;
+				this.viewsInCurrentRow++;
+			}
+			Debug.write("After updateOffsets. viewsInCurrentRow: "+ this.viewsInCurrentRow + ", xoffset: " + xoffset + ", yoffset: " + yoffset);
+		</method>
+		
+		<!-- called when a stream was closed -->
+		<method name="handleStreamClosed" args="uri, name">
+			Debug.write("Stream closed at: " + uri);
+			
+			playViews[uri].close();
+			
+		</method>
+		
+		<!-- Starts streaming -->
+		<method name="startStream">
+
+			if(!streaming){
+				Debug.write("starting streaming: " + streaming);
+				streaming = true;
+				Debug.write("Streaming? " + streaming);
+			}
+			
+			if(this['sendView']){
+				this.sendView.startStream();
+			}
+			
+		</method>
+		
+		<!-- Sets the current speaker in a moderated chat -->
+		<method name="setCurrentSpeaker" args="newSpeaker">
+			
+			Debug.write("New speaker: " + newSpeaker);
+		
+			var params = newSpeaker.split("covcellSeparator");
+			var speakerId = params[0];
+			var speakerName = params[1];
+						
+			if(speakerId == this.clientId){
+				if(!this.speaking){
+					speakersPanel.unmute();
+					this.speaking = true;
+				} 
+			} else {
+				if(this.speaking){
+					Debug.write("*");
+					speakersPanel.mute();
+					this.speaking = false;
+				}
+			}
+
+			sendView.setSpeaking(this.speaking);
+			
+			this.currentSpeaker = speakerId;
+			
+			if(currentSpeaker != ""){
+				Debug.write("current speaker: " + currentSpeaker);
+				Debug.write("Playviews: " + playViewsById);
+			}
+			
+		</method>
+		
+		<!-- Setter for the role, either "invitor" or "invitee" -->
+		<method name="setRole" args="role">
+			this.role = role;
+		</method>
+
+	</class>
+	
+	<!-- A view for playing streams -->
+	<class name="PlayVideoView" extends="window">
+	
+
+		<simplelayout axis="y" spacing="10"/>
+
+		<!-- The connection -->
+		<attribute name="rtmpConnection"/>
+
+		<!-- The name of the stream -->
+		<attribute name="streamName"/>
+
+		<!-- Setter for the connection -->
+		<method name="setConnection" args="rtmpConnection">
+		
+			this.pStream.setConnection(rtmpConnection);
+			Debug.write("rtmpConnection: " + rtmpConnection);
+		
+		</method>
+		
+		<!-- Plays a stream at the given url with the given name -->
+		<method name="playStream" args="url, name">
+
+			Debug.write("Playing Stream at: " + url);
+			this.setAttribute("title", name);
+			this.streamName = name;
+		
+			playView._setUrl(url);
+			playView.stream.play();
+		</method>
+
+		<!-- Closes the stream -->
+		<method name="close">
+			setAttribute("title", this.streamName + "[disconnected]");
+		</method>
+
+		<ExtendedMediaStream name="pStream" type="rtmp"/>
+
+		<videoview autoplay="true"  name="playView" stream="parent.pStream"/>
+		
+	</class>
+
+</library>

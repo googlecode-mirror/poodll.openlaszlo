@@ -1,0 +1,67 @@
+8
+
+dir
+1686
+http://openmeetings.googlecode.com/svn/branches/dev/laszlo/client/xmlcrm/simplebroadcast
+http://openmeetings.googlecode.com/svn
+
+
+
+2007-09-23T19:20:47.170821Z
+562
+seba.wagner
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+7b01d772-cd2b-0410-8f67-a1032f00e51c
+
+editrecordstream.lzx
+file
+
+
+
+
+2008-11-15T13:38:56.000000Z
+28187ee60fded08773418c15c8a931ce
+2007-09-23T16:09:35.159382Z
+561
+seba.wagner
+
+avlib
+dir
+
+subscribe.lzx
+file
+
+
+
+
+2008-11-15T13:38:56.000000Z
+69008eb9645fe470b49e9be7bc53c879
+2007-09-23T16:09:35.159382Z
+561
+seba.wagner
+
+broadcast.lzx
+file
+
+
+
+
+2008-11-15T13:38:56.000000Z
+a7f433774616b1717a89b549b606ccc1
+2007-09-23T19:20:47.170821Z
+562
+seba.wagner
+

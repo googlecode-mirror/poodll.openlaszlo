@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+		<include href="lz"/>
+		<include href="../messaging/MessagingRtmpConnection.lzx" />
+	<class name="phpheadercommunications" >
+
+		
+		<!-- general attributes -->
+		<attribute name="red5url" />  	
+		<attribute name="mename"  /> 
+		<attribute name="courseid" />  	
+		<attribute name="headeridtag" value="'phpheader01'" />
+
+		
+	
+		<!--  open widget code -->
+		<method name="openWidget" args="url,height">
+			<![CDATA[
+					Debug.write("openwidget called");	
+					//js to open the widget frame					
+					var somejs ="var poodllFrame = document.getElementById(\'poodllframe'\);"; 
+					somejs = somejs + "poodllFrame.src=\'" + url + "\'; ";
+					somejs = somejs + "poodllFrame.style.height=\'" + height + "\'; ";
+					somejs = somejs + "poodllFrame.style.display=\'block\'; ";
+					
+					//js to jump to the top of the page, to show this thing
+					var morejs="window.location.hash='POODLLANCHOR'; ";
+					
+					//send the js to browser
+					somejs = morejs + somejs;
+					lz.Browser.loadJS(somejs);
+
+					]]>
+		</method>
+
+		<!--close widget code -->
+		<method name="closeWidget">
+			<![CDATA[
+				var somejs ="var poodllFrame = document.getElementById(\'poodllframe'\);"; 
+				somejs = somejs + "poodllFrame.src=\'about:blank\'; ";
+				somejs = somejs + "poodllFrame.style.display=\'none\'; ";
+				lz.Browser.loadJS(somejs);				
+			]]>
+		</method>
+
+
+
+
+
+
+					<!--Subviews start here -->
+		<!--rtmp connection -->
+		<!-- we set altsrc and src to the same value, to force a reconnect if timeouts, seems to happen, -->
+		<MessagingRtmpConnection name="rtmpc" userid="${classroot.mename}" appprofileid="${classroot.headeridtag}" 
+			src="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}"  
+			altsrc="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}" 
+			debug="false" autoconnect="true">
+
+			<handler name="onpeermessage" args="message">
+				<![CDATA[
+					Debug.write("ConsoleMessage", message);						
+				]]>
+			</handler>
+		</MessagingRtmpConnection>
+			
+							
+
+			
+	</class>
+</library>

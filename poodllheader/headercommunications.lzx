@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+		<include href="lz"/>
+		<include href="../messaging/MessagingRtmpConnection.lzx" />
+	<class name="headercommunications" >
+
+		<!-- our class for controlling which users are selected -->
+		<!-- we dont use this instead use the thememberlist global from poodllconsole-->
+		<!-- not cool, but instantiation timing issues were around. more time, good to tidy this up-->
+		<attribute name="memberlist" />
+		
+		<!-- general attributes -->
+		<attribute name="red5url" />  	
+		<attribute name="mename"  /> 
+		<attribute name="courseid" />  	
+		
+		<!-- Initially this was hard coded, but the parent class may be communicating with different headers -->
+		<!-- Partic. phpclientheader and clientheader. So they can create instances if this, and chck presence on both -->
+		<!-- attribute name="headeridtag" value="'header01'" -->
+		<attribute name="headeridtag" />
+		
+
+		<!-- attributes for presence updates. Only presenceinterval should be set from outside -->
+		<!-- presenceinterval =0, is presence checking off-->
+		<attribute name="checkPresenceDelegate" value="$once{ new LzDelegate(this, 'checkPresence') }" />  	
+		<attribute name="presenceinterval" value="0" />
+		<attribute name="_onlineusers" />
+		<attribute name="_offlineusers" />
+		<!-- This defaults to one, because we are online. In display we will always subtract 1, ourselves. -->
+		<attribute name="onlineusercount" value="1"/>
+
+
+		
+		<!-- We fire this event to offer other classes the opportunity to know who is online and who is offline -->
+		<event name="presenceupdate" />		
+
+
+		<!--A timer is added to the checkpresence delegate which calls this -->
+		<!--We keep reseting the timer to  get regulare presence updates -->
+		<!--The result of the presence update arrives in rtmpc.ongetpeersresult -->
+		<method name="checkPresence" args="ignore = null">
+			<![CDATA[
+				this.rtmpc.getPeers();
+				if (this.presenceinterval > 0){
+					lz.Timer.resetTimer(this.checkPresenceDelegate, this.presenceinterval);
+				}
+			]]>
+		</method>
+		<handler name="onpresenceinterval">
+				if (this.presenceinterval > 0){
+					lz.Timer.resetTimer(this.checkPresenceDelegate, this.presenceinterval);
+				}
+		</handler>
+		<!--client classes use these methods to get lists of on and offline users-->
+		<!--They can subscribe to the presenceupdate event to get "realtime" notifications of presence updates-->
+		<!--TODO: centralise calls to get php getcourse data in this class. 200912-->
+		<method name="getOnlineUsers">
+			<![CDATA[
+				return this._onlineusers;
+			]]>
+		</method>			 
+		<!-- method name="getOfflineUsers" args="allusers" -->
+		<method name="getOfflineUsers">
+			<![CDATA[
+				Debug.write("returning offlineusers", "@" + this._offlineusers + "@");
+				return this._offlineusers;
+				
+				//what follow is obselete. deletable
+			
+		//	return "admin";
+			//Time this 
+			/*
+			var d = new Date();
+			var curr_hour = d.getHours();
+			var curr_min = d.getMinutes();
+			var curr_sec = d.getSeconds();
+			Debug.write("Begin getoffline users:" + curr_hour + ":" + curr_min + ":" + curr_sec);
+			*/
+		
+
+		/*
+			
+				//there is no trim in javascript
+				//but allusers contains trailing and leaading white space
+				//why(?)
+				allusers= allusers.replace(' ', '');
+				allusers =  allusers.replace('\n', '');
+				allusers =  allusers.replace('\t', '');
+
+				//arrayify the string data we have
+				var offlineUsersArray = allusers.split("\;");
+				var onlineUsersArray = this._onlineusers.split("\;");
+					
+			//remove the online users from the offlineUsersArray
+			//so it lives up to its name.
+			var peername="";
+			for (var peer in onlineUsersArray){
+				peername =  onlineUsersArray[peer];
+				var offlinePeerIndex = -1;
+				for (var offlinepeer in offlineUsersArray){
+					if (offlineUsersArray[offlinepeer] == peername){
+						offlinePeerIndex = offlinepeer;
+						break;
+					}
+				}
+				
+				if(offlinePeerIndex > -1){
+					offlineUsersArray.splice(offlinePeerIndex,1);
+				}
+				return offlineUsersArray.join(";");
+
+			}
+			*/
+			
+			
+			//get end time
+			/*
+			d = new Date();
+			curr_hour = d.getHours();
+			curr_min = d.getMinutes();
+			curr_sec = d.getSeconds();
+			Debug.write("End:" + curr_hour + ":" + curr_min + ":" + curr_sec);
+			*/
+			
+			]]>
+		</method>			 
+	
+		<!--  open widget code -->
+		<method name="openWidget" args="url,height">
+			<![CDATA[
+					Debug.write("openwidget called");	
+					//js to open the widget frame					
+					var somejs ="var poodllFrame = document.getElementById(\'poodllframe'\);"; 
+					somejs = somejs + "poodllFrame.src=\'" + url + "\'; ";
+					somejs = somejs + "poodllFrame.style.height=\'" + height + "\'; ";
+					somejs = somejs + "poodllFrame.style.display=\'block\'; ";
+					
+					//js to jump to the top of the page, to show this thing
+					var morejs="window.location.hash='POODLLANCHOR'; ";
+					
+					//send the js to browser
+					somejs = morejs + somejs;
+					lz.Browser.loadJS(somejs);
+
+					]]>
+		</method>
+
+		<!--close widget code -->
+		<method name="closeWidget">
+			<![CDATA[
+				var somejs ="var poodllFrame = document.getElementById(\'poodllframe'\);"; 
+				somejs = somejs + "poodllFrame.src=\'about:blank\'; ";
+				somejs = somejs + "poodllFrame.style.display=\'none\'; ";
+				lz.Browser.loadJS(somejs);				
+			]]>
+		</method>
+
+		<!-- Open Interview Panel on Client -->
+		<method name="sendData" args="receiptUser">
+			//use this to get online peer list
+			//var onlineUsers = this.rtmpc.getPeers();
+
+			var messageKey = "data:";
+			var sendUser = receiptUser;
+			var messageBody = "blank"; 
+			var messagestring = sendUser + "@" + this.rtmpc.appprofileid + "," + messageKey + messageBody;
+			this.rtmpc.sendMessage([messagestring]);
+			Debug.write("sent Data");									
+			
+		</method>
+
+		<!-- Open Interview Panel on Client -->
+		<method name="sendInterview">
+			//use this to get online peer list
+			//var onlineUsers = rtmpc.getPeers();
+			var messageKey = "intv:";
+			var sendUser = interviewviewholder.memberlist.fetchSelected(this.rtmpc.appprofileid);
+			var messageBody = "blank"; 
+			var messagestring = sendUser + "@" + this.rtmpc.appprofileid + "," + messageKey + messageBody;
+			this.rtmpc.sendMessage([messagestring]);
+			Debug.write("sent Interview");									
+			
+		</method>
+
+		<!-- Open Pairs Panel on Client -->
+		<method name="sendPairs">
+			var messageKey = "pair:";
+			var messageBody = "blank";
+			var sendUser = pairviewholder.pairs.api.fetchpartnerlist(this.rtmpc.appprofileid);
+			if (sendUser == ""){return;}
+			var messagestring = sendUser + "," + messageKey + messageBody;
+			this.rtmpc.sendMessage([messagestring]);
+			Debug.write("sent Pairs");
+		</method>
+
+		<!-- Send an URL jump to Client -->
+		<method name="sendJump" args="url,target">
+			var messageKey = "jump:";
+			var messageBody = url + '@' + target;
+			var sendUser = jumpviewholder.memberlist.fetchSelected(this.rtmpc.appprofileid);
+			if (sendUser == ""){return;}
+			var messagestring = sendUser + "," + messageKey + messageBody;
+			this.rtmpc.sendMessage([messagestring]);							
+			Debug.write("sent Jump");			
+		</method>
+		
+		<!-- Send Poodll Client popup on st pc-->
+		<method name="sendClnt">
+			var messageKey = "clnt:";
+			var messageBody = "blank";
+			var sendUser = moodlestatusviewholder.memberlist.fetchSelected(this.rtmpc.appprofileid);
+			if (sendUser == ""){return;}
+			var messagestring = sendUser + "," + messageKey + messageBody;
+			this.rtmpc.sendMessage([messagestring]);							
+			Debug.write("sent clnt");			
+		</method>
+
+		<!-- Open Broadcasr Panel on Client -->
+		<method name="sendBroadcast">
+			//use this to get online peer list
+			//var onlineUsers = rtmpc.getPeers();
+
+			var messageKey = "bcst:";
+			var messageBody = "blank";
+			var sendUser = screencastviewholder.memberlist.fetchSelected(this.rtmpc.appprofileid);
+			if (sendUser == ""){return;}
+			var messagestring = sendUser + "," + messageKey + messageBody;
+			this.rtmpc.sendMessage([messagestring]);
+			Debug.write("sent Broadcast");									
+			
+		</method>
+		<!-- Close Panel on Client -->
+		<method name="sendShut">
+			//use this to get online peer list
+			//var onlineUsers = this.rtmpc.getPeers();
+
+			var messageKey = "shut:";
+			var messageBody = "blank";
+			var sendUser = "";
+			//var sendUser = thememberlist.fetchSelected(this.rtmpc.appprofileid);
+			if (sendUser == ""){return;}
+			var messagestring = sendUser + "," + messageKey + messageBody;
+			this.rtmpc.sendMessage([messagestring]);
+			Debug.write("sent Shut");									
+			
+		</method>
+
+
+					<!--Subviews start here -->
+		<!--rtmp connection -->
+		<!-- we set altsrc and src to the same value, to force a reconnect if timeouts, seems to happen, -->
+		<MessagingRtmpConnection name="rtmpc" userid="${classroot.mename}" appprofileid="${classroot.headeridtag}" 
+			src="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}"  
+			altsrc="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}" 
+			debug="false" autoconnect="true">
+
+			<handler name="onpeermessage" args="message">
+				<![CDATA[
+					Debug.write("ConsoleMessage", message);						
+				]]>
+			</handler>
+
+			<!--on connecting we kick off our presence check timer -->
+			<handler name="onconnect">
+				<![CDATA[
+				
+				if (classroot.presenceinterval > 0){
+					Debug.write("Starting Presence Timer: ", classroot.presenceinterval);
+					lz.Timer.addTimer(classroot.checkPresenceDelegate,classroot.presenceinterval);	
+				}
+				]]>
+			</handler>
+
+			<!--results from the timer started presence checks, will come in here -->
+			<!--to get this information a class needs to listen for the presenceupdate event declared above -->
+			<handler name="ongetpeersresult" args="peers">
+				<![CDATA[
+					Debug.write("Got Peers: ", peers);
+					var onlineUsers = "";
+					var offlineUsers = "";
+					var peersarray = peers.split("|");
+					if (peersarray.length > 1){
+						var onlineUsersArray = peersarray[0].split("\;");
+						onlineUsers = convertList(onlineUsersArray);
+						
+						var offlineUsersArray = peersarray[1].split("\;");
+						offlineUsers = convertList(offlineUsersArray);
+						
+					}else if(peersarray.length > 0){
+						var onlineUsersArray = peersarray[0].split("\;");
+						var onlineUsers = convertList(onlineUsersArray);					
+					}
+					
+					
+					
+					//var peerinfoArray = peerinfo.split("\;");			
+					//var onlinepeers = convertList(peerinfoArray);
+					/*
+					var peernames="";
+					for (var peer in peerinfoArray){
+						//peerinfo looks like this "user1@pairclient01;user2@interview01"
+						//But we return a string like this "user1,user2,user3"
+						var peername= peerinfoArray[peer].split("@")[0];
+						
+						//remake our peernames string
+						if (peernames ==""){
+							peernames =  peername;
+						}else{
+							peernames = peernames + ";" + peername;
+						}
+					}
+					*/
+
+					classroot.setAttribute("_onlineusers",onlineUsers);
+					classroot.setAttribute("_offlineusers",offlineUsers);					
+					classroot.presenceupdate.sendEvent(onlineUsers);
+					
+					//update our count attributes for use on poodll console main page
+					if(peersarray[0] !=null){
+						classroot.setAttribute("onlineusercount", peersarray[0].split("\;").length);
+					}
+
+				]]>
+			</handler>
+			<method name="convertList" args="thelist">
+				<![CDATA[
+					//peerinfo looks like this "user1@pairclient01;user2@interview01"
+					//But we return a string like this "user1,user2,user3"
+
+					var peernames="";
+					for (var peer in thelist){
+						//peerinfo looks like this "user1@pairclient01;user2@interview01"
+						//But we return a string like this "user1,user2,user3"
+						var peername= thelist[peer].split("@")[0];
+						
+						//remake our peernames string
+						if (peernames ==""){
+							peernames =  peername;
+						}else{
+							peernames = peernames + ";" + peername;
+						}
+					}
+					return peernames;
+					]]>
+			</method>
+		</MessagingRtmpConnection>
+			
+							
+
+			
+	</class>
+</library>

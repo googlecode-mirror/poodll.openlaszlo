@@ -1,0 +1,10 @@
+<pairsets>
+	<teacher name="justin" stream="justintoall"/>
+      <pair name="unassignedusers" dirty="false">
+        <pairelement username="jerry" showname="Jerry Leslie" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/11/f2.jpg" />
+	  	<pairelement username="bob" showname="Bob Haru" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/19/f2.jpg"/>
+	  	<pairelement username="eric" showname="Eric Boo" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/19/f2.jpg"/>
+		<pairelement username="joe" showname="Joe Syun" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/20/f2.jpg"/>
+		<pairelement username="jim" showname="Jim Il" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/22/f2.jpg"/>
+      </pair>	  
+</pairsets>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<include href="incubator/roundrect.lzx" />
+	
+	<resource name="dice_resource" >
+        <frame src="dicepics/dice-1.png"/>
+        <frame src="dicepics/dice-2.png"/>
+		<frame src="dicepics/dice-3.png"/>
+		<frame src="dicepics/dice-4.png"/>
+		<frame src="dicepics/dice-5.png"/>
+		<frame src="dicepics/dice-6.png"/>
+    </resource>
+
+<class name="diceclass" extends="view" resource="dice_resource" xoffset="${this.width / 2}" yoffset="${this.height / 2}" stretches="both" frame="${(this.spinner + 1) / 6}">
+	<attribute name="degree" value="0" />
+	<attribute name="spinner" value="0" />
+	<attribute name="seed" value="0" />
+	
+	<animatorgroup name="diceAnim" start="false" process="simultaneous">
+		<animator name="animrotation" attribute="rotation" to="3600" relative="false" from="0" duration="500" motion="easeout" />
+		<animator name="animspinner" attribute="spinner" to="37" relative="false" from="0" duration="400"  motion="easeout" />
+	</animatorgroup>
+			
+	<method name="roll">
+		if (this.diceAnim.isActive) return;
+		Debug.write("spinner is: ", this.spinner);
+		this.diceAnim.animrotation.setAttribute("to",this.randget(3601));
+		this.diceAnim.animspinner.setAttribute("to",this.randget(37));
+		this.diceAnim.doStart();
+	</method>
+	<method name="randget" args="seed">
+		return Math.floor(Math.random()*seed);
+	</method>
+			
+</class>
+
+	
+<class name="diceview" extends="view" clickable="true">
+
+	<attribute name="dicecount"  value="3" /> 
+	<attribute name="dicesize"  value="200"  /> 
+	<attribute name="usepresets" value="false"  /> 
+
+	<method name="fetchdicepos" args="dicenumber,axis">
+		var ybase = (this.dicesize / 4) * 3;
+		var spacer = this.dicesize /3;
+	
+		switch (axis){
+			case "x":
+				return ybase + ((dicenumber - 1) * (parseInt(this.dicesize) + parseInt(spacer)));
+			
+			
+			
+			case "y": return ybase;
+					break;
+		
+		}
+		
+	</method>
+	
+	
+	<handler name="oninit">
+		<![CDATA[
+		Debug.write("entering loop");
+		var ypos = (this.dicesize / 4) * 3;
+		var spacer = this.dicesize /4;
+		//var spacer = 50;
+		 for (var x=0; x<this.dicecount; x++ ){
+		
+			switch (x){
+				case 0: this.diceone.setAttribute("visible",true);
+						this.diceone.setAttribute("y", ypos);
+						this.diceone.setAttribute("x", fetchdicepos(1,"x"));
+						this.diceone.roll();
+						 Debug.write("diceone x:",this.diceone.x);
+						Debug.write("diceone should be visible now");
+						break;
+						
+				case 1: this.dicetwo.setAttribute("visible",true);
+						this.dicetwo.setAttribute("y", ypos);
+						this.dicetwo.setAttribute("x", fetchdicepos(2,"x"));
+						this.dicetwo.roll();
+						Debug.write("dicetwo x:",this.dicetwo.x);
+						Debug.write("dicetwo should be visible now");
+						break;
+						
+				case 2: this.dicethree.setAttribute("visible",true);
+						this.dicethree.setAttribute("y", ypos);
+						this.dicethree.setAttribute("x", fetchdicepos(3,"x"));
+						this.dicethree.roll();
+						Debug.write("dicethree x:",this.dicethree.x);
+						Debug.write("dicethree should be visible now");
+						break;
+						
+				case 3: this.dicefour.setAttribute("visible",true);
+						this.dicefour.setAttribute("y", ypos);
+						this.dicefour.setAttribute("x",   fetchdicepos(4,"x"));
+						this.dicefour.roll();
+						Debug.write("dicefour should be visible now");
+						break;
+						
+				case 4: this.dicefive.setAttribute("visible",true);
+						this.dicefive.setAttribute("y", ypos);
+						this.dicefive.setAttribute("x", fetchdicepos(5,"x"));
+						this.dicefive.roll();
+						Debug.write("dicefive should be visible now");
+						break;
+						
+				case 5: this.dicesix.setAttribute("visible",true);
+						this.dicesix.setAttribute("y", ypos);
+						this.dicesix.setAttribute("x",  fetchdicepos(6,"x"));
+						this.dicesix.roll();
+						Debug.write("dicesix should be visible now");
+						break;
+			}
+		 }
+		 ]]>
+	</handler>
+	<handler name="onclick">
+		this.diceone.roll();
+		this.dicetwo.roll();
+		this.dicethree.roll();
+		this.dicefour.roll();
+		this.dicefive.roll();
+		this.dicesix.roll();
+	</handler>
+
+	
+	<diceclass name="diceone" width="${classroot.dicesize}" height="${classroot.dicesize}" visible="false" />
+	<diceclass name="dicetwo" width="${classroot.dicesize}" height="${classroot.dicesize}" visible="false" />
+	<diceclass name="dicethree" width="${classroot.dicesize}" height="${classroot.dicesize}" visible="false" />
+	<diceclass name="dicefour" width="${classroot.dicesize}" height="${classroot.dicesize}" visible="false" />
+	<diceclass name="dicefive" width="${classroot.dicesize}" height="${classroot.dicesize}" visible="false" />
+	<diceclass name="dicesix" width="${classroot.dicesize}" height="${classroot.dicesize}" visible="false" />
+	
+</class>
+
+</library>
+

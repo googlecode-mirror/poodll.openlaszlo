@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="500" height="500">
+<include href="scribblepalette.lzx" />	
+<include href="scribblecpanel.lzx" />	
+<include href="../interview/sharedObject.lzx" />	
+<include href="../messaging/MessagingRtmpConnection.lzx" />
+
+		<attribute name="red5url" value="lz.Browser.getInitArg('red5url')"/>  	
+		<attribute name="mename"  value="lz.Browser.getInitArg('mename')" /> 
+		<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />  	
+		<attribute name="boardname" value="lz.Browser.getInitArg('boardname')" />
+		<attribute name="rooms" value="lz.Browser.getInitArg('rooms')" />  			
+		<attribute name="imageurl" value="lz.Browser.getInitArg('imageurl')" />  		
+		<attribute name="headeridtag" value="'scribble01'" />
+
+<!--rtmp connection -->
+		<!-- we set altsrc and src to the same value, to force a reconnect if timeouts, seems to happen, -->
+		<MessagingRtmpConnection name="rtmpc" userid="${canvas.mename}" appprofileid="${canvas.headeridtag}" 
+			src="${unescape(canvas.red5url) + '/' + canvas.courseid +  '/' + canvas.headeridtag}"  
+			altsrc="${unescape(canvas.red5url) + '/' + canvas.courseid +  '/' + canvas.headeridtag}" 
+			debug="false" autoconnect="true">
+
+			<!--on connecting we init the whiteboard shared object with the boardname -->
+			<!--However we only do this if there is no list of drop down rooms available -->
+			<handler name="onconnect">
+					Debug.write("connecting to SO");
+					parent.scribbleview.scribble.api.connectSO(canvas.boardname);
+					Debug.write("connected to SO");
+			</handler>			
+		</MessagingRtmpConnection>
+
+<!--Beginning of scribble view -->
+<view name="scribbleview"  width="${canvas.width}" height="${canvas.height}" bgcolor="green">
+	<simplelayout axis="x" spacing="5" inset="10"/>
+	
+	<scribblepalette name="scribble" y="10" slavemode="false" rtmpc="${canvas.rtmpc}" imageurl="${canvas.imageurl}" width="${parent.width-20}" height="${parent.height-30}" />
+	<text options="ignorelayout" fgcolor="white" align="center" y="${parent.height - (this.height)}">--click HERE to show controls--</text>		
+	<handler name="onclick" >
+			canvas.dostuffdialog.open();
+	</handler>
+	
+</view>
+
+ <modaldialog name="dostuffdialog" width="120" height="150">
+    <view align="center" valign="middle" layout="axis:y; spacing:5">
+      <button align="center" width="100" onclick="canvas.scribbleview.scribble.api.clear();parent.parent.close();" >Clear</button>
+	  <button align="center" width="100" onclick="canvas.scribbleview.scribble.api.goback()" >Go Back</button>
+	  <button align="center" width="100" onclick="parent.parent.close();" isdefault="true">Close</button>
+    </view>
+  </modaldialog>
+
+
+</canvas>

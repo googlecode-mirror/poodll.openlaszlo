@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas debug="false" width="100%" height="100%" >
+ <simplelayout/>
+ <rtmpconnection id="autocon" name="autocon" src="rtmp://192.168.11.215/oflaDemo" autoconnect="false"/>
+<edittext  id="filename" name="filename" fontsize="12" text="test.flv" width="200" /> 
+ <mediastream name="v" type="rtmp" url="${filename.text}"  >
+	<camera show="true"/>
+       <microphone capturing="true"/>
+ </mediastream>
+ <mediastream name="p" type="rtmp" url="${filename.text}"/>
+  <videoview id="recview" stream="v"   />
+  <videoview id="playview"  stream="p"   />
+ 
+
+
+<rtmpstatus/>
+   <view bgcolor="black" width="${v.time/180*v.width}"/>
+	
+   	<button text="record" enabled="${!v.recording}">
+<handler name="onclick">
+		v.setAttribute('url',filename.getText());
+		Debug.write("v.url=", v.url);
+		v.record();
+        </handler>
+</button>
+	<button text="play" enabled="${!p.playing}">
+		<handler name="onclick">
+		p.setAttribute('url',filename.getText());
+		Debug.write("p.url=", p.url);
+		p.play();
+        </handler>
+</button>
+
+   	<button text="stop" >
+        <handler name="onclick" enabled="${p.playing || v.recording}">
+		if (v.recording){
+			v.stop();
+		}
+		if (p.playing){
+			p.stop();
+		}
+        </handler>
+    </button>  
+	<button text="connect">
+        <handler name="onclick">
+            autocon.connect();
+        </handler>
+    </button>  
+
+ 
+</canvas>

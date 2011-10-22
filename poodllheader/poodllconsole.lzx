@@ -1,0 +1,584 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas height="600" width="1000">
+
+
+	<include href="lz"/>	
+	<include href="headercommunications.lzx" />
+	<include href="memberlist.lzx" />
+	<include href="animations.lzx" />	
+	<include href="roundpanel.lzx" />	
+	<include href="../screencast/screenbroadcast.lzx" />
+	<include href="../screencast/cambroadcast.lzx" />
+	<include href="../jumpmaker/jumpmaker.lzx" />
+	<include href="../pairwork/pairlist.lzx" />
+	<include href="../pairwork/pairlistcpanel.lzx" />
+	<include href="../moodlestatus/moodlestatuscpanel.lzx" />
+	<include href="../soundpalette/soundpalette.lzx" />	
+	<include href="../settingspalette/settingspalette.lzx" />	
+	<include href="../scribblepalette/scribblepalette.lzx" />	
+	<include href="../scribblepalette/scribblecpanel.lzx" />		
+	<include href="../interview/sharedObject.lzx" />	
+	<include href="../timers/stopwatchlib.lzx" />
+	<include href="../timers/countdownlib.lzx"/>
+	
+
+	 <!-- fisheye resources -->
+    <resource name="settings_rsc"        src="consoleicons/process.png"        />
+    <resource name="pairs_rsc"         src="consoleicons/headphones.png"         />
+    <resource name="screencast_rsc"    src="consoleicons/television.png" />
+
+	<!-- The Stylesheet: Good for customising -->
+	<stylesheet src="poodll.css" />
+	 
+	<!-- general attributes -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  	
+	<attribute name="mename"  value="lz.Browser.getInitArg('mename')" />
+	<attribute name="usestyle"  value="'goldstyle'" />
+	<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />
+	
+	<!-- screencast attributes -->
+	<attribute name="broadcastkey" value="lz.Browser.getInitArg('broadcastkey')" />  
+	<attribute name="prefcam" value="lz.Browser.getInitArg('prefcam')" />
+	<attribute name="prefmic" value="lz.Browser.getInitArg('prefmic')" />
+
+	<!-- Some camera settings-->
+	<attribute name="capturewidth" value="lz.Browser.getInitArg('capturewidth')" />
+	<attribute name="captureheight" value="lz.Browser.getInitArg('captureheight')" />
+	<attribute name="bandwidth" value="lz.Browser.getInitArg('bandwidth')" />
+	<attribute name="picqual" value="lz.Browser.getInitArg('picqual')" />
+	<attribute name="capturefps" value="lz.Browser.getInitArg('capturefps')"  />
+
+
+
+	
+	<!-- pairwork attributes -->
+	<attribute name="teacherpairstreamname" value="lz.Browser.getInitArg('teacherpairstreamname')" />
+	<attribute name="pairdataurl" value="lz.Browser.getInitArg('pairdataurl')" />
+	<attribute name="coursedataurl" value="lz.Browser.getInitArg('coursedataurl')" />
+	<!-- attribute name="pairsusercount" value="0"  -->
+	
+	<!-- scribble attributes -->
+	<attribute name="boardname" value="'scribbleslave'" />
+	
+	<!-- We use this attribute to changover widget selection and handle animators -->
+	<attribute name="selectedwidget" value="${homeviewholder}" />
+	<attribute name="selectedwidgetanim" value="${settingsviewholder.thesettingspalette.widgetanimview.animlist.value}" />
+	<attribute name="selectedoptionanim" value="${settingsviewholder.thesettingspalette.cpanelanimview.animlist.value}" />
+	
+	<!--   Style for the widget  -->
+	<goldstyle name="goldstyle" isdefault="${this.name == settingsviewholder.thesettingspalette.styleview.stylelist.value}"/>
+	<purplestyle name="purplestyle" isdefault="${this.name == settingsviewholder.thesettingspalette.styleview.stylelist.value}"/>
+	<whitestyle name="whitestyle" isdefault="${this.name == settingsviewholder.thesettingspalette.styleview.stylelist.value}"/>
+	<bluestyle name="bluestyle" isdefault="${this.name == settingsviewholder.thesettingspalette.styleview.stylelist.value}"/>
+	<greenstyle name="greenstyle" isdefault="${this.name == settingsviewholder.thesettingspalette.styleview.stylelist.value}"/>
+	<silverstyle name="silverstyle" isdefault="${this.name == settingsviewholder.thesettingspalette.styleview.stylelist.value}"/>
+	
+		<!--object that handle communications with sts poodll client's headers -->
+	<headercommunications 
+			name="headercomm" 
+			mename="${canvas.mename}" 
+			courseid="${canvas.courseid}" 
+			red5url="${canvas.red5url}" 
+			headeridtag="'header01'"
+			presenceinterval="${1000 * settingsviewholder.thesettingspalette.presenceview.interval.value}" />
+	
+	<!--object that handle communications with st moodle php embed client's headers -->	
+	<headercommunications 
+			name="phpheadercomm" 
+			mename="${canvas.mename}" 
+			courseid="${canvas.courseid}" 
+			red5url="${canvas.red5url}" 
+			headeridtag="'phpheader01'"
+			presenceinterval="${1000 * settingsviewholder.thesettingspalette.presenceview.interval.value}" />		
+			
+	<!--object that handle communications with st moodle php embed client's headers -->	
+	<headercommunications 
+			name="screencastheadercomm" 
+			mename="${canvas.mename}" 
+			courseid="${canvas.courseid}" 
+			red5url="${canvas.red5url}" 
+			headeridtag="'screencast01'"
+			presenceinterval="${1000 * settingsviewholder.thesettingspalette.presenceview.interval.value}" />		
+
+	<!--object that handle communications with st moodle php embed client's headers -->	
+	<headercommunications 
+			name="scribbleheadercomm" 
+			mename="${canvas.mename}" 
+			courseid="${canvas.courseid}" 
+			red5url="${canvas.red5url}" 
+			headeridtag="'scribble01'"
+			presenceinterval="${1000 * settingsviewholder.thesettingspalette.presenceview.interval.value}" />		
+	
+	<!--object that handle communications with st moodle php embed client's headers -->	
+	<headercommunications 
+			name="pairsheadercomm" 
+			mename="${canvas.mename}" 
+			courseid="${canvas.courseid}" 
+			red5url="${canvas.red5url}" 
+			headeridtag="'pairs01'"
+			presenceinterval="${1000 * settingsviewholder.thesettingspalette.presenceview.interval.value}" />			
+	
+				
+			
+
+	<!--method that is called to switch the actie widget -->
+	<method name="selectWidget" args="widgetref">
+		<![CDATA[
+			//exit if we are already selected
+			if (this.selectedwidget == widgetref) return;
+
+			//exit if the widget is mid-transition
+			if (this.selectedwidget.transition != null ){
+				Debug.write(this.selectedwidget.name + " started: ", this.selectedwidget.transition.started);
+			}
+			//do our best to make sure our transitins don't get frazzled
+			if ((this.selectedwidget.transition != null) && (this.selectedwidget.transition.started)) return;
+			this.selectedwidget.transition.stop();
+			
+			
+			//hide currentwidget
+			this.selectedwidget.setAttribute("visible",false);
+			
+
+			//show new widget and set it as current
+			this.setAttribute("selectedwidget",widgetref);
+			this.selectedwidget.setAttribute("visible",true);
+
+		]]>
+	</method>
+	
+	<handler name="oninit" >
+		Debug.write("coursedataurl:" , coursedataurl);
+		Debug.write("courseid:" , courseid);
+		Debug.write("canvas.coursedataurl:" , canvas.coursedataurl);
+		Debug.write("canvas.courseid:" , canvas.courseid);
+		Debug.write("canvas.mename:" , canvas.mename);
+		Debug.write("this.coursedataurl:" , this.coursedataurl);
+		Debug.write("this.courseid:" , this.courseid);
+		Debug.write("this.mename:" , this.mename);
+	</handler>
+	
+
+
+
+	 <resizelayout axis="y" spacing="10"/>
+	 <view name="canvasbackground" resource="$style{'backgroundimage'}" bgcolor="$style{'bgcolor'}" opacity="$style{'opacity'}" stretches="both" width="${parent.width}" height="${parent.height}" options="ignorelayout" />
+	 <!-- The screen is made of three horiz stripes. The top, holds buttons. The bottom, holds branding and session info -->
+	 <!-- The middle holds all the good stuff. The top stripe is declared below. -->
+	  <view name="topstripe" width="${parent.width}" height="100" >
+	  
+		<!-- view name="backtexture" resource="resources/poodlltexture.jpg" opacity="0.1" stretches="both" width="${parent.width}" height="${parent.height}"  -->
+		<view name="background" 
+			bgcolor="$style{'bgcolor'}" 
+			opacity="$style{'opacity'}" 
+			width="${parent.width}" 
+			height="${parent.height}" />
+		<view name="topbuttoncontainer" width="${parent.width}" y="5">			  
+					<attribute name="buttonwidth" value="84" />
+					<attribute name="buttonheight" value="90" />
+					<simplelayout axis="x" inset="${(parent.width -((parent.buttonwidth + this.spacing) * 7) - this.spacing - parent.logo.width - this.spacing) / 2} " spacing="10"/>
+
+		  	<view name="logo" resource="resources/mw_joomla_logo.png" opacity="$style{'opacity'}"  />
+					<consoleiconbutton name="homeButton" text="Home"  iconframe="3"  width="${parent.buttonwidth}" height="${parent.buttonheight}">
+						<handler name="onclick">	
+							Debug.write("home clicked");
+							canvas.selectWidget(homeviewholder);
+						</handler>
+					</consoleiconbutton>		            
+				<!--
+					<consoleiconbutton name="moodlestatusButton" text="Home"  iconframe="3"  width="${parent.buttonwidth}" height="${parent.buttonheight}">
+						<handler name="onclick">	
+							Debug.write("Moodle Status Clicked");
+							canvas.selectWidget(moodlestatusviewholder);
+						</handler>
+					</consoleiconbutton>
+					-->
+					<consoleiconbutton name="pairsButton" text="Pairs"  iconframe="4"  width="${parent.buttonwidth}" height="${parent.buttonheight}">
+						<handler name="onclick">	
+							Debug.write("pairs clicked");
+							canvas.selectWidget(pairviewholder);
+						</handler>
+					</consoleiconbutton>		            
+		            <consoleiconbutton name="screencastButton" text="Screencast"   iconframe="6"  width="${parent.buttonwidth}" height="${parent.buttonheight}">
+						<handler name="onclick">	
+							Debug.write("screencast clicked");
+							canvas.selectWidget(screencastviewholder);
+						</handler>
+					</consoleiconbutton>            
+		            <consoleiconbutton name="jumpButton" text="Jump"   iconframe="13"  width="${parent.buttonwidth}" height="${parent.buttonheight}">
+						<handler name="onclick">	
+							Debug.write("jump clicked");
+							canvas.selectWidget(jumpviewholder);
+						</handler>
+					</consoleiconbutton>         
+		            <consoleiconbutton name="soundsButton" text="Utils"  iconframe="14"  width="${parent.buttonwidth}" height="${parent.buttonheight}">
+						<handler name="onclick">	
+							Debug.write("sounds clicked");
+							canvas.selectWidget(soundviewholder);
+						</handler>
+					</consoleiconbutton>  
+					<!--
+					<consoleiconbutton name="interviewButton" text="Interview"   iconframe="2"  width="${parent.buttonwidth}" height="${parent.buttonheight}">
+						<handler name="onclick">	
+							Debug.write("interview clicked");
+							canvas.selectWidget(interviewviewholder);
+						</handler>
+					</consoleiconbutton>
+					-->
+					<consoleiconbutton name="scribbleButton" text="Scribble"  iconframe="7"  width="${parent.buttonwidth}" height="${parent.buttonheight}">
+						<handler name="onclick">	
+							Debug.write("scribble clicked");
+							canvas.selectWidget(scribbleviewholder);
+						</handler>
+					</consoleiconbutton>
+		            <consoleiconbutton name="settingsButton" text="Settings"  iconframe="12"  width="${parent.buttonwidth}" height="${parent.buttonheight}">
+						<handler name="onclick">	
+							Debug.write("settings clicked");
+							canvas.selectWidget(settingsviewholder);
+						</handler>
+					</consoleiconbutton>            
+			<!-- End of topbuttoncontainer -->		
+			</view>		
+	<!-- End of top stripe -->		
+    </view>
+
+	<view name="middleStripeView" width="${parent.width}" options="releasetolayout">
+	<resizelayout axis="x" spacing="5"/>
+	<view name="optionsView" height="${parent.height}">
+	    
+
+				<!-- The Moodle Status Options Tab-->
+				<animatedview name="moodlestatusoptions" maincolor="$style{'moodlestatuscolor'}" transition="${canvas.selectedoptionanim}" 
+					flatopacity ="$style{'flatopacity'}"
+					visible="${canvas.selectedwidget==moodlestatusviewholder}" height="${parent.height}" width="250">
+					<moodlestatuscpanel headercomm="${canvas.phpheadercomm}" 
+						courseid="${canvas.courseid}"
+						coursedataurl="${canvas.coursedataurl}"					
+					/>
+				<!-- end of jump options -->	
+				</animatedview>	
+				
+				<!-- The Screencast Tab -->
+				<!-- Commented because member list not really required, at this stage for screencast widget Justin 20100522  replaced with screencast main area with cpanel	
+				<animatedview name="screencastoptions" maincolor="$style{'screencastcolor'}" transition="${canvas.selectedoptionanim}" 
+					visible="${canvas.selectedwidget==screencastviewholder}" 
+					flatopacity ="$style{'flatopacity'}"
+					height="${parent.height}" width="360">
+					<simplelayout axis="x" spacing="5" />
+				<cambroadcast 
+						name="cbroadcast"
+						red5url="${canvas.red5url}" 
+						broadcastkey="${canvas.broadcastkey}" 
+						capturedevice="${canvas.capturedevice}" 
+						capturesizeindex="${canvas.capturesizeindex}" 
+						coursedataurl="${canvas.coursedataurl}"
+						headercomm="${canvas.headercomm}"
+						mename="${canvas.mename}"
+						courseid="${canvas.courseid}"
+						width="350"
+				/>	
+				</animatedview>	
+				-->
+				<!--
+					<screenbroadcast 
+						name="sbroadcast"
+						red5url="${unescape(canvas.red5url)}" 
+						broadcastkey="${canvas.broadcastkey}" 
+						capturedevice="${canvas.capturedevice}" 
+						capturesizeindex="${canvas.capturesizeindex}" 
+						coursedataurl="${canvas.coursedataurl}"
+						headercomm="${canvas.headercomm}"
+						visible="${parent.visible}" 
+						mename="${canvas.mename}"
+						courseid="${canvas.courseid}"		
+						width="325"
+						/>
+						-->
+						<!--    
+								visible="${parent.visible &amp;&amp; settingsviewholder.thesettingspalette.screencastview.usejavascreencast }"
+								loadjava="${settingsviewholder.thesettingspalette.screencastview.usejavascreencast.value}" 
+
+						-->	
+
+						
+				
+					<!--   visible="${!settingsviewholder.thesettingspalette.screencastview.usejavascreencast.value}" -->	
+				<!-- end of screencast options -->	
+				
+				<!-- tabelement -->	
+			
+			
+			
+			
+				<!-- The Jump to a URL Tab -->
+				<!-- tabelement id="jumptab" text="Jump" selected="true" -->
+				<animatedview name="jumpoptions" maincolor="$style{'jumpcolor'}" transition="${canvas.selectedoptionanim}" 
+					flatopacity ="$style{'flatopacity'}"
+					visible="${canvas.selectedwidget==jumpviewholder}" height="${parent.height}" width="250">
+					<jumpmaker headercomm="${settingsviewholder.thesettingspalette.clienttypeview.clienttype.value}" 
+						courseid="${canvas.courseid}"
+						coursedataurl="${canvas.coursedataurl}"					
+					/>
+				<!-- end of jump options -->	
+				</animatedview>	
+				<!-- tabelement -->				
+
+				<!-- The Pairwork Tab -->
+				<!-- tabelement id="pairtab" text="Pairs" selected="false" -->
+				<animatedview name="pairoptions"  maincolor="$style{'paircolor'}" transition="${canvas.selectedoptionanim}"  
+					flatopacity ="$style{'flatopacity'}"
+					visible="${canvas.selectedwidget==pairviewholder}" height="${parent.height}" width="200">
+					 <simplelayout axis="y" spacing="10"/>
+					<pairlistcpanel refpairlist="${thepairlist}" />
+				<!-- end of pair options -->
+				</animatedview>	
+				<!-- tabelement -->						
+
+				
+
+				<!-- The Other Tab (miscellaneous) -->
+				<!-- tabelement id="interviewtab" text="Other" selected="false" -->
+				<animatedview name="interviewoptions"  maincolor="$style{'interviewcolor'}" transition="${canvas.selectedoptionanim}"  
+					flatopacity ="$style{'flatopacity'}"
+					visible="${canvas.selectedwidget==interviewviewholder}" height="${parent.height}" width="200">
+					<button name="sendInterview" text="Interview" height="${50}">
+						<handler name="onclick">
+							canvas.headercomm.sendInterview();
+							var so = new lz.sharedObject(this.parent,{'name': 'myso', 'so_persist': 'false', 'rtmpc': canvas.headercomm.rtmpc, 'red5url' : canvas.red5url});
+							so.so.setProperty=("fruit","avocado");
+						</handler>
+					</button>
+				<!-- end of interview options -->
+				</animatedview>
+				<!-- tabelement -->	
+
+			
+				<!-- tabelement id="scribbletab" text="Scribble" selected="false" -->
+				<animatedview name="scribbleoptions"  maincolor="$style{'scribblecolor'}" transition="${canvas.selectedoptionanim}"  
+					flatopacity ="$style{'flatopacity'}"				
+					visible="${canvas.selectedwidget==scribbleviewholder}" height="${parent.height}" width="200">
+					<scribblecpanel refscribblepalette="${scribbleviewholder.thescribblepalette}" />
+				<!-- end of interview options -->
+				</animatedview>
+
+							
+				<!-- tabelement -->				
+			<!-- tabslider -->
+		<!-- end of options view -->
+		</view>
+
+		<!-- The Widgets (ie the guts of the page) -->
+		<view name="bodyView" height="${parent.height}" options="releasetolayout"  >
+		
+					<!-- The php moodle users status widget -->
+					<animatedview name="homeviewholder" maincolor="$style{'moodlestatuscolor'}" transition="${canvas.selectedwidgetanim}" 
+						flatopacity ="$style{'flatopacity'}"					
+						id="homeviewholder"  width="${parent.width}" height="${parent.height}" visible="true">
+						
+						<view align="center" width="${(330 * 2) + (20 *2)}">
+							<wrappinglayout axis="x" spacing="20" />
+
+							<roundpanel width="330" height="150"
+									borderColor="0x0000FF" iconFrame="3" 
+									backgroundStartColor="0x333333"
+									backgroundStopColor="0x555555"
+									showText="'Moodle Course'"
+									userCount="${canvas.phpheadercomm.onlineusercount - 1}" />	
+
+							<roundpanel width="330" height="150"
+									borderColor="0x0000FF" iconFrame="4" 
+									backgroundStartColor="0x333333"
+									backgroundStopColor="0x555555"
+									showText="'Pairwork'"
+									userCount="${canvas.pairsheadercomm.onlineusercount - 1}"  />	
+									
+							<roundpanel width="330" height="150"
+									borderColor="0x0000FF" iconFrame="7" 
+									backgroundStartColor="0x333333"
+									backgroundStopColor="0x555555"
+									showText="'Whiteboard'"
+									userCount="${canvas.scribbleheadercomm.onlineusercount - 1}"  />	
+									
+							<roundpanel width="330" height="150"
+									borderColor="0x0000FF" iconFrame="6" 
+									backgroundStartColor="0x333333"
+									backgroundStopColor="0x555555"
+									showText="'Screencast'"
+									userCount="${canvas.screencastheadercomm.onlineusercount - 1}"  />		
+									
+						</view>
+								
+					</animatedview>
+		
+		
+		
+					<!-- The php moodle users status widget -->
+					<animatedview name="moodlestatusviewholder" maincolor="$style{'moodlestatuscolor'}" transition="${canvas.selectedwidgetanim}" 
+						flatopacity ="$style{'flatopacity'}"					
+						id="moodlestatusviewholder"  width="${parent.width}" height="${parent.height}" visible="false">
+						<memberlist 
+							name="memberlist"	
+							courseid="${canvas.courseid}"
+							red5url="${unescape(canvas.red5url)}" 
+							coursedataurl="${canvas.coursedataurl}" 
+							headercomm="${canvas.phpheadercomm}"
+							settings="${settingsviewholder.thesettingspalette}"
+							mename="${canvas.mename}">							
+						</memberlist>
+						
+					</animatedview>
+		
+						<!-- The Screencast Widget -->
+					<!-- Commented because member list not really required, at this stage for screencast widget Justin 20100522  replaced with screencast cpanel	
+					<animatedview name="screencastviewholder" maincolor="$style{'screencastcolor'}" transition="${canvas.selectedwidgetanim}" 
+						flatopacity ="$style{'flatopacity'}"
+						id="screencastviewholder"  width="${parent.width}" height="${parent.height}" visible="false">						
+						<memberlist 
+							name="memberlist"	
+							courseid="${canvas.courseid}"
+							red5url="${unescape(canvas.red5url)}" 
+							coursedataurl="${canvas.coursedataurl}" 
+							headercomm="${settingsviewholder.thesettingspalette.clienttypeview.clienttype.value}"
+							settings="${settingsviewholder.thesettingspalette}"
+							mename="${canvas.mename}">	 						
+						</memberlist>
+						
+					</animatedview>
+					-->
+					
+				<animatedview name="screencastviewholder" maincolor="$style{'screencastcolor'}" transition="${canvas.selectedwidgetanim}" 
+						flatopacity ="$style{'flatopacity'}"
+						id="screencastviewholder"  width="${parent.width}" height="${parent.height}" visible="false">
+						<!--  simplelayout axis="x" spacing="5"  -->
+						<cambroadcast align="center"
+								name="cbroadcast"
+								red5url="${canvas.red5url}" 
+								broadcastkey="${canvas.broadcastkey}" 
+								prefcam="canvas.prefcam"
+								prefmic="canvas.prefmic"
+								capturewidth="canvas.capturewidth"
+								captureheight="canvas.captureheight"
+								bandwidth="canvas.bandwidth"
+								picqual="canvas.picqual"
+								capturefps="canvas.capturefps"
+								coursedataurl="${canvas.coursedataurl}"
+								headercomm="${canvas.headercomm}"
+								mename="${canvas.mename}"
+								courseid="${canvas.courseid}"
+								width="350"
+						/>	
+				</animatedview>	
+				
+					<!-- The Pair Widget -->
+					<animatedview name="pairviewholder"  maincolor="$style{'paircolor'}" transition="${canvas.selectedwidgetanim}" 
+						flatopacity ="$style{'flatopacity'}"					
+						id="pairviewholder" width="${parent.width}" height="${parent.height}" visible="false">
+						<pairlist 
+							id="thepairlist"
+							name="pairs"	
+							courseid="${canvas.courseid}"
+							red5url="${unescape(canvas.red5url)}" 
+							teacherpairstreamname="${canvas.teacherpairstreamname}" 				
+							coursedataurl="${canvas.coursedataurl}" 
+							headercomm="${canvas.headercomm}"
+							settings="${settingsviewholder.thesettingspalette}"
+							mename="${canvas.mename}"
+							showvideo="${settingsviewholder.thesettingspalette.showvideopairsview.showvideos.value}"
+							width="${parent.width}" 
+							height="${parent.height}" 
+						/>
+					</animatedview>
+					
+					<!-- The Jump Widget -->
+					<animatedview name="jumpviewholder" maincolor="$style{'jumpcolor'}" transition="${canvas.selectedwidgetanim}" 
+						flatopacity ="$style{'flatopacity'}"					
+						id="jumpviewholder"  width="${parent.width}" height="${parent.height}" visible="false">
+						<memberlist 
+							name="memberlist"	
+							courseid="${canvas.courseid}"
+							red5url="${unescape(canvas.red5url)}" 
+							coursedataurl="${canvas.coursedataurl}" 
+							headercomm="${settingsviewholder.thesettingspalette.clienttypeview.clienttype.value}"
+							settings="${settingsviewholder.thesettingspalette}"
+							mename="${canvas.mename}">							
+						</memberlist>
+						
+					</animatedview>
+					
+					<!-- The Interview Widget -->
+					<animatedview name="interviewviewholder" maincolor="$style{'interviewcolor'}" transition="${canvas.selectedwidgetanim}" 
+						flatopacity ="$style{'flatopacity'}"					
+						id="interviewviewholder"  width="${parent.width}" height="${parent.height}" visible="false">
+						<memberlist 
+							name="memberlist"	
+							courseid="${canvas.courseid}"
+							red5url="${unescape(canvas.red5url)}" 
+							coursedataurl="${canvas.coursedataurl}" 
+							headercomm="${settingsviewholder.thesettingspalette.clienttypeview.clienttype.value}"
+							settings="${settingsviewholder.thesettingspalette}"
+							mename="${canvas.mename}">							
+						</memberlist>						
+					</animatedview>
+					
+					<!-- The Sound Widget -->
+					<animatedview name="soundviewholder" maincolor="$style{'soundcolor'}" transition="${canvas.selectedwidgetanim}" 
+						flatopacity ="$style{'flatopacity'}"
+						id="soundviewholder"  width="${parent.width}" height="${parent.height}" visible="false">
+						<basetabs align="center" name="utilstabs" y="10" bordersize="5" tabclass="tab">
+							<basetabpane name="soundtab" text="Sounds" bgcolor="#cbcbcb">
+								<soundpalette width="750" height="250" />						
+							</basetabpane>
+							<basetabpane name="stopwatchtab" text="Stopwatch" bgcolor="#cbcbcb" >
+								<stopwatchview width="750" height="250" fontheight="78" />						
+							</basetabpane>
+							<basetabpane name="countdowntab" text="Countdown" bgcolor="#cbcbcb" >
+								<countdownview initseconds="120" usepresets="true" fontheight="64" width="${750}" height="${250}" />
+							</basetabpane>
+						</basetabs>
+					</animatedview>
+					
+					<!-- The Scribble Widget -->
+					<animatedview name="scribbleviewholder" maincolor="$style{'scribblecolor'}" transition="${canvas.selectedwidgetanim}" 
+						flatopacity ="$style{'flatopacity'}"
+						id="scribbleviewholder"  width="${parent.width}" height="${parent.height}" visible="false">					
+						<scribblepalette name="thescribblepalette" rtmpc="${canvas.headercomm.rtmpc}"  >
+							<handler name="oninit" >
+									this.api.connectSO(canvas.boardname);
+									Debug.write("connected to SO:", canvas.boardname);
+									Debug.write("boardwidth:", this.width);
+									Debug.write("boardheight:", this.height);
+							</handler>
+						</scribblepalette>
+					</animatedview>
+					
+					<!-- The Settings Widget -->
+					<animatedview name="settingsviewholder" maincolor="$style{'settingscolor'}" transition="${canvas.selectedwidgetanim}" 
+						flatopacity ="$style{'flatopacity'}"
+						id="settingsviewholder"  width="${parent.width}" height="${parent.height}" visible="false">
+						<settingspalette headercomm="${canvas.headercomm}"  phpheadercomm="${canvas.phpheadercomm}" name="thesettingspalette"  width="${parent.width}" height="${parent.height}" />						
+					</animatedview>
+
+		<!-- end of bodyview -->
+		</view>
+
+	<!-- end of middleStripeView -->
+	</view>		
+	<view name="lowerstripe" 
+		height="80" 
+		width="${parent.width}">
+		
+		<view name="background" 
+			bgcolor="$style{'bgcolor'}" 
+			opacity="$style{'opacity'}" 
+			width="${parent.width}" 
+			height="${parent.height}" />
+	
+	</view>
+
+
+				
+
+
+	
+		
+</canvas>

@@ -1,0 +1,42 @@
+
+<mediaresource>
+	<mediapath>audio_success_01/conversation.mp3</mediapath>
+	<roleAName>Boy</roleAName>	
+	<roleBName>Girl</roleBName>	
+	<segment>
+		<splash>http:./splash1.jpg</splash>
+		<mutestart><A>12</A><B>15</B></mutestart>
+		<muteend><A>15</A><B>16</B></muteend>
+		<start>12</start>
+		<end>16</end>
+		<speech>Is this seat taken?</speech>
+		<title>One</title>
+	</segment>
+	<segment>
+		<splash>http:./splash2.jpg</splash>
+		<mutestart><A>16.2</A><B>18</B></mutestart>
+	        <muteend><A>18</A><B>19.4</B></muteend>
+	        <start>16.2</start>
+	        <end>19.4</end>
+		<speech>Where are you going?</speech>
+		<title>Two</title>
+	</segment>
+	<segment>
+		<splash>http:./splash3.jpg</splash>
+		<mutestart><A>19.5</A><B>22</B></mutestart>
+	        <muteend><A>22</A><B>24.8</B></muteend>
+	        <start>19.5</start>
+	        <end>24.8</end>
+		<speech>Really? Vancouver is beautiful.</speech>
+		<title>Three</title>
+	</segment>
+	<segment>
+		<splash>http:./splash4.jpg</splash>
+		<mutestart><A>25</A><B>28</B></mutestart>
+		<muteend><A>28</A><B>30</B></muteend>
+	        <start>25</start>
+	        <end>30</end>
+		<speech>Your hometown? It's mine, too.</speech>
+		<title>Four</title>
+	</segment>
+</mediaresource>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--- 
+This class is for handling the mechanics of peer messaging
+between like apps. It is intended to be generic so that
+poodle does not need new methods as new laszlo clients 
+are developed, and so that multiple laszlo clients
+can use without stepping on each other.
+
+TODO: Need to implement contactPeer and RegisterPeer on server
+Also need to figure our how to pass args
+
+Justin 20090515
+-->
+
+<library>
+
+<class name="postie" extends="view">
+
+<include href="./ExtendedRtmpConnection.lzx" />
+
+		<!-- The url of the red5 server -->
+		<attribute name="red5url" value="" />
+		<!-- The id of the logged in user -->
+		<attribute name="userid" value="" />
+		<!-- The app profile to use
+		The apps do not need to be the same
+		just able to support the same set of messages -->
+		<attribute name="appprofileid" value="" />		
+		<!-- client id -->
+		<attribute name="connid" value="" />
+
+
+		<!-- The server connection -->
+		<ExtendedRtmpConnection name="autocon" src="${red5url}" autoconnect="true" >
+
+			<!-- Remote call stub for server's contactPeer method -->
+			<!-- This could be renamed callSendMessage , to be easy to understand-->
+			<ExtendedNetRemoteCall id="callContactPeer" funcname="contactPeer">
+				<method name="onStatus" args="info">
+					Debug.write("Status:" + info.code);
+				</method>
+				<method name="onResult" args="info">
+					Debug.write("onResult:" + info.code);
+				</method>
+			</ExtendedNetRemoteCall>
+
+			<!-- Remote call stub for server's registerPeer method -->
+			<ExtendedNetRemoteCall id="callRegisterPeer" funcname="registerPeer">
+				<method name="onStatus" args="info">
+					Debug.write("Status:" + info.code);
+				</method>
+				<method name="onResult" args="info">
+					Debug.write("onResult:" + info.code);
+				</method>
+			</ExtendedNetRemoteCall>
+
+			<!-- Register with server in order to be able to receive messages -->
+			<handler name="onconnect">
+				//We should send up our app profile, and userid, and connid
+				var args=[userid + "@" + appprofileid, connid];
+		  		callRegisterPeer.callRemoteFunction(args);
+		  	</handler>
+
+		</ExtendedRtmpConnection>
+
+
+
+<!-- The main method called from server -->
+<method name="receiveMessage" args="message">
+	var processedMessage = message;
+	//raise an event and send it
+	//our parent app should be listening for these events
+
+</method>
+
+
+<!-- The main method called from the parent app into this class -->
+<!-- We process the args and send them on -->
+<method name="sendMessage" args="message">
+	var processedMessage = message;
+	callContactPeer.callRemoteFunction(processedMessage);
+</method>
+
+
+<!-- The method is called from server and tells us our unique connection id -->
+<method name="setId" args="id">
+		this.connid=id;
+		Debug.write("setId:" + id);
+
+</method>
+
+
+</class>
+
+
+
+        
+</library>

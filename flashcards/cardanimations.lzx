@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<include href="incubator/roundrect.lzx" />
+	
+	<!-- This should be separate class -->
+	<!-- When time lets class-ify it -->
+	<class name="animations">
+		<attribute name="cardtarget" value="null" />
+		<animatorgroup target="$once{classroot.cardtarget}" name="anmSlideInRight" start="false" process="simultaneous">
+			<animator name="topanim" attribute="x" from="${-1 * parent.target.cardwidth}" to="${(parent.target.classroot.width - parent.target.cardwidth) /2 }" duration="1000" motion="easeout" />
+		</animatorgroup>
+		<animatorgroup target="$once{classroot.cardtarget}" name="anmSlideAwayRight" start="false" process="sequential">
+			<animator name="topanim" attribute="x" from="${(parent.target.classroot.width - parent.target.cardwidth) /2 }" to="${parent.target.classroot.width}" duration="1000" motion="easeout" />
+			<animator name="returnanim" attribute="showingfront" to="${true}" duration="1" motion="linear"/>
+		</animatorgroup>
+		<animatorgroup target="$once{classroot.cardtarget}" name="anmSlideInLeft" start="false" process="sequential">		
+			<animator name="topanim" attribute="x" from="${parent.target.classroot.width}" to="${(parent.target.classroot.width - parent.target.cardwidth) /2 }" duration="1000" motion="easeout" />				
+		</animatorgroup>
+		<animatorgroup target="$once{classroot.cardtarget}" name="anmSlideAwayLeft" start="false" process="sequential">
+			<animator name="topanim" attribute="x" from="${(parent.target.classroot.width - parent.target.cardwidth) /2}" to="${-1 * parent.target.cardwidth}" duration="1000" motion="easeout" />
+			<animator name="returnanim" attribute="showingfront" to="${true}" duration="1" motion="linear"/>
+		</animatorgroup>
+		<animatorgroup target="$once{classroot.cardtarget}" name="anmSwivelCard" start="false" process="sequential">
+			<animatorgroup target="$once{classroot.cardtarget}" name="anmSwivelOut" start="false" process="simultaneous">
+				<animator name="anmThin" attribute="width" to="0" from="${parent.target.cardwidth}" duration="150" motion="linear"/>
+				<animator name="anmThinCentre" attribute="x" relative="true" to="${parent.target.cardwidth / 2}" duration="150" motion="linear"/>
+			</animatorgroup>			
+			<animator name="anmToggle" attribute="showingfront" to="${!classroot.cardtarget.showingfront}" duration="1" motion="linear"/>
+			<animatorgroup target="$once{classroot.cardtarget}" name="anmSwivelIn" start="false" process="simultaneous">
+				<animator name="anmFatCentre" attribute="x" relative="true" to="${parent.target.cardwidth / (-2)}" duration="150" motion="linear"/>
+				<animator name="anmFat" attribute="width" to="${parent.target.cardwidth}" from="0" duration="150" motion="linear"/>
+			</animatorgroup>
+		</animatorgroup>
+		<animatorgroup name="anmFadeIn" start="false" process="simultaneous">
+			<animator name="topanim" attribute="opacity" from="0" to="$style{'fadeopacity'}" duration="1000" motion="linear"/>
+		</animatorgroup>
+		<animatorgroup target="$once{classroot.cardtarget}" name="anmFadeOut" start="false" process="simultaneous">
+			<animator name="topanim" attribute="opacity" from="$style{'fadeopacity'}" to="0" duration="1000" motion="linear"/>
+		</animatorgroup>
+		<animatorgroup target="$once{classroot.cardtarget}" name="anmSlideUp" start="false" process="simultaneous">
+			<animator name="topanim" attribute="y" from="${parent.target.height}" to="1" duration="1000" motion="easeout" />	
+		</animatorgroup>
+		<animatorgroup target="$once{classroot.cardtarget}" name="anmSlideDown" start="false" process="simultaneous">
+			<animator name="topanim" attribute="y" from="${-1 * parent.target.height}" to="1" duration="1000" motion="easeout" />		
+		</animatorgroup>
+	</class>
+	<class name="animatedview" extends="roundrect" clip="true">
+			<attribute name="_transition" value="$once{transitions.anmSlideInRight}" />
+			<attribute name="_swiveltransition" value="$once{transitions.anmSwivelCard}" />
+			<attribute name="maincolor" type="color" value="white" />
+			<attribute name="onscreen" value="false" />
+			<attribute name="defaultfontsize" value="14" />
+			<attribute name="cardwidth" value="150" />
+			<attribute name="cardheight" value="100" />
+			<attribute name="showingfront" value="true" />
+			
+			<!--  Due to Openlaszlo 4.7 bug, replace these with bgcolor -->
+			<!--  or compile to 4.3 Justin 20100125 -->
+			<attribute name="backgroundStartColor" type="color" value="${this.maincolor}" />
+			<attribute name="backgroundStopColor" type="color" value="${this.maincolor * 0.95}" />
+			<!-- attribute name="bgcolor" type="color" value="${this.maincolor}" -->
+
+			<attribute name="flatopacity" value="0.6" />
+			<attribute name="backgroundStartOpacity" value="${this.flatopacity}" />
+			<attribute name="backgroundStopOpacity" value="${this.flatopacity}" />               
+			<attribute name="bordersize" value="2" />
+			
+			<!-- we need to do this in order to call drawstructure, else non size changes don't trigger the redraw -->
+			<handler name="onmaincolor">
+				this.setAttribute("backgroundStartColor", this.maincolor);
+				this.setAttribute("backgroundStopColor", this.maincolor * 0.9);
+				this.drawStructure();			
+			</handler>
+			
+			<method name="setTransition" args="newtransition">
+				<![CDATA[
+					switch (newtransition){
+						case "anmSlideInLeft":
+								this._transition=transitions.anmSlideInLeft;
+								break;
+						case "anmSlideAwayLeft":
+								this._transition=transitions.anmSlideAwayLeft;
+								break;
+						case "anmSlideInRight":
+								this._transition=transitions.anmSlideInRight;
+								break;
+						case "anmSlideAwayRight":
+								this._transition=transitions.anmSlideAwayRight;
+								break;
+						
+					}				
+				]]>			
+			</method>
+			<method name="swivelcard" args="">
+				<![CDATA[
+						//if (!this._transition.started){
+						if (!this._transition.isactive){
+							this._swiveltransition.doStart();
+							//this._swiveltransition.setAttribute("started",true);
+						}
+				]]>
+			</method>
+			<handler name="ononscreen">
+				<![CDATA[
+						//if(!this._swiveltransition.started){
+						if(!this._swiveltransition.isactive){
+							this._transition.doStart();
+							//this._transition.setAttribute("started",true);
+						}
+						
+				]]>
+			</handler>				
+			<animations name="transitions" cardtarget="${this.parent}"/>
+	</class>
+	
+</library>

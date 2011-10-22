@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas debug="false">
+		
+		<include href="lz"/>
+		<include href="../talkback/justinav/justinvideoplayer.lzx"/>
+		
+		<!-- The URL of the Red5 server -->
+		<attribute name="red5url" />
+		
+		<!-- The type of player -->
+		<attribute name="playertype"  />
+		
+		<!-- The video to be played -->
+		<attribute name="mediapath"  />
+		
+		<!-- The background color -->
+		<attribute name="playerbackcolor" value="0x9abce5" />
+		
+		<!-- The font color -->
+		<attribute name="playerfontcolor" value="0x550000" />
+
+
+		<method name="seturl" args="a">
+			canvas.rtmpplayer.vscreen.ms.stop();
+			Debug.write("setting url now:", a);
+			canvas.rtmpplayer.vscreen.ms.setAttribute("url",a) ;
+			canvas.rtmpplayer.vscreen.ms.play();
+		</method>
+
+	<rtmpconnection id="autocon" name="autocon" src="${red5url}" autoconnect="true"/>
+
+	<justinvideoplayer name="rtmpplayer"  bgcolor="${canvas.playerbackcolor}" fontcolor="${canvas.playerfontcolor}" rtmp="${canvas.autocon}" type="${playertype}" url="${mediapath}" showscreen="true" autoplay="false" width="${parent.width}" height="${parent.height}" />
+
+
+    
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006 Laszlo Systems, Inc. All Rights Reserved.                    *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->
+

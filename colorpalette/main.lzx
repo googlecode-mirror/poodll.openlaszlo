@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<canvas>
+
+   <include href="components/color_picker.lzx"></include>
+   <include href="components/color_field.lzx"></include>
+   
+   <colorfield name="colorBox1" x="10" y="10" colorval="0xff0000"></colorfield>
+   <colorfield name="colorBox2" x="200" y="10" colorval="0xff0000"></colorfield>    
+   
+   <view width="150" height="150" x="10" y="50" name="swatch1" bgcolor="${parent.colorBox1.colorval}"></view>   
+   <view width="150" height="150" x="200" y="50" name="swatch2" bgcolor="${parent.colorBox2.colorval}"></view>
+     
+</canvas>

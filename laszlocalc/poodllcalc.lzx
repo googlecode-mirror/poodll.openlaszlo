@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+	<include href="poodllcalclib.lzx"/>	
+	  <!-- Uncomment to include fonts for SWF -->
+  <!-- fonts -->
+  <!--
+  <font src="helmetbi.ttf" name="obliqueText" />
+  <font src="helmetr.ttf" name="displayText" />
+  -->
+	<poodllcalc  width="${parent.width}" height="${parent.height}" />
+</canvas>

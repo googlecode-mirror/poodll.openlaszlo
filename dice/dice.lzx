@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+
+	<include href="dicelib.lzx"/>
+	<attribute name="dicecount"  value="lz.Browser.getInitArg('dicecount')" /> 
+	<attribute name="dicesize"  value="lz.Browser.getInitArg('dicesize')" /> 
+	
+	<diceview dicecount="${canvas.dicecount}" dicesize="${canvas.dicesize}" usepresets="false"  width="${parent.width}" height="${parent.height}" />
+</canvas>

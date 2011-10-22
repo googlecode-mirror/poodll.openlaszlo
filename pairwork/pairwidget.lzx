@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<include href="incubator/boxview.lzx" />
+	<include href="dragutil/DragUtil.lzx" />
+	<include href="ExtendedText.lzx" />
+	<include href="pairwidgetelement.lzx" />
+	<!-- include href="streamset.lzx"  -->
+
+
+
+
+<class name="pairwidget" defaultplacement="content" bordersize="3"  
+			extends="boxview" 			
+			clickable="true"
+			height="${Math.max(35,this.elementsview.height + (this.iscurrentwidget ? this.broadcastButton.height+8 : 0))}"
+			width="${Math.max(120,this.elementsview.width + (this.bordersize*2))}"
+			>
+
+
+	<!--The index of this widget in the set of widgets. -->
+	<!--serves as a unique identifier. -->
+	<attribute name="pos" />
+	<attribute name="dirty" type="boolean" value="false" />
+	
+	<attribute name="teachername" />
+	<attribute name="teachertopairstreamname" />
+	<!-- Flag to tell us if we should show video when listening to students -->  
+   <attribute name="showvideo" />
+	
+	<!-- are the elements in this widgets listenable -->	
+	<attribute name="listenable"  />
+	
+	<!-- A flag to show if we are being listened to -->	
+	<attribute name="iscurrentwidget"  />
+	
+	<!-- A handle on the global streamset  -->	
+	<attribute name="rtmpc" value="null" />
+	<attribute name="dragUtil" value="null" />
+	
+	
+	
+	
+	
+   <!-- mediastream, passed in from above -->    
+   <!-- teachertopair is a broadcasting stream -->	
+   <attribute name="teachertopairstream" value="null" />
+
+	
+	 <!-- turn border red if we are listening in -->  	
+	<attribute name="bordercolor" value="${(this.iscurrentwidget) ? '0xFF0000': (this.dirty ? '0x00FF00' : '0x0000FF') }" />
+	<!-- attribute name="bordercolor" value="${this.dirty ? '0x00FF00' : '0x0000FF'}" -->
+	
+	<handler name="oninit">
+				this.dragUtil.register(this);
+				Debug.write("PairWidgetCreated, pos: " , this.pos);
+	</handler>
+	
+	<handler name="onmousetrackup"><![CDATA[
+				var sender = this.dragUtil.getsender();
+				//var sender = lz.DragUtil.getSender();
+				if (sender) {
+					//since we are going to delete and create a view
+					//delegates attached will get screwed. So we tidy 
+					//those up first
+					this.dragUtil.forcemouseup();
+					
+					
+					//then we do the moving					
+					parent.moveElement(this.pos, sender.username);
+					Debug.write("Dropped Sender:", sender.showname);					
+				}
+				]]>
+	</handler>
+	
+
+	<!-- onclick toggle the playing of these streams -->  
+	<handler name="onclick" >
+	<![CDATA[
+	
+	//if this is unassigned or offline, we do not want to listen, so ignore clicks
+	if (!this.listenable){ return;}
+	
+	Debug.write('pairwidgetonclick pos : ', this.pos);	
+		if (this.iscurrentwidget) {			
+			//init currentwidget to -1 
+			this.parent.setAttribute('currentwidget',-1);
+
+			
+			
+			if(this.teachertopairstream.broadcasting){				
+				this.teachertopairstream.stop();
+				Debug.write('teacher to pair stream stopped: ', this.teacherstreamname);
+			}
+			
+		}else{
+		
+			//init currentwidget to this one	
+			this.parent.setAttribute('currentwidget', this.pos);		
+
+		}	
+		
+		]]>
+	
+	</handler>
+ 
+		<simplelayout axis="y" spacing="4"  />		
+
+
+
+		<view name="elementsview" >
+			<simplelayout axis="y" spacing="2"  />
+
+			<pairwidgetelement datapath="pairelement" 
+					rtmpc="${classroot.rtmpc}" 
+					dragUtil="${classroot.dragUtil}" 
+					pos="$path{'position()'}" 
+					odd="${(this.pos % 2) == 0}" 
+					username="$path{'@username'}" 
+					showname="$path{'@showname'}" 
+					pictureurl="$path{'@pictureurl'}" 
+					iscurrentwidget="${classroot.iscurrentwidget}" 
+					width="150"/>
+		</view>
+
+			<!-- This button is for toggling our broadcasting to students in the pair or stopping a broadacast to them-->
+			<button name="broadcastButton"  visible="${classroot.iscurrentwidget}" width="${parent.width-(parent.bordersize*2)}" height="30"  text="" >
+			
+				<handler name="onclick">
+				<![CDATA[
+						if (classroot.teachertopairstream.broadcasting){
+							classroot.teachertopairstream.stop();
+							classroot.teachertopairstream.setAttribute("url",'');
+							Debug.write("broadcast stopped,yeah");
+							
+						}else{
+						
+							classroot.teachertopairstream.stop();
+							classroot.teachertopairstream.setAttribute("url",classroot.teachertopairstreamname);
+							classroot.teachertopairstream.mic.setAttribute("capturing",true);
+							classroot.teachertopairstream.broadcast();
+							Debug.write("teachertopairstream url:",classroot.teachertopairstream.url);	
+							Debug.write("broadcast started,yeah");					
+						}
+							]]>
+				</handler>
+				<view visible="${!classroot.teachertopairstream.broadcasting}" name="micicon" width="24" height="24" x="${(parent.width - 24) / 2}" y="3" resource="icons/24x24/PlainBlue/MicrophoneHot.png" ></view>	
+				<view visible="${classroot.teachertopairstream.broadcasting}" name="stopicon" width="24" height="24"  x="${(parent.width - 24) / 2}" y="3" resource="icons/24x24/CircleBordered/Stop1NormalRed.png" ></view>	
+			</button>
+	
+
+	</class>
+</library>

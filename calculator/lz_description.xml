@@ -1,0 +1,10 @@
+<lzapplication>
+    <appname>Simple Calculator</appname>
+    <shortdesc>
+        Basic calculator application for doing 
+        simple arithmetic.
+    </shortdesc>
+    <authorfirstname>Aaron</authorfirstname>
+    <authorlastname>Abelard</authorlastname>
+    <authorwebsite>http://www.bitmechanics.com/</authorwebsite>
+</lzapplication>

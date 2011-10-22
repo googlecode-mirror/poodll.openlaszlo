@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+<!--our main widget class -->
+<include href="../messaging/MessagingRtmpConnection.lzx"/>
+<include href="../poodllheader/headercommunications.lzx"/>
+
+
+<!-- ButtonStates -->
+<resource name="buttonStatesResource">
+  <frame src="resources/re_ginger1.jpg"/>
+  <frame src="resources/re_ginger5.jpg"/>
+</resource>
+
+<class name="memberlist" width="100%" height="100%" extends="view">
+
+ <!-- info to be passed in via constructor-->
+<attribute name="red5url" />   
+<attribute name="coursedataurl" />
+<attribute name="courseid" />
+<attribute name="mename" />    
+
+ <!-- other variables-->
+<attribute name="membersidtag" value="'members01'" />  
+
+
+<!-- our class for communicating with clients -->
+<attribute name="headercomm" />
+
+<!-- our class for getting settings -->
+<attribute name="settings" />
+
+ <!-- variables for internal use-->
+<attribute name="selectcount" value="0" />
+<!-- We init at 1, because if here is only one, clones will be 0, if there are 2 clones will be 2. Got it?-->
+<attribute name="clonecount" value="1" />    
+<attribute name="noneselected" value="false" />
+<attribute name="allselected" value="false" />
+
+
+<!--Horrible flag to ensure offlineData inited before applying presence updates --> 
+<attribute name="offlinedataInited" value="false" />
+
+
+<!-- We fetch and return a list of usernames,suitable for submitting back to red5 --> 
+<method name="fetchSelected" args="widgetType=''">
+	<![CDATA[
+		var selectedUsernames="";
+		//if all or none has been selcted
+		if (this.allselected) return "--zenuser--@" + widgetType;
+		if (this.noneselected) return "";
+		for(var i = 0; i < widgets.userbuttonsview.onlineview.holder.onlinebuttonview.clones.length; i++){
+			if (widgets.userbuttonsview.onlineview.holder.onlinebuttonview.clones[i].bgButton.statenum > 0){
+				selectedUsernames += widgets.userbuttonsview.onlineview.holder.onlinebuttonview.clones[i].buttonUsername + "@" + widgetType;
+				selectedUsernames += "|";
+			}
+		}
+		if (selectedUsernames.length > 0){
+			selectedUsernames = selectedUsernames.substr(0,selectedUsernames.length-1);
+		}
+		return selectedUsernames;
+	]]>
+</method>
+
+<handler name="onheadercomm" >
+	<![CDATA[
+		//reset/init our presence delegate
+		if (this.offlinedataInited){
+			offlinedata.resetPresenceDelegate();
+		}
+	]]>		
+</handler>
+
+<!-- The dataset containing info about users offline --> 
+ <dataset name="onlinedata">
+	<pairsets>
+		 <pair name="onlineusers" dirty="false">
+	        
+	     </pair>
+	</pairsets>
+ 	<handler name ="ondata">			
+		Debug.write("ondata onlinedata fired:");
+	</handler>
+ </dataset>
+
+
+ <!-- The dataset containing info about users not online to a pair --> 
+ <dataset name="offlinedata"  type="http" src="${unescape(classroot.coursedataurl  + 'datatype=courseusers&amp;courseid=' + classroot.courseid)}" request="true" >
+
+	<attribute name="presenceDelegate" value="$once{ new LzDelegate(this, 'handlePresenceUpdate') }" />
+
+	<handler name ="ondata">	
+		<![CDATA[
+		//reset/init our presence delegate
+		this.resetPresenceDelegate();
+		parent.setAttribute("offlinedataInited",true);
+		
+		//after this is done show our data on screen
+		classroot.widgets.userbuttonsview.onlineview.completeInstantiation(); 
+		classroot.widgets.userbuttonsview.offlineview.completeInstantiation();
+
+			
+		]]>
+	</handler>
+
+	<method name="resetPresenceDelegate" >
+		//register our presence delegate to handle presence updates
+		Debug.write("resetting presence delegate");
+		this.presenceDelegate.unregisterAll();
+		this.presenceDelegate.register(classroot.headercomm,"presenceupdate");
+
+	</method>
+
+	<!-- Here we handle the presence update info-->
+	<method name="handlePresenceUpdate" args="peerinfo">
+		<![CDATA[
+	
+
+		Debug.write("entered handlePeersResult:peers:", peerinfo);
+		
+		//move offline users out of online and into offline
+		//get pointer for fetching list of alluses from dataset data
+		var dpelement = this.getPointer();
+			
+			
+		//move offline users out of online area
+		
+		
+		//no longer need this because offline users is done differently
+		//var searchPath= "/pairsets/usersummary/text()";
+		//	var allUsers = dpelement.xpathQuery(searchPath);
+		//var offlineusers =  classroot.headercomm.getOfflineUsers();	
+		Debug.write("memberlist getting offline:");
+		var offlineusers =  classroot.headercomm.getOfflineUsers();	
+		Debug.write("memberlist crosssing lines" );
+		classroot.crossLines(offlineusers,classroot.onlinedata,this);
+		
+		//move online users out of offline and into online
+		classroot.crossLines(peerinfo,this,classroot.onlinedata);
+
+
+		
+		]]>
+
+	</method>
+
+
+
+ </dataset>
+
+<!-- Here we handle the moving from one dataset to another -->
+<!-- On presence update or drag and drop -->
+	<method name="crossLines" args="moveusers, olddataset, newdataset, newwidgetindex=1">
+		<![CDATA[
+		/*
+			var d = new Date();
+			var curr_hour = d.getHours();
+			var curr_min = d.getMinutes();
+			var curr_sec = d.getSeconds();
+			Debug.write("Begining crosslines:" + curr_hour + ":" + curr_min + ":" + curr_sec);
+			*/
+
+		Debug.write("handling peer data", moveusers);
+		var users = moveusers.split("\;");
+
+		for(var i = 0; i < users.length; i++){
+
+			//get pointer for old data dataset
+			var dpelement = olddataset.getPointer();
+
+			//here jim@header01 -> jim
+			var elementUsername =users[i];
+			Debug.write("@" + elementUsername + "@");
+
+			//the search string for this username in old data dataset
+			var searchPath= "/pairsets/pair/pairelement[@username='" + elementUsername + "']";	
+
+			//search for user in old data dataset
+			var foundOk = dpelement.setXPath(searchPath);
+			
+			
+			Debug.write("movePeerTo:checking:", users[i]);
+
+
+			//do our moving if we found a user that needs moving
+			if (foundOk){
+				//get and init pointer	to new data dataset	
+				var dpnewhome =  newdataset.getPointer();
+				dpnewhome.selectChild(2);
+				
+				//moves the pointer forward to newWidgetIndex, provided it is def. properly
+				//moveing 0 places, leads to problems so we check for that scenario first
+				if (newwidgetindex > 1){dpnewhome.selectNext(newwidgetindex-1);}
+				Debug.write("newwidgetindex:",newwidgetindex);
+
+				//get and init our oldhome pointer			
+				var dpoldhome= dpelement.dupePointer();
+				dpoldhome.selectParent();
+
+				//for debugging strange false positives when moving into unassigned data pairset
+				Debug.write("olddataset pairgroup name:",dpoldhome.getNodeAttribute("name"));
+				Debug.write("newdataset pairgroup name:",dpnewhome.getNodeAttribute("name"));
+				Debug.write("moveusers:",moveusers);
+
+				//using comparePointer lead to inconsistent and strange results, so resorted to comparing name attribute
+				if (dpoldhome.getNodeAttribute("name")==dpnewhome.getNodeAttribute("name")){
+					Debug.write("Can't move within the same pairgroup. quitting.");
+					 return;
+				}
+
+				
+				//copy the node
+				dpnewhome.addNodeFromPointer(dpelement);
+				dpnewhome.setNodeAttribute("dirty",true);
+
+				//and then delete the original node
+				dpelement.deleteNode();
+				dpoldhome.setNodeAttribute("dirty",true);				
+
+
+				//inform the world
+				Debug.write("moved:", users[i]);
+			} //end of if foundOK
+
+		}//end of for loop
+/*
+	d = new Date();
+	curr_hour = d.getHours();
+	curr_min = d.getMinutes();
+	curr_sec = d.getSeconds();
+	Debug.write("ending crosslines:" + curr_hour + ":" + curr_min + ":" + curr_sec);
+	*/
+
+		]]>
+
+</method>
+
+
+
+
+ <!-- Classroot View layout. contains widgets and buttons views -->
+<resizelayout axis="y" spacing="10" />
+
+
+
+
+<!--The view containing the buttons -->
+<view name="buttons" align="right" height="30">
+<simplelayout axis="x" spacing="10" />
+	<!--
+	<button name="dataButton" text="Get Data">
+		<handler name="onclick">
+			Debug.write("getting peer data:onclick");
+			classroot.onlinedata.updatePresence();
+		</handler>
+
+	</button>
+	-->
+	<button name="allselectButton" text="Select All" enabled="${classroot.selectcount != classroot.clonecount }" >	
+		<handler name="onclick">
+			Debug.write("selecting all");
+			classroot.setAttribute("allselected",true);
+			Debug.write("selectCount:", classroot.selectcount);
+			Debug.write("cloneCount:",  classroot.cloneCount);
+		</handler>
+
+	</button>
+	<button name="allclearButton" text="Clear All" enabled="${classroot.selectcount > 0}">	
+		<handler name="onclick">
+			Debug.write("clearing all");
+			Debug.write("selectCount:", classroot.selectcount);
+			Debug.write("cloneCount:",  classroot.cloneCount);
+			classroot.setAttribute("noneselected",true);
+		</handler>
+
+	</button>
+	<!--
+	<button name="fetchSelected" text="Fetch">	
+		<handler name="onclick">
+			var selectedUsers = classroot.fetchSelected("fetcher01");
+			Debug.write("selected:", selectedUsers);
+		</handler>
+
+	</button>
+	-->
+		
+</view>
+
+
+
+
+
+ <!-- Widgets view contains pairs and users -->
+<view name="widgets" width="${parent.width}" options="releasetolayout">
+
+
+<!-- The container view containing users views -->
+<view name="userbuttonsview" width="${parent.width}" height="${parent.height}">
+
+<resizelayout axis="y" spacing="10" />
+
+		<view name="onlineview"   width="${parent.width}"  bgcolor="$style{'bgcolor'}" opacity="$style{'opacity'}" clip="true"  options="releasetolayout" initstage="defer" >
+			<!-- view name="opacityfilter" width="${parent.width}" height="${parent.height}" bgcolor="$style{'bgcolor'}" opacity="$style{'opacity'}" options="ignorelayout" -->
+			<view name="holder" width="${parent.width-40}" > 
+			<wrappinglayout axis="x" spacing="10" />
+			<!-- replicator name="onlinebuttonreplicator"  dataset="$once{classroot.onlinedata}" xpath="/pairsets/pair/pairelement" -->
+			<view  name="onlinebuttonview">
+				<attribute name="buttonUsername" value="$path{'@username'}" />
+				
+				  <multistatebutton name="bgButton" resource="buttonStatesResource" statenum="0" statelength="1" 
+						stretches="both" width="130" height="45" maxstate="1" onclick="this.toggle()">
+			                 <method name="toggle">
+			                    if (this.statenum == 0) {
+									this.setStateNum(1);
+									if(classroot.noneselected){classroot.setAttribute("noneselected",false); }
+									classroot.setAttribute("selectcount", classroot.selectcount+1);
+			                    }else{ 
+									this.setStateNum(0);
+									if(classroot.allselected){classroot.setAttribute("allselected",false); }
+									classroot.setAttribute("selectcount", classroot.selectcount-1);
+					    }
+			                 </method>
+					<handler name="onallselected" reference="classroot">
+						<![CDATA[
+							if (classroot.allselected && this.statenum != 1){
+								this.toggle();
+							}
+						]]>					
+					</handler>
+					<handler name="onnoneselected" reference="classroot">
+						<![CDATA[
+							if (classroot.noneselected && this.statenum != 0){
+								this.toggle();
+							}
+						]]>
+					</handler>
+
+			           </multistatebutton>
+					<!--view containing user name and picture-->
+				   <view name="buttonIdentityView" height="${parent.bgButton.height}"  width="${parent.bgButton.width}" x="5" y="5" >
+					<simplelayout name="thelayout" axis="x" spacing="4"/>					
+					  <text text="$path{'@showname'}"  multiline="true" width="${parent.width - 50}"/>
+					  <image name="pic" width="40"  
+						height="40" src="$path{'@pictureurl'}"/>
+					
+				   <!--End of buttonidentityview-->
+				  </view>
+				<!--update our classroot button count-->
+				<!--using the datapath onclones event we could do more elegantly, but its more code, for little love-->
+				<datapath xpath="local:classroot.onlinedata:/pairsets/pair/pairelement" >
+					<handler name="onclones" >
+								//you have to remember that if there is only one "clone", it is not a clone
+								//so there is no clones object or replication manager for it.
+								if (this.datapath.clones){
+									classroot.setAttribute("clonecount",this.clones.length);
+									Debug.write("onlineusercount:", this.clones.length);
+								}else{
+									//presumanbly the admin at least is online, or we would not be loaded
+									classroot.setAttribute("clonecount",1);
+									Debug.write("cloneCount: One or fewer onliners.");
+								}
+								
+					</handler>
+				</datapath>
+			<!--End of onlinebuttonview-->			
+			</view>
+			<!-- replicator -->
+
+			
+		<!--End of holderview-->			
+		</view>
+		<vscrollbar />				
+		<!--End of The onlineview view-->
+		</view>
+		
+		<view name="offlineview"   width="${parent.width}"  height="150" bgcolor="$style{'bgcolor'}" opacity="$style{'opacity'}" clip="true"  
+			visible="${classroot.settings.offlineview.showofflineusers.value}" 
+			initstage="defer" >
+			<!-- view name="opacityfilter" width="${parent.width}" height="${parent.height}" bgcolor="$style{'bgcolor'}"  opacity="$style{'opacity'}" options="ignorelayout" -->
+			<view name="holder" width="${parent.width-40}" > 
+				<wrappinglayout axis="x" spacing="10" />
+				<view  name="offlinebuttonview" datapath="local:classroot.offlinedata:/pairsets/pair/pairelement">
+					<attribute name="buttonUsername" value="$path{'@username'}" />
+					
+					  <multistatebutton name="bgButton" resource="buttonStatesResource" statenum="0" statelength="1" stretches="both" width="130" height="45" maxstate="1" />
+
+						<!--view containing user name and picture-->
+					   <view name="buttonIdentityView" height="${parent.bgButton.height}"  width="${parent.bgButton.width}" x="5" y="5" >
+						<simplelayout name="thelayout" axis="x" spacing="4"/>					
+						  <text text="$path{'@showname'}"  multiline="true" width="${parent.width - 50}"/>
+						  <image name="pic" width="40"  
+							height="40" src="$path{'@pictureurl'}"/>
+						
+					   <!--End of buttonidentityview-->
+					  </view>
+					<!--update our classroot button count-->
+
+				<!--End of offlinebuttonview-->			
+				</view>
+			<!--End of holderview-->		
+			</view>
+			<vscrollbar />
+			<!--End of offlineview-->		
+		</view>
+
+<!--End of The userbuttons container view-->
+</view>
+<!--End of the widgets view-->
+</view>
+
+
+
+</class>
+</library>

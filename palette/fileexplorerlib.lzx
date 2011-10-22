@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	<resource name="foldericons" >
+		<frame src="folder.png" /><!-- closed -->
+		<frame src="folder.png" /><!-- open -->
+		<frame src="file.png" /><!-- leaf -->
+	</resource>
+
+	<include href="incubator/opttree/opttree.lzx" />
+	<include href="treenode.lzx"/>
+
+	<class name="fileexplorer" extends="view">
+	
+	<!-- we raise this event when we have successfully registered-->
+	<event name="onchoice"/>
+
+	<attribute name="filedataurl"  /> 
+	<attribute name="courseid"  /> 
+	
+	<!-- The dataset containing info about the filesystem -->
+	<!-- The timestamp is to get us over crap browser caching which should not but does occur-->
+	<dataset name="filedata" type="http" src="${classroot.filedataurl + '?datatype=dirlist&amp;courseid=' + classroot.courseid + '&amp;timestamp=' + new Date().getTime()}" request="true">
+		<handler name="ondata">		
+			Debug.write("instantiating");
+			classroot.treecontainer.completeInstantiation();			
+		</handler>
+	</dataset>
+	
+	 <node name="adatanode">
+        <attribute name="loadnode" value="null"/>
+
+        <method name="loadAdditionalTreeData" args="atnode">
+            this.setAttribute( "loadnode", atnode );
+            classroot.filedata.doRequest();
+        </method>
+
+        <method name="loadedTreeData" args="ldata">
+            loadnode.setAttribute( "childNodes", ldata.childNodes );
+        </method>
+    </node>
+	
+	<handler name="oninit">
+		Debug.write("class init'ing");
+		adatanode.loadAdditionalTreeData(filedata.getFirstChild() );
+	</handler>
+	
+	
+	<!-- Specify a non null icon, icon="foldericons" to get custom pictures-->
+	<view name="treecontainer" width="${classroot.width}" height="${classroot.height}"  clip="true" initstage="defer" >
+	<opttree name="outertree" datapath="local:classroot.filedata:/directorylist" nodepath="*" nodeclass="treenode" >
+		<handler name="oninit">
+			Debug.write("inited");
+		</handler>
+		  <!-- opttree name="innertree" datapath="*" text="$path{'@name'}" isleaf="$path{'@isleaf'}" -->
+			<method name="select" args="el" override="true"><![CDATA[
+                    super.select(el);					
+                    this.setAttribute("selection", el && el.datapath.p);
+					//classroot.onchoice.sendEvent(this.selection);
+					
+					var path="";
+					var currentnode=el.datapath.p;
+					//Debug.inspect(currentnode);
+					while(currentnode.hasAttr('name')){
+						if(path==""){
+							path = currentnode.getAttr("name");
+						}else{
+							path = currentnode.getAttr("name") + "/" + path;
+						}
+						//Debug.write("path", path);
+						currentnode = currentnode.parentNode;
+					}
+					classroot.onchoice.sendEvent(path);
+					
+                ]]></method>	
+			
+	</opttree>
+	<scrollbar axis="x" />
+	<scrollbar axis="y" />
+	</view>
+
+
+
+
+	
+		
+</class>
+
+</library>
+

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+		<include href="lz"/>
+		<include href="../messaging/MessagingRtmpConnection.lzx" />
+	<class name="canvasheadercommunications" >
+
+
+		
+		<!-- general attributes -->
+		<attribute name="red5url" />  	
+		<attribute name="mename"  /> 
+		<attribute name="courseid" />  	
+		
+		<!-- Initially this was hard coded, but the parent class may be communicating with different headers -->
+		<!-- Partic. phpclientheader and clientheader. So they can create instances if this, and chck presence on both -->
+		<!-- attribute name="headeridtag" value="'header01'" -->
+		<attribute name="headeridtag" />
+		
+
+
+					<!--Subviews start here -->
+		<!--rtmp connection -->
+		<!-- we set altsrc and src to the same value, to force a reconnect if timeouts, seems to happen, -->
+		<MessagingRtmpConnection name="rtmpc" userid="${classroot.mename}" appprofileid="${classroot.headeridtag}" 
+			src="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}"  
+			altsrc="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}" 
+			debug="false" autoconnect="true">
+
+			<handler name="onpeermessage" args="message">
+				<![CDATA[
+					Debug.write("ConsoleMessage", message);						
+				]]>
+			</handler>
+
+
+		
+		</MessagingRtmpConnection>
+			
+							
+
+			
+	</class>
+</library>

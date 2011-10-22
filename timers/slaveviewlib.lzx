@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	<include href="incubator/roundrect.lzx" />
+	<include href="../interview/sharedObject.lzx"/>
+	<include href="../messaging/MessagingRtmpConnection.lzx" />
+	
+
+	<class name="slaveview" extends="view">
+		
+	<!-- attributes passed in -->	
+	<attribute name="fontheight" /> 	
+	<attribute name="red5url"/>  	
+	<attribute name="mename"   /> 
+	<attribute name="courseid"  />  	
+	<attribute name="uniquename"  />
+	<attribute name="showmilli" value="false"  />  
+
+	
+	
+	
+	
+	<!-- classroot level data -->
+	<attribute name="usefontheight" value="${this.fontheight==null || this.fontheight==0 ? this.height * 0.3 : this.fontheight}"/>
+	<attribute name="headeridtag" value="'slaveview01'" />
+	<attribute name="millitime" value="''"/>
+	<attribute name="secondstime" value="''"/>
+	
+			<!--rtmp connection -->
+	<!-- we set altsrc and src to the same value, to force a reconnect if timeouts, seems to happen, -->
+	<MessagingRtmpConnection name="rtmpc" userid="${classroot.mename}" appprofileid="${classroot.headeridtag}" 
+		src="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}"  
+		altsrc="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}" 
+		debug="false" autoconnect="true">
+		<!-- we init the whiteboard shared object -->
+		<handler name="onconnect">
+				Debug.write("connecting to SO");
+				this.parent.timeso.connect();
+				Debug.write("connected to SO");
+				Debug.write("connected rtmpc");
+		</handler>			
+	</MessagingRtmpConnection>
+
+	
+		<!-- The shared object for making it a shared whiteboard	-->
+	<sharedobject name="timeso" rtmpc="${classroot.rtmpc}" uniquename="${classroot.uniquename}" persist="${false}"  >
+		<handler name="datachanged" args="field">
+			<![CDATA[
+			Debug.write("updating from so:" );
+			Debug.write("field:", field );
+			Debug.write("field:", this.getProperty(field));
+			
+			switch (field){
+				case "newtime":
+					var seconds =  this.getProperty(field).substr(0,8);
+					var milliseconds= this.getProperty(field).substr(8);
+					parent.setAttribute("secondstime", 	seconds);
+					parent.setAttribute("millitime", 	milliseconds);				
+					break;	
+				
+				default:
+					break;
+			
+			
+			}
+			]]>
+				
+		</handler>
+	</sharedobject>
+
+
+	
+	
+	 <simplelayout axis="y" spacing="10"/>
+
+
+		<roundrect align="center" name="displayview" width="${parent.width}" height="${parent.height - 30}" 
+					backgroundStartColor="0xEEEEEE"
+					backgroundStopColor="0xDDDDDD"
+					borderColor="#0000FF"
+					borderWidth="5"				
+					>
+			<!-- seconds field:  use fgcolor="${classroot.secondstime == '00:00:00' ? 0xFF0000 : 0x000000}" to make it red on 0 -->		
+			 <text align="center" valign="middle" name="timeDisplay" fontsize="${classroot.usefontheight}"  text="${classroot.secondstime}" />
+			 <text y="${parent.timeDisplay.y + parent.timeDisplay.height + 4}" x="${parent.timeDisplay.x + parent.timeDisplay.width - this.width}" 
+				name="milliDisplay" visible="${classroot.showmilli}" fgcolor="${parent.timeDisplay.fgcolor}" fontsize="${(classroot.usefontheight / 8) * 3}" text="${classroot.millitime}" />
+		</roundrect>
+
+
+	
+
+	
+
+	
+	</class>
+</library>
+

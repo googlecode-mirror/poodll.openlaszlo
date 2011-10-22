@@ -1,0 +1,94 @@
+<!-- X_LZ_COPYRIGHT_BEGIN ************************************************
+* Copyright 2007-2008 Laszlo Systems, Inc.  All Rights Reserved.         *
+* Use is subject to license terms.                                       *
+* X_LZ_COPYRIGHT_END ************************************************** -->
+
+
+<library>
+    <include href="./justinvideoscreen.lzx"/>
+    <include href="./justinvideoslider.lzx"/>
+
+    <class name="justinvideoplayer">
+	
+		<attribute name="fontcolor" value="0x000000"/>
+		
+		<attribute name="bgcolor" value="0x808080"/>
+		
+		<attribute name="slidercolor" value="0x808080"/>
+		
+		<attribute name="progresscolor" value="0x00ff00"/>
+		
+        <attribute name="type" type="string" value="http"/>
+
+        <attribute name="url" type="string" value=""/>
+		
+		<attribute name="rtmp" value="null" />
+
+        <attribute name="autoplay" value="false"/>
+
+        <attribute name="showscreen" value="true"/>
+
+        <attribute name="showslider" value="true"/>
+
+        <attribute name="borderLeft" value="5"/>
+
+        <attribute name="borderRight" value="5"/>
+
+        <attribute name="borderTop" value="5"/>
+
+        <attribute name="sliderGap" value="5"/>
+		
+		<attribute name="sliderHeightVal" value="34"/>
+
+        <attribute name="sliderHeight" value="${
+            this.showslider ? this.sliderHeightVal : 0}"/>        
+
+        <attribute name="borderBottom" value="5"/>
+
+        <attribute name="screenWidth" value="${
+            this.width - (this.borderLeft + this.borderRight)}"/>
+
+        <attribute name="sliderTop" value="${
+            this.height - (this.borderBottom + this.sliderHeight)}"/>
+
+        <attribute name="videoBottom" value="${
+            this.sliderTop - (this.showslider ? this.sliderGap : 0)}"/>
+			
+        <justinvideoscreen name="vscreen"
+            x="${parent.borderLeft}"
+            y="${parent.borderTop}"
+            width="${parent.screenWidth}"
+            height="${parent.videoBottom - parent.borderTop}"
+            visible="${parent.showscreen}"
+            type="${classroot.type}"
+            autoplay="${classroot.autoplay}"
+            url="${classroot.url}"
+            volume="${parent.vslider.volume}"
+			rtmp="${classroot.rtmp}"
+        >	
+		<handler name="oninit">
+			Debug.write("videoscreen height:", this.height)
+		</handler>
+		</justinvideoscreen>
+		
+
+        <justinvideoslider name="vslider" 
+			fontcolor="${parent.fontcolor}"
+			bgcolor="${parent.bgcolor}"
+            x="${parent.borderLeft}"
+            y="${parent.height - (parent.borderBottom + parent.sliderHeight)}"
+            width="${parent.screenWidth}"
+            height="${parent.sliderHeight}"
+            visible="${parent.showslider}"
+            ms="${classroot.vscreen.ms}"
+            time="${classroot.vscreen.ms.time}"
+            totaltime="${classroot.vscreen.ms.totaltime}"
+			slidercolor="${classroot.slidercolor}"
+			progresscolor="${classroot.progresscolor}"			
+        />
+
+
+    </class>
+
+
+</library>

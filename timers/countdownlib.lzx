@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+<!-- master slave related condiional inclusion (only works as swf) -->
+<switch>
+        <unless property="$dhtml">
+				<include href="../interview/sharedObject.lzx"/>
+				<include href="../messaging/MessagingRtmpConnection.lzx" />
+		</unless>
+</switch>
+
+
+	<include href="../utils/kmeixnertimer.lzx"/>	
+	<include href="incubator/roundrect.lzx" />
+	<include href="../talkback/justinav/poodllbigbutton.lzx"/>
+	<resource name="play_button" src="../talkback/justinav/newicons/32/classic_play_button.png" />
+	<resource name="stop_button" src="../talkback/justinav/newicons/32/classic_stop_button.png" />	
+	<resource name="reset_button" src="../talkback/justinav/newicons/32/classic_reset_button.png" />
+	
+	<class name="countdowntimer" extends="loopingtimer">
+
+		<event name="countevent" />
+		<event name="stopevent" />
+
+		<attribute name="inittime" value="0" />
+		<attribute name="progresstime" value="0" />
+		<attribute name="showmilli" value="0" />
+		<attribute name="showsec" type="number" value="0" />
+		<attribute name="showmin" type="number" value="0" />
+		<attribute name="showhour" type="number" value="0" />
+		<method name="reactToTimeChange" args="theTime">
+			this.setAttribute('progresstime' ,  theTime);
+			  if(progresstime > inittime){
+				this.stopTimer();
+				this.setAttribute('progresstime' ,  inittime);
+			        this.stopevent.sendEvent();	 
+			  }
+				
+			//set hours
+			var rawtime = (this.inittime - this.progresstime) % (60 * 60 * 1000);
+			var remainder = rawtime;
+			var quotient =  (this.inittime - this.progresstime - remainder) / (60 * 60 * 1000);
+			this.setAttribute('showhour', quotient );
+
+			//set minutes
+			remainder = rawtime % (60 * 1000);
+			quotient = (rawtime - remainder) / (60 * 1000);
+			rawtime = remainder;
+			this.setAttribute('showmin', quotient );
+
+			//set seconds
+			remainder = rawtime % 1000;
+			quotient = (rawtime - remainder) / 1000;
+			rawtime = remainder;
+			this.setAttribute('showsec', quotient );
+
+			//set milliseconds
+			this.setAttribute('showmilli', rawtime );
+		
+			//let anyone listening know about this
+			this.countevent.sendEvent();
+
+	    </method>
+	</class>
+
+
+	<class name="countdownview" extends="view">
+
+	
+	<attribute name="initseconds" value="120"  />
+	<attribute name="fontheight" /> 	
+	<attribute name="usefontheight" value="${this.fontheight==null || this.fontheight==0 ? this.height * 0.3 : this.fontheight}"/> 
+	<attribute name="usepresets" value="false"  /> 
+	
+	<!-- master slave related stuff -->
+	<!-- ############################################################################################################### -->
+	<attribute name="red5url"/>  	
+	<attribute name="mename"   /> 
+	<attribute name="courseid"  />  	
+	<attribute name="uniquename"  />
+	<attribute name="actionbuttondel" />
+	<attribute name="resetbuttondel" />
+	<attribute name="mode"  />
+	<attribute name="headeridtag" value="'slaveview01'" />
+	<!-- ################################################ -->	
+
+
+	<countdowntimer name="ltimer" inittime="${classroot.initseconds * 1000}" >
+		<handler name="countevent">
+			classroot.displayview.timeDisplay.format('%02d:%02d:%02d',this.showhour,this.showmin,this.showsec);
+			classroot.displayview.milliDisplay.format('%03d',this.showmilli);
+		</handler>
+		<handler name="oninit">
+			this.resetTimer();
+		</handler>
+		<handler name="ontimer_state">
+			if (this.timer_state=='STOPPED'){
+				//classroot.displayview.doorbell.play();
+				Debug.write("dont play doorbell cos it beeps on load");
+			}
+		</handler>
+	</countdowntimer>
+
+
+	 <simplelayout axis="y" inset="10" spacing="10"/>
+
+
+	<roundrect align="center" name="displayview" width="${parent.width}" height="${parent.height - parent.presetsview.height - 30}" 
+				backgroundStartColor="0xEEEEEE"
+				backgroundStopColor="0xDDDDDD"
+				borderColor="#0000FF"
+				borderWidth="5"				
+				>
+		 <text align="center" valign="middle" name="timeDisplay" fontsize="${classroot.usefontheight}" fgcolor="${classroot.ltimer.timer_state == 'STOPPED' ? 0xFF0000 : 0x000000}" />
+		 <text y="${parent.timeDisplay.y + parent.timeDisplay.height + 4}" x="${parent.timeDisplay.x + parent.timeDisplay.width - this.width}" 
+			name="milliDisplay" fgcolor="${parent.timeDisplay.fgcolor}" fontsize="${(classroot.usefontheight / 8) * 3}" />
+		<!-- view name="doorbell" resource="doorbell.mp3" -->
+	</roundrect>
+
+	 <view name="buttonsview" align="center" visible="$once{!classroot.usepresets}">
+		<simplelayout axis="x" spacing="10"/>	
+		 <poodllbigbutton name="actionButton" 
+			resourcename="${classroot.ltimer.timer_state == 'READY' ? 'play_button' : classroot.ltimer.timer_state=='PAUSED' ? 'play_button' : 'stop_button'}"
+			width="${(parent.parent.displayview.width * 0.5) - 5 }"
+			height="40"
+			text="${classroot.ltimer.timer_state == 'READY' ? 'START' : classroot.ltimer.timer_state=='PAUSED' ? 'CONT.' : 'PAUSE'}">
+			<handler name="onclick">
+				switch(classroot.ltimer.timer_state){
+					case 'READY' : 
+						classroot.ltimer.startTimer();
+						break;
+					case 'COUNTING' : 
+						classroot.ltimer.pauseTimer();
+						break;
+					case 'PAUSED' : 
+						classroot.ltimer.unpauseTimer();
+						break;
+				}
+			</handler>
+		</poodllbigbutton>
+		<poodllbigbutton name="resetButton" 
+				text="RESET" 
+				height="40"
+				enabled="${classroot.ltimer.timer_state != 'READY'}"
+				resourcename="reset_button"
+				width="${(parent.parent.displayview.width * 0.5) - 5 }" >
+			<handler name="onclick">
+				if(this.enabled){
+					classroot.ltimer.resetTimer();
+					classroot.ltimer.setAttribute('progresstime',0);
+				}
+			</handler>
+		</poodllbigbutton>
+	</view>
+    <view name="presetsview" align="center" visible="$once{classroot.usepresets}">
+		<simplelayout axis="y" spacing="10"/>	
+			<view name="presetbuttons">
+			<simplelayout axis="x" spacing="10"/>	
+			 <poodllbigbutton name="actionButton"  width="150"  
+				height="40"
+				resourcename="${classroot.ltimer.timer_state == 'READY' ? 'play_button' : classroot.ltimer.timer_state=='PAUSED' ? 'play_button' : 'stop_button'}"
+				text="${classroot.ltimer.timer_state == 'READY' ? 'START' : classroot.ltimer.timer_state=='PAUSED' ? 'CONT.' : 'PAUSE'}">
+				<handler name="onclick">
+					switch(classroot.ltimer.timer_state){
+						case 'READY' : 
+							classroot.setAttribute("initseconds",parent.countcombo.value);
+							classroot.ltimer.startTimer();
+							break;
+						case 'COUNTING' : 
+							classroot.ltimer.pauseTimer();
+							break;
+						case 'PAUSED' : 
+							classroot.ltimer.unpauseTimer();
+							break;
+					}
+				</handler>
+			</poodllbigbutton>
+			<combobox name="countcombo" valign="middle" width="140" editable="false">
+				<textlistitem text="10 Seconds" value="10" />		
+				<textlistitem text="30 Seconds" value="30" />		
+				<textlistitem text="1 Minute" value="60" />		
+				<textlistitem text="1 Min 30 Seconds" value="90" />		
+				<textlistitem text="2 Minutes" value="120" selected="true" />		
+				<textlistitem text="3 Minutes" value="180" />		
+				<textlistitem text="4 Minutes" value="240" />		
+				<textlistitem text="5 Minutes" value="300" />		
+				<textlistitem text="6 Minutes" value="360" />		
+				<textlistitem text="7 Minutes" value="420" />		
+				<textlistitem text="8 Minutes" value="480" />		
+				<textlistitem text="9 Minutes" value="540" />		
+				<textlistitem text="10 Minutes" value="600" />		
+				<handler name="onselect">
+					if (!classroot.usepresets) return;
+					if (classroot.ltimer.timer_state == 'READY'){
+						classroot.setAttribute("initseconds",this.value);
+						classroot.ltimer.resetTimer();
+					}
+				</handler>
+			</combobox>
+			
+		</view>
+		<poodllbigbutton name="resetButton" 
+				text="RESET" 
+				height="40"
+				enabled="${classroot.ltimer.timer_state != 'READY'}"
+				resourcename="reset_button"
+				width="300" >
+			<handler name="onclick">
+				if(this.enabled){
+					classroot.ltimer.resetTimer();
+					classroot.ltimer.setAttribute('progresstime',0);
+				}
+			</handler>
+		</poodllbigbutton>
+	</view>
+
+	
+	<!-- master slave related condiional inclusion (only works as swf) -->
+	<!-- ############################################################################################################### -->
+<switch><unless property="$dhtml">
+
+
+			<!--rtmp connection -->
+	<!-- we set altsrc and src to the same value, to force a reconnect if timeouts, seems to happen, -->
+	<MessagingRtmpConnection name="rtmpc" userid="${classroot.mename}" appprofileid="${classroot.headeridtag}" 
+		src="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}"  
+		altsrc="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}" 
+		debug="false" autoconnect="${classroot.mode=='master'}">
+
+		<handler name="onconnect">
+				Debug.write("connecting to SO");
+				this.parent.timeso.connect();
+				Debug.write("connected to SO");
+				if(classroot.mode =='master'){
+					this.parent.refreshtimer.startTimer();
+					Debug.write("started timer");
+				}
+		</handler>			
+	</MessagingRtmpConnection>
+	
+	
+	<!-- The shared object for making it a shared whiteboard	-->
+	<sharedobject name="timeso" rtmpc="${classroot.rtmpc}" uniquename="${classroot.uniquename}" persist="${false}" >
+		<handler name="datachanged" args="field">
+			<![CDATA[
+			Debug.write("updating from so:" );
+			Debug.write("field:", field );
+		//	Debug.write("field:", this.getProperty(field));
+			
+						
+			
+	
+			]]>
+				
+		</handler>
+	</sharedobject>
+	<loopingtimer name="refreshtimer" timer_resolution="250">
+		<handler name="timeevent" args="theTime">
+			//return;
+			parent.timeso.setProperty("newtime", classroot.displayview.timeDisplay.text + classroot.displayview.milliDisplay.text);
+			//Debug.write("setprop", classroot.displayview.timeDisplay.text + classroot.displayview.milliDisplay.text);
+		</handler>			
+	</loopingtimer>
+	
+	
+</unless></switch>
+	<!-- ############################################################################################################### -->	
+	
+		
+</class>
+
+</library>
+

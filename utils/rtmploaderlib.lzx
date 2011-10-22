@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<include href="lz"/>
+	<include href="extensions/av/mediastream.lzx" />
+	<include href="extensions/av/videoview.lzx" />
+
+<class name="streamy" extends="listitem" height="40">
+<attribute name="red5url"  />
+<attribute name="courseid" />
+<attribute name="debug" value="false" />
+<attribute name="createconn" value="false" />
+<attribute name="thertmp" value="null" />
+<attribute name="thertmpstatus" value="null" />
+<attribute name="thestream" value="null" />
+<attribute name="vidcount" value="null" />
+<attribute name="thisidtag" value="null" />
+<attribute name="thevview" value="null" />
+<attribute name="videourl" value="'avideourl'" />
+<attribute name="contactdelegate" value="null" />
+
+
+<method name="receivedMessage" args="message">
+	Debug.write("got message", message);
+	this.setAttribute("text", this.thertmp.userid + ":" + message);
+</method>
+
+<method name="setupStreamView">
+<![CDATA[
+	//if we already have a stream, destroy it man
+	if (this.thestream != null) {
+			this.thestream.stop();
+			this.thevview.destroy();
+			if (this.thestream != null){this.thestream.destroy();}
+			this.setAttribute("thestream", null);
+			this.setAttribute("thevview", null);		
+		}
+
+	//create the new stream
+	this.setAttribute("thestream", new lz.mediastream(this, 
+				{'type': 'rtmp',
+				'rtmp': this.thertmp,
+				'url': this.videourl,
+				'debug': this.debug
+			  }));
+			  
+			  //create the new view
+	this.setAttribute("thevview", new lz.videoview(this,
+				{'type': 'rtmp',
+				'visible': true,
+				'x' : 5,
+				'y' : 5,
+				'width': this.height - 10,
+				'height': this.height - 10,
+				'bgcolor': '0xCCCCCC',
+				'stream': this.thestream
+			  }));		
+			  
+			  //start playing
+			  this.thestream.play();
+			  ]]>
+</method>
+<method name="init">
+<![CDATA[
+		super.init();
+		Debug.write("making mediastream for:", this.videourl);
+		Debug.write("rtmp is null:", this.thertmp == null);
+		
+		if (this.createconn){
+		
+			this.setAttribute("thertmp",
+				new lz.MessagingRtmpConnection(this,
+					{'name' :  this.vidcount,
+					'userid' : this.vidcount,
+					'connectiontimeout': 10000,
+					 'appprofileid' : this.thisidtag,
+					 'altsrc' : unescape(this.red5url) + '/' + this.courseid + '/' + this.thisidtag,
+					 'src' : unescape(this.red5url) + '/' + this.courseid + '/' + this.thisidtag,
+					 'debug' : false,
+					 'autoconnect' : true					
+					}));
+					
+			this.setAttribute("contactdelegate",  new LzDelegate(this,"receivedMessage"));
+			this.contactdelegate.register(this.thertmp, "onpeermessage");
+			
+			this.setAttribute("thertmpstatus",  
+			new lz.rtmpstatus(this,
+				{'rtmpc' : this.thertmp,
+				'name' : 'thertmpstatus',
+				'x' : 1}
+				));
+		
+		
+		
+		}
+		
+		this.setupStreamView();
+		
+			  
+		
+]]>
+</method>
+<method name="destroy">
+	if (this.contactdelegate != null){
+		this.contactdelegate.unregisterAll();
+	}
+	
+	if (this.thertmpstatus  != null ){
+		this.thertmpstatus.destroy();
+	}
+	
+	if (this.thertmp  != null ){
+		this.thertmp.destroy();
+	}
+	if (this.thevview  != null ){
+		this.thevview.destroy();
+	}
+	if (this.thestream  != null ){
+		this.thestream.destroy();
+	}
+	this.setAttribute("thertmp",null);
+	this.setAttribute("thestream",null);
+	this.setAttribute("thevview",null);
+	super.destroy();
+</method>
+
+	<text name="listtext" x="${parent.height + 5}" text="${parent.text}"/>
+	
+
+</class>
+
+
+</library>

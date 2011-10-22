@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+<switch>
+    <when property="$dhtml" >
+	</when>
+	<otherwise>
+	
+		<attribute name="fullscreenxoffset" value="60" />
+		<attribute name="fullscreenyoffset" value="35" />
+		<attribute name="permitfullscreen" value="lz.Browser.getInitArg('permitfullscreen')=='true'" />
+ 
+       
+	   <view 
+	name="fullscreenbutton" 
+	clickable="${canvas.permitfullscreen}"
+	visible="${canvas.permitfullscreen}" 
+	resource="fullscreen.png"
+	options="ignorelayout"
+	x="${canvas.width - canvas.fullscreenxoffset}"
+	y="${canvas.fullscreenyoffset}"
+	opacity="${this.hasmouse ? 0.5 : 0.2}" initstage="late">
+	
+	<attribute name="hasmouse" value="false" />
+	
+	<handler name="onclick">
+			canvas.setAttribute("fullscreen", !canvas.fullscreen);
+	</handler>
+	<handler name="onmouseover">
+		this.setAttribute("hasmouse",true);	
+	</handler>
+	<handler name="onmouseout">
+		this.setAttribute("hasmouse",false);	
+	</handler>		
+	<handler name="oninit">
+		this.bringToFront();	
+	</handler>
+	</view>
+
+	   
+    </otherwise>
+  </switch>
+
+</library>
+

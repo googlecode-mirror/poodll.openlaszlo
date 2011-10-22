@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+		
+		<include href="lz"/>
+		<include href="incubator/roundrect.lzx" />
+		<include href="../talkback/justinav/poodllaudioplayerclass.lzx"/>
+		
+		<!-- The URL of the Red5 server -->
+		<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />
+		
+		<!-- The type of player -->
+		<attribute name="playertype"  value="lz.Browser.getInitArg('playertype')" />
+		
+		<!-- The URL of the playlist -->
+		<attribute name="playlist"   value="lz.Browser.getInitArg('playlist')"  />
+		
+
+
+		<!-- The border color -->
+		<attribute name="playerbordercolor" value="0x0000FF" />
+
+		<!-- The border width -->
+		<attribute name="playerborderwidth" value="1" />
+		
+		<!-- The border width -->
+		<attribute name="autoplay" value="$once{lz.Browser.getInitArg('autoplay')=='true'}" />
+		
+		<!-- The background color -->
+		<attribute name="playerbackcolor" value="0x9abce5" />
+		
+		<!-- The font color -->
+		<attribute name="playerfontcolor" value="0x550000" />
+		
+		<!-- Current Playing Index -->
+		<attribute name="currentindex" value="0" />
+		<attribute name="currentfilename" value="''" />
+		
+		<!-- Have started -->
+		<attribute name="havestarted" value="false" />
+		
+		<!-- Total Audios -->
+		<attribute name="totalaudios" value="0" />
+
+		<dataset name="audios"  type="http" src="${unescape(canvas.playlist)}" proxied="false" request="true">
+			<handler name="ondata">
+				Debug.write("audios data src:",this.src);
+				//canvas.main.contents.completeInstantiation();
+				canvas.mydp.setAttribute("xpath","audios:/audios");
+				canvas.setAttribute("totalaudios", canvas.mydp.getNodeCount());
+			</handler>
+		</dataset>
+	<datapointer name="mydp" />
+
+	<rtmpconnection  name="autocon" src="${canvas.red5url}" autoconnect="true"/>
+	<roundrect align="center" name="maincontainer" width="${parent.width -10}" height="${parent.height - 10}" 
+					backgroundStartColor="0xEEEEEE"
+					backgroundStopColor="0xDDDDDD"
+					borderColor="#0000FF"
+					borderWidth="5"					
+					>	
+				<simplelayout axis="y" spacing="5" />
+
+					<text align="center"  fontsize="${canvas.height * 0.2}" fgcolor="${canvas.currentindex==0 ? '0x0000FF' : '0xFF0000'}" name="instruction" text="${canvas.currentindex==0 ? (canvas.havestarted ? 'Finished' : 'Click to Start') : 'Playing'}" >
+						<handler name="onclick">
+								parent.doClick();
+						</handler>
+					</text>
+					<text align="center" fontsize="${canvas.height * 0.08}" fgcolor="0x0000FF" name="currentfile" text="${canvas.currentindex==0 ? '' : canvas.currentfilename }" />
+					<text align="center" fontsize="${canvas.height * 0.08}" fgcolor="0x0000FF" name="currentovertotal" text="${canvas.currentindex==0 ? '' : '(' + canvas.currentindex + '/' + canvas.totalaudios + ')' }" />
+					<view name="volumeview" align="center" bgcolor="0xCCCCCC" >
+						<simplelayout axis="x" />
+						<text name="volumelabel" valign="middle" text="Volume: " />
+						<slider name="volumebutton" 
+							enabled="${canvas.currentindex!=0}"
+							valign="middle"
+							width="40" 
+							value="5" 
+							maxvalue="10" 
+							minvalue="0" 
+							showrange="false"
+							showvalue="false" 
+							showfill="true" >
+							<handler name="onvalue">
+								parent.parent.audioplayer.vslider.setAttribute("volume",this.value);
+							</handler>
+						</slider>
+					</view>
+					
+					 <poodllaudioplayer visible="false" name="audioplayer"  bgcolor="${canvas.playerbackcolor}" fontcolor="${canvas.playerfontcolor}" 
+						rtmp="${canvas.autocon}" type="${canvas.playertype}"  autoplay="${canvas.autoplay}" />
+					
+					<handler name="onclick">
+						this.doClick();
+					</handler>
+					<method name="doClick">
+						<![CDATA[
+						if(canvas.currentindex==0 && !canvas.havestarted){
+							this.selectnext();
+							canvas.setAttribute("havestarted",true);
+						}
+						]]>
+					</method>
+					<method name="doSelect">
+							//Access selected data in dataset
+							Debug.write("this value:", this.value );
+							canvas.mydp.setXPath("audios:/audios/audio[" + canvas.currentindex  + "]");
+
+							//set mediastream protocol						
+							this.audioplayer.ms.setAttribute("paused",true) ;
+							
+							//set mediastream protocol
+							this.audioplayer.ms.setAttribute("type",canvas.mydp.getNodeAttribute("playertype")) ;
+							
+							//Set the text label
+							canvas.setAttribute("currentfilename",canvas.mydp.getNodeAttribute("audioname")); 
+							
+							//set mediastream url
+							this.audioplayer.setAttribute("url",canvas.mydp.getNodeAttribute("url")) ;
+							
+							//play audio
+							this.audioplayer.ms.play();
+					
+					</method>
+					<method name="selectprevious">
+					<![CDATA[
+						if (canvas.currentindex < 2){return;}
+						canvas.setAttribute("currentindex", canvas.currentindex -1);
+						Debug.write("currentindex",canvas.currentindex);
+						this.doSelect();
+						]]>
+					</method>
+					<method name="selectnext">
+						<![CDATA[
+						if (canvas.currentindex >= canvas.totalaudios){
+							//Reset the playing index
+							canvas.setAttribute("currentindex", 0);
+							//Set the text label
+							canvas.setAttribute("currentfilename",'');
+							return;
+						}
+						canvas.setAttribute("currentindex", canvas.currentindex + 1);
+						Debug.write("currentindex",canvas.currentindex);
+						this.doSelect();
+						]]>
+					</method>
+			<handler name="onstop" reference="ms">
+				Debug.write("ms on stop from test player");
+				this.selectnext();
+			</handler>
+		</roundrect>
+
+    
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006 Laszlo Systems, Inc. All Rights Reserved.                    *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->
+

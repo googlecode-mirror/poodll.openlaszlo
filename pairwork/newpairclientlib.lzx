@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+<!-- Use messaging rtmp class to manage peer to remote calls -->
+<include href="../messaging/MessagingRtmpConnection.lzx" />
+<!-- The partner widget we will use to show and hear our partners (data replicated) -->
+<include href="partnerwidget.lzx" />
+<!-- Include our better microphone class -->
+<include href="../talkback/justinav/flashutils.lzx" />
+ <include href="../vsplitpane/vsplitpane.lzx"/>
+<include href="lz"/>
+
+<class name="newpairclient" width="100%"  height="100%" extends="view">
+
+<!-- Declare our attributes -->
+<attribute name="mename" />    
+<attribute name="mefullname" /> 
+<attribute name="courseid" /> 
+<attribute name="mepictureurl"  />
+<attribute name="red5url"  />   
+<attribute name="chat"  />   
+<attribute name="whiteboard"  />   
+<attribute name="teacherallstreamname"  />
+<attribute name="whiteboardback"  />   
+<attribute name="pairsidtag" value="'pairs01'" />  
+<attribute name="showvideo"  /> 
+<!-- if we are using javascript to open and close iframes, we set this to true-->
+<attribute name="useroles" value="false"  /> 
+<!-- our role. 0 = nothing, 1= Students A 2 = Student B -->
+<attribute name="role" value="0" />
+
+
+	<!--   Am empty dataset to be filled with information recieved by rtmp messaging -->
+	<!--   the group elements are partners. The group name is also the stream the teacher uses to comm with the group-->
+  <dataset name="partnerData">
+	  <pairsets>
+	  </pairsets>
+  </dataset>
+
+   <!-- A datapointer for other purposes -->
+ <datapointer name="dpurl" xpath="local:partnerData:/pairsets" />
+ 
+ <setter name="role" args="role">
+ <![CDATA[
+	var sendJS = "";
+	this.role=role;
+	if(this.useroles){
+		Debug.write("role:", role);
+		switch (role){
+			case 0: sendJS = sendJS + toggleRoleFrame("poodllrole_a", false);
+					sendJS = sendJS + toggleRoleFrame("poodllrole_b", false);
+					break;
+			case 1: sendJS = sendJS + toggleRoleFrame("poodllrole_b", false);
+					sendJS = sendJS + toggleRoleFrame("poodllrole_a", true);
+					break;
+					
+			case 2: sendJS = sendJS + toggleRoleFrame("poodllrole_a", false);
+					sendJS = sendJS + toggleRoleFrame("poodllrole_b", true);
+					break;				
+										
+					
+		}
+		
+		lz.Browser.loadJS(sendJS);
+		
+		
+	}
+	]]>
+ </setter>
+ 
+ <!--  toggle the role frame open or closed -->
+<method name="toggleRoleFrame" args="pairrole,show">
+	<![CDATA[
+			Debug.write("toggleRoleFrame called");	
+			//altered Justin 20100703 cos this string looked wrong .. not tested
+			//var somejs ="var poodllFrame = document.getElementById(\'" + pairrole + "'\);"; 
+			var somejs ="var poodllFrame = document.getElementById(\'" + pairrole + "\');"; 
+			if(show){
+				somejs = somejs + "poodllFrame.style.display=\'block\'; ";
+			}else{
+				somejs = somejs + "poodllFrame.style.display=\'none\'; ";
+			}
+			
+			//send the js 
+			return somejs;
+
+			]]>
+</method>
+
+<!--rtmp connections -->
+<MessagingRtmpConnection id="paircon" name="paircon" connectiontimeout="15000" userid="${classroot.mename}" appprofileid="${classroot.pairsidtag}" altsrc="${unescape(classroot.red5url) + '/' + classroot.courseid + '/' + classroot.pairsidtag}" src="${unescape(classroot.red5url) + '/' + classroot.courseid + '/' + classroot.pairsidtag}"  debug="false" autoconnect="true">
+	<!--on connecting we init the whiteboard shared object with the boardname -->
+	<handler name="onconnect">
+		if (classroot.whiteboard){
+			Debug.write("connecting whiteboard to SO");
+			//the "solo" sets it up in standalone mode. until we get a partner later ..	
+			classroot.splitpane.scribbleview.thescribblepalette.api.connectSO("solo");
+			Debug.write("connected whiteboard to so");
+		}
+	</handler>
+	<handler name="onpeermessage" args="message">
+		<![CDATA[
+		Debug.write("peermessage:",message);
+		var messageKey = message.slice(0,5);
+		var messageBody = message.slice(5);
+		switch(messageKey){
+			case 'drag:':
+				var newNode = lz.DataElement.stringToLzData(messageBody);
+				if(newNode){			
+					Debug.write("newNode:createdOK");
+					//remove self from list of nodes before adding
+					if(newNode.hasChildNodes()){
+						var pElement= newNode.getFirstChild();
+						//here we fetch our order in the site which can be used to determine our role.
+						var meindex=0;
+						while (pElement != null){
+							meindex++;
+							if (pElement.getAttr("username")== classroot.mename){
+								newNode.removeChild(pElement);
+								classroot.setAttribute("role", meindex);
+								Debug.write("Deleting me from tolisten nodes:me:", classroot.mename);
+								break;								
+							}							
+							pElement = pElement.getNextSibling();
+						}
+					}else{
+						//initialise our role to nothing
+							classroot.setAttribute("role", 0);
+					}
+					
+					//delete old partner nodes
+					var foundOk = false;
+					foundOk = classroot.dpurl.setXPath('local:partnerData:/pairsets/pair');
+					 if (foundOk){
+						//moved to implicit replication Justin 20110311
+						//classroot.splitpane.partnersview.partnersreplicator.stopStreams();
+						classroot.splitpane.partnersview.stopStreams();
+						classroot.dpurl.deleteNode();
+					}
+					
+
+					//set our new nodes
+					var pairNode = null;				
+					classroot.dpurl.setXPath('local:partnerData:/pairsets');
+					pairNode = classroot.dpurl.p.appendChild(newNode);
+					Debug.write("serializing:partnerdata:",classroot.partnerData.serialize());
+
+					//Reset Whiteboard
+					if( classroot.whiteboard != false && pairNode != null && pairNode instanceof lz.DataElement){ 
+						classroot.splitpane.scribbleview.thescribblepalette.restart(pairNode.getAttr('name'));
+						Debug.write("resetting whiteboard:",pairNode.getAttr('name'));
+					}
+					
+					//Reset our pair bound listening stream for teachers voice
+					if(pairNode != null && pairNode instanceof lz.DataElement){
+						Debug.write("newpairclientlib:ms:teachertopairstream: ready but currently we don't play ");
+						/* Seemed to cause instability problems 20100524 something to do with playig streamd that don't exist
+						if (classroot.teachertopairstream.playing){ classroot.teachertopairstream.stop();}
+						classroot.teachertopairstream.setAttribute("url",pairNode.getAttr('name') );
+						classroot.teachertopairstream.play();
+						*/
+					}
+
+				}else{
+					Debug.write("newNode:NOT created ok");
+					Debug.write("newNode messageBody:", messageBody);
+				}
+				break;
+			case 'chat:':	
+				chatHistory.updateHistory(messageBody);			
+				//chatHistory.addItem(messageBody,0);
+				//chatHistory.ensureItemInView(chatHistory.getItemAt(chatHistory.getNumItems-1));
+				//chatHistory.selectItemAt(chatHistory.getNumItems()-1);		
+				break;
+				
+			default: 
+				Debug.write("peermessage:unknown message key:",messageKey);
+				break;
+		
+		}//end of switch	
+		
+				
+		]]>
+		
+	</handler>
+ </MessagingRtmpConnection>
+
+ <!-- our microphone -->
+<poodllmicrophone name="poodllmic" > 
+	<handler name="oninit">
+		this.setAttribute("rate",22);
+		this.setAttribute("gain",50);
+		this.setAttribute("capturing",true);
+	</handler>
+</poodllmicrophone>
+
+<!--mediastreams -->
+  <mediastream name="mestream" type="rtmp" mic="${classroot.poodllmic}"
+		cam="$once{classroot.showvideo=='true'? classroot.splitpane.partnersview.meview.mevideo.mecam : null}" 
+									rtmp="${classroot.paircon}">
+	
+	<handler name="onconnect" reference="classroot.paircon">
+			this.setAttribute("url",classroot.mename);
+			this.broadcast();	
+			Debug.write("showvideo:",classroot.showvideo=='true'  );
+	</handler>
+  </mediastream>
+  
+  
+  
+	<!-- Teachers voice streams -->
+  <mediastream name="teachertopairstream" type="rtmp" rtmp="${classroot.paircon}"  />
+  <mediastream name="teachertoallstream" type="rtmp" rtmp="${classroot.paircon}" url="${classroot.teacherallstreamname}" >
+  <handler name="onconnect" reference="classroot.paircon">
+			Debug.write("newpairclientlib:ms:teachertoallstream: ready but currently we don't play ");
+			//red5 0.9 threw errors when trying to play a stream that had not been created yet.
+			//will eventually need it again. May have to kick it off on a call from the broadcaster.
+			//or maybe we can ust ignore those errors ... Justin 2010.05.13
+			//this.play();	
+	</handler>
+  </mediastream>
+
+
+  <!-- simplelayout axis="y" spacing="15" -->
+<vsplitpane name="splitpane" bordersize="1"  bordercolor="#ff0000" lhs_min_height="${classroot.whiteboard || classroot.chat  ? (classroot.showvideo=='true' ? 180 : 140) : this.height - (this.bordersize*2) - this.sizer_height}" lhs_height_start="${this.lhs_min_height}">
+<view name="partnersview" width="100%"  height="800" x="${(parent.width - this.width) * 0.5}">
+	 <!-- simplelayout axis="x" spacing="10" -->
+	  <wrappinglayout axis="x" spacing="10"/>
+   <!-- rtmpstatus -->  
+	<view name="meview" >
+		 <simplelayout />
+		<view name="mename" align="center">
+			<text fontsize="11" text="${classroot.mefullname}" />		
+		</view>
+		<view name="mepicture" x="27" xoffset="17" visible="${!parent.mevideo.visible}" resource="${unescape(classroot.mepictureurl)}" onclick="this.animMe.doStart()" >
+			<animatorgroup name="animMe" start="false" process="sequential">
+				<animator attribute="rotation" to="360" relative="true" duration="700"  />
+				<animator attribute="x" to="5 " relative="true" duration="150"  />
+				<animator attribute="x" to="-10 " relative="true" duration="300"  />
+				<animator attribute="x" to="5" relative="true" duration="150" />
+			</animatorgroup>
+		</view>
+		<videoview name="mevideo" x="27" xoffset="17"  
+			width="${Math.max(160 , parent.mepicture.width)}" height="${Math.max(120 , parent.mepicture.height)}" 
+				bgcolor="0xCCCCCC" stream="${classroot.mestream}"
+				visible="${(classroot.showvideo =='true')&amp;&amp; classroot.mestream.broadcasting}">
+			<camera name="mecam" capturing="${classroot.showvideo=='true'}" show="${classroot.showvideo=='true'}" />
+		</videoview>
+	</view>
+
+	<!-- Init partner views -->
+	<!-- Commented here Justin 20110311 moving to implicit replication because of problematic pooling remnants.
+	<replicator name="partnersreplicator" dataset="$once{classroot.partnerData}" pool="false" xpath="/pairsets/pair/pairelement">
+		Unfortunately garbage collection, does not seem to stop stream, and changing dataset doesn't automaticlally stop stream>
+		Hope this is not a source of a memory leak , if so set partnerwidget ms to null from here>
+		<method name="stopStreams">
+			<![CDATA[
+			 for (var i = 0; i < clones.length ; i++) {
+              Debug.write("tidying up clone loop:", i);
+				//decided to let flash cleanitup.renamed tidyup to destroy
+			  clones[i].tidyup();
+            }
+			]]>
+		</method>
+		
+		The guts of pairwork. Our partnerwidget which listens to others streams.>
+		  <partnerwidget 
+			pos="$path{'position()'}" 
+			partnerpictureurl="$path{'@pictureurl'}"    	
+			partnerfullname="$path{'@showname'}"  
+			partnerusername="$path{'@username'}" 
+			showvideo="${classroot.showvideo}"
+		  >
+				datapath xpath="local:classroot.partnerData:/pairsets/pair/pairelement" pooling="false">
+				Here we initialise the streams, Took a long time to get the timing right on both 1 and many partnets>
+				<handler name="ondata">
+					Debug.write("partnerwidget ondata username ", this.partnerusername);
+					Debug.write("partnerwidget ondata classroot.showvideo ", classroot.showvideo);
+					Debug.write("partnerwidget ondata this.showvideo ", this.showvideo);
+					this.initpartner();
+				</handler>
+			</partnerwidget>
+		</replicator>
+		-->
+
+		<!-- Unfortunately garbage collection, does not seem to stop stream, and changing dataset doesn't automaticlally stop stream -->
+		<!--Hope this is not a source of a memory leak , if so set partnerwidget ms to null from here or attempt to use pooling-->
+		<method name="stopStreams">
+			<![CDATA[
+			if(this.apartnerwidget.datapath.clones){
+			 for (var i = 0; i < this.apartnerwidget.datapath.clones.length ; i++) {
+				  Debug.write("tidying up clone loop:", i);
+					//decided to let flash cleanitup.renamed tidyup to destroy
+				  this.apartnerwidget.datapath.clones[i].tidyup();
+				}
+			}else{
+				apartnerwidget.tidyup();
+			}
+			]]>
+		</method>
+		
+		<!-- The guts of pairwork. Our partnerwidget which listens to others streams. -->
+		  <partnerwidget 
+			name="apartnerwidget"
+			pos="$path{'position()'}" 
+			partnerpictureurl="$path{'@pictureurl'}"    	
+			partnerfullname="$path{'@showname'}"  
+			partnerusername="$path{'@username'}" 
+			showvideo="${classroot.showvideo}"
+		  >
+				<datapath xpath="local:classroot.partnerData:/pairsets/pair/pairelement" pooling="false" />
+				<!-- Here we initialise the streams, Took a long time to get the timing right on both 1 and many partnets -->
+				<handler name="ondata">
+					Debug.write("partnerwidget ondata username ", this.partnerusername);
+					Debug.write("partnerwidget ondata classroot.showvideo ", classroot.showvideo);
+					Debug.write("partnerwidget ondata this.showvideo ", this.showvideo);
+					this.initpartner();
+				</handler>
+			</partnerwidget>
+
+
+
+</view>
+<view name="ChatView" x="${(parent.width- this.width) / 2}" visible="${classroot.chat}">
+	<simplelayout axis="y" spacing="5"/>
+	<boxview name="chatHistoryView" bordersize="1" bordercolor="0x000000" clip="true" width="100%" bgcolor="0xFFCCFF" height="200" >
+		<text id="chatHistory" name="chatHistory" multiline="true" bgcolor="${parent.bgcolor}" width="${parent.width}" >
+			<method name="updateHistory" args="newText">
+				<![CDATA[
+					var existingText = this.text;
+					if (existingText != "") existingText = existingText + "<br />"; 
+					this.setAttribute("text", existingText + newText);
+					chatScroll.step(chatScroll.scrollmax);					
+					]]>
+			
+			</method>
+		</text>
+		
+		<vscrollbar id="chatScroll" name="chatScroll" />
+ 	</boxview>
+
+		
+	<view name="ChatSendControlsView">
+		<simplelayout axis="x" spacing="10"/>
+		<inputtext id="sendText" name="sendText" bgcolor="0xFFCCFF" width="250">
+		
+			<handler name="onkeyup" args="k">
+
+				switch(k) {			
+					case 13 : this.parent.connectButton.sendMessage(); break;	
+				}
+
+			</handler>
+		</inputtext>
+		<button name="connectButton" width="40" text="Send">
+			<method name="sendMessage">
+				<![CDATA[
+				
+					//first check we actually have text
+					if (sendText.text=="") return;
+					
+					var pairNode = classroot.dpurl.xpathQuery("local:partnerData:/pairsets/pair");
+					
+					if(pairNode != null && pairNode.hasChildNodes()){
+						var pElement = pairNode.getFirstChild();
+						while (pElement != null){
+							var messageString = pElement.getAttr("username") + "@" + classroot.pairsidtag 
+								+ "," + "chat:" +  "<b>" + classroot.mefullname + ":</b> " + sendText.text;
+							Debug.write("messagestring:", messageString);
+							classroot.paircon.sendMessage([messageString]);		
+							pElement = pElement.getNextSibling();
+						}
+					}			
+					
+					chatHistory.updateHistory("<b>me:</b> " + sendText.text);
+					sendText.setAttribute("text", "");
+
+				]]>
+			</method>	
+			<handler name="onclick">
+				sendMessage();
+			</handler>
+		</button>
+	<!-- End of chat send controls view -->	
+	</view>
+<!-- End of chat view -->	
+</view>
+
+<!--Beginning of scribble view -->
+<!-- view name="scribbleview"  x="${(parent.width- this.width) / 2}" width="${parent.width}" height="${parent.height - this.y}" width="600" height="400" visible="${classroot.whiteboard}"  bgcolor="green" -->
+<view name="scribbleview"   width="${parent.width}" height="${parent.height - this.y}" visible="${classroot.whiteboard}"  bgcolor="green">
+	<simplelayout axis="x" spacing="5" inset="10"/>
+	<scribblecpanel name="scribblecpanel" y="10" width="180" height="${classroot.height*0.6}" refscribblepalette="${parent.thescribblepalette}" >
+		<handler name="oninit">	
+			Debug.write("scribblepanelparent", parent.name);
+		</handler>
+	</scribblecpanel>
+	<scribblepalette y="10" rtmpc="${classroot.paircon}" imageurl="${classroot.whiteboardback}" width="${parent.width-parent.scribblecpanel.width -25}" height="${classroot.height*0.6}" name="thescribblepalette" >
+		<method name="restart" args="pairname">
+			this.api.clear();
+			this.api.connectSO(pairname);
+			Debug.write("so connecting");
+		</method>
+	</scribblepalette>	
+
+</view>
+</vsplitpane >
+<!-- We need these to avoid crashes, but they do not need to be visible -->
+<videoview name="teacherAllVView" width="1" height="1" stream="${classroot.teachertoallstream}" visible="false" />
+<videoview name="teacherPairVView" width="1" height="1" stream="${classroot.teachertopairstream}" visible="false" />
+</class>
+</library>

@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	<resource name="foldericons" >
+		<frame src="resources/folder24.png" /><!-- closed -->
+		<frame src="resources/folder24.png" /><!-- open -->
+		<frame src="resources/folder24.png" /><!-- leaf -->
+	</resource>
+	<resource name="fileicons">
+		<frame src="resources/icon_txt.gif" /><!-- leaf -->
+		<frame src="resources/icon_film.gif" /><!-- closed -->
+		<frame src="resources/icon_audio.gif" /><!-- open -->		
+		<frame src="resources/icon_image.gif" /><!-- leaf -->
+		<frame src="resources/icon_plugin.gif" /><!-- leaf -->
+		<frame src="resources/folder16.png" /><!-- leaf -->
+	</resource>
+
+	<include href="incubator/opttree/opttree.lzx" />
+	<include href="treenode.lzx"/>
+	<include href="../vsplitpane/vsplitpane.lzx"/>
+
+	<class name="moodlefileexplorer" extends="view">
+	
+	<!-- we raise this event when we have successfully registered-->
+	<event name="onchoice"/>
+
+	<attribute name="filedataurl"  /> 
+	<attribute name="courseid"  /> 
+	<attribute name="donefirstfetch" value="false" />
+	<attribute name="multiselect" value="true" />
+	<attribute name="selecteddir" value="''" /> 
+	
+	<!-- the xpath generated just prior to a refresh, inorder to reopen the correct dir post refresh -->
+	<attribute name="selxpath" value="''" />
+	
+	
+	<datapointer name="tempdp" />
+	
+	<!-- The dataset containing info about the filesystem -->
+	<!-- The timestamp is to get us over crap browser caching which should not but does occur-->
+	<!-- dataset name="filedata" type="http" src="${classroot.filedataurl + '&amp;timestamp=' + new Date().getTime()}" request="true" -->
+	<dataset name="filedata" type="http" src="${classroot.filedataurl}" request="true" >
+		<handler name="ondata">	
+		<![CDATA[	
+			Debug.write("instantiating");
+			if(!classroot.donefirstfetch){
+				classroot.splitpane.dirtreecontainer.completeInstantiation();			
+				classroot.splitpane.filetreecontainer.completeInstantiation();
+				classroot.setAttribute("donefirstfetch",true);
+			}else{
+				//if we have saved xpath, lets reset our tree/grid to that
+				//NB if we delete a directory, we should first reset the selxpath to the higher folder 
+				//and then perform the action. This way the tree will open to the right place
+				if(classroot.selxpath && classroot.selxpath !=''){
+					classroot.tempdp = this.getPointer();
+					//Set the xpath
+					if(classroot.tempdp.setXPath(classroot.selxpath)){
+						//if we got it, open the tree folder(dirs)
+						classroot.splitpane.dirtreecontainer.dirtree.setOpen(classroot.tempdp.p,true);
+						//then set the grid(files)
+						classroot.splitpane.filetreecontainer.filetree.datapath.setAttribute('p', classroot.tempdp.p);
+						//finally make sure the tree is opened right the way through to our folder
+						while(classroot.tempdp.selectParent()){
+							classroot.splitpane.dirtreecontainer.dirtree.setOpen(classroot.tempdp.p,true);
+						}
+					}
+					
+				}
+			}	
+			
+			]]>
+		</handler>
+		<handler name="oninit">	
+			Debug.write("url:" + this.src);
+		</handler>
+	</dataset>
+	
+	 <node name="adatanode">
+        <attribute name="loadnode" value="null"/>
+
+        <method name="loadAdditionalTreeData" args="atnode">
+            this.setAttribute( "loadnode", atnode );
+            classroot.filedata.doRequest();
+        </method>
+
+        <method name="loadedTreeData" args="ldata">
+            loadnode.setAttribute( "childNodes", ldata.childNodes);
+        </method>
+    </node>
+	
+	<handler name="oninit">
+		Debug.write("class init'ing");
+		adatanode.loadAdditionalTreeData(filedata.getFirstChild());
+	</handler>
+	
+	<simplelayout axis="y" spacing="2" />
+	<!-- On windows systems this will look crap : need to revisit Justin 20111006 -->
+	<text name="thedir" text="${'/' + classroot.selecteddir}" width="${classroot.width}" bgcolor="0xCCCCCC"  />
+	<vsplitpane name="splitpane" bordersize="1"  bordercolor="#ff0000" width="${parent.width}">
+<!-- lhs_min_height="${classroot.whiteboard || classroot.chat  ? (classroot.showvideo=='true' ? 180 : 140) : this.height - (this.bordersize*2) - this.sizer_height}" lhs_height_start="${this.lhs_min_height}" -->
+	<!-- Specify a non null icon, icon="foldericons" to get custom pictures-->
+	<view name="dirtreecontainer" width="${parent.width}" height="100%"  clip="true" initstage="defer" >
+		<opttree name="dirtree" datapath="local:classroot.filedata:/directorylist" nodepath="directory" nodeclass="treenode" >
+			<handler name="oninit">
+				Debug.write("inited");
+			</handler>
+		  <!-- opttree name="innertree" datapath="*" text="$path{'@name'}" isleaf="$path{'@isleaf'}" -->
+				<method name="select" args="el" override="true"><![CDATA[
+                    super.select(el);					
+                    this.setAttribute("selection", el && el.datapath.p);
+					//classroot.onchoice.sendEvent(this.selection);
+					
+					var path="";
+					var newxpath="";
+					var currentnode=el.datapath.p;
+					//Debug.write(el.datapath);
+					//Debug.write('ok');
+					//Debug.inspect(el);
+					while(currentnode && currentnode.hasAttr('name')){
+						if(path==""){
+							path = currentnode.getAttr("name");
+							newxpath="directory[@name='" + currentnode.getAttr('name') + "']"; 
+						}else{
+							path = currentnode.getAttr("name") + "/" + path;
+							newxpath="directory[@name='" + currentnode.getAttr('name') + "']/" + newxpath; 
+						}
+						
+						currentnode = currentnode.parentNode;
+					}
+					
+					//set our currently selected dir(as user will see it) and xpath to it
+					classroot.setAttribute("selecteddir", path);
+					classroot.setAttribute("selxpath", "/directorylist/" + newxpath);
+					//Debug.write("path", path);
+					//Debug.write("newxpath", newxpath);
+					
+					classroot.onchoice.sendEvent(path);
+					
+					//update our grid(file area) to the correct path
+					classroot.splitpane.filetreecontainer.filetree.datapath.setAttribute("p",el.datapath.p);
+                ]]></method>	
+			
+		</opttree>
+		<scrollbar axis="y" />
+		<!-- scrollbar axis="x" -->
+	</view>
+	
+	<!-- view name="filetreecontainer" width="${classroot.width}" height="${(classroot.height - classroot.controlbox.height - 5) /2 }" clip="true" initstage="defer" -->
+	<view name="filetreecontainer" width="100%" height="100%" clip="true" initstage="defer" >
+		<!-- make contentdatapath here = file if you don't want to show directories(or directory if that all you want) -->
+		<grid name="filetree" datapath="local:classroot.filedata:/directorylist" width="${parent.width}" height="${parent.height - 20}" multiselect="${classroot.multiselect}" contentdatapath="*" >
+			
+			<gridcolumn name="col1" showheader="true" width="${parent.width * 0.1}">
+				<!--
+				<view bgcolor="#CCCCCC" width="${parent.width}" placement="header" height="${parent.immediateparent.height-1}"/>
+				<text datapath="position()"/>
+				-->
+				<!-- text text="${parent.immediateparent.datapath.xpathQuery('@name')}" -->
+				<attribute name="sfile" value="$path{'@isleaf'}" />
+				<attribute name="stype" value="$path{'@type'}" />
+				<text name="isafile" text="$path{'@isleaf'}" visible="false" />
+				<text name="thetype" text="$path{'@type'}" visible="false" >
+					<handler name="ontext" >						
+						switch(this.text.substring(0,4)){
+							case 'audi' : parent.iconview.setAttribute("frame",3);
+										break;
+							case 'text' : parent.iconview.setAttribute("frame",1);
+										break;
+							case 'vide' : parent.iconview.setAttribute("frame",2);
+										break;
+							case 'imag' : parent.iconview.setAttribute("frame",4);
+										break;
+							case 'appl' : parent.iconview.setAttribute("frame",5);
+										break;
+							case 'null' : parent.iconview.setAttribute("frame",6);
+										break;
+							default : parent.iconview.setAttribute("frame",1);
+	
+							
+						}
+					</handler>
+				</text>
+				
+				
+				<view name="iconview" resource="fileicons" width="${parent.width}" height="${parent.immediateparent.height-1}" 
+					frame="2" />
+					
+              </gridcolumn>
+		
+			 <gridtext name="col2" editable="false" datapath="@name" width="${parent.width * 0.3}">NAME</gridtext>
+			 <gridtext name="col3" editable="false" datapath="@filesize" datatype="number" width="${parent.width * 0.2}">SIZE</gridtext>
+			 <gridtext name="col4" editable="false" datapath="@modified" width="${parent.width * 0.2}">MODIFIED</gridtext>
+			 <gridtext name="col5" editable="false" datapath="@type" width="${parent.width * 0.2}">TYPE</gridtext>
+			 <!--
+			 <gridtext name="col6" editable="false" datapath="@created" >CREATED</gridtext>
+			 <gridtext name="col7" editable="false" datapath="@url" >URL</gridtext>
+			 <gridtext name="col8" editable="false" datapath="@hash" >HASH</gridtext>
+			 -->
+			
+              
+		</grid>
+      
+		<scrollbar axis="x" />
+		
+	</view>
+	</vsplitpane>
+	
+	<view name="controlbox" height="50" align="right" x="${classroot.width - this.width - 5}">
+		<button name="refreshButton" text="Refresh" onclick="parent.doRefr()"/>
+		<method name="doRefr">
+			<![CDATA[
+				classroot.filedata.doRequest();
+			]]>
+		</method>
+	</view>
+
+
+
+
+	
+		
+</class>
+
+</library>
+

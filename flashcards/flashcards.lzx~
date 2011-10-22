@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas height="500" width="100%" debug="false">
+	<attribute name="showingFront" value="true"/>
+  <dataset name="cards">
+    <stack>
+      <card>
+	<background>Green</background>
+        <front type="text">Subaru</front>
+        <back type="text">Japan</back>                
+      </card>
+	  <card>
+	<background>Red</background>
+        <front type="text">Chrysler</front>
+        <back type="text">America</back>                
+      </card>
+	  <card>
+	<background>Blue</background>
+        <front type="image">Hyundai</front>
+        <back type="video">Korea</back>                
+      </card>
+    </stack>
+  </dataset>
+<view name="cardview" width="350" height="200" datapath="cards:/stack/card"  clickable="true" >
+
+	<view bgcolor="$path{'background/text()'}" width="15" height="15" />
+	<text name="showtext" datapath="front/text()" />
+	<handler name="onclick">
+		//this.setAttribute("bgcolor", "red");
+		canvas.showingFront = !canvas.showingFront;
+		toggleCard();
+	</handler>
+	<method name="toggleCard" args="">	
+		if(canvas.showingFront){
+			this.showtext.setAttribute("datapath","front/text()");
+		}else{
+			this.showtext.setAttribute("datapath","back/text()");
+		}
+	</method>
+	<button name="nextButton" valign="middle"  width="300" height="30" text="Next>>">
+        	<handler name="onclick" >				
+				canvas.showingFront="true";
+				this.parent.setAttribute("visible",false);
+			</handler>
+</button>
+</view>
+
+</canvas>

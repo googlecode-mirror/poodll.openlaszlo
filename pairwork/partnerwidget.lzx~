@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	<include href="incubator/boxview.lzx" />	
+
+<!-- this class holds an individual user-->
+<class name="partnerwidget" extends="view">
+	<attribute name="partnerpictureurl" />
+	<attribute name="partnerfullname" />
+	<attribute name="partnerusername" />
+	
+	<!-- the rtmp connection to initialise the streams with must be passed in -->	
+	<attribute name="rtmpc" value="null" />
+	
+	<!-- the mediastream we use to listen to our partner on -->
+  <mediastream name="partnerstream" type="rtmp" rtmp="rtmpc" >
+	<handler name="oninit">
+			this.setAttribute("url",classroot.partnerusername);
+			this.play();	
+	</handler>
+  </mediastream>  
+
+
+<!-- the visual elemenets of the partner widget -->
+		<simplelayout />
+		<view name="partnername" >
+			<text fontsize="11" text="${classroot.partnerfullname}" />		
+		</view>
+		<view name="partnerpicture" x="27" xoffset="17"  resource="${unescape(classroot.partnerpictureurl)}" onclick="this.animPartner.doStart()">
+		  <!-- this animation is not necessary, but later on we might use it to indicate a state of the partner -->
+		  <animatorgroup name="animPartner" process="sequential" start="false">
+			  <animator attribute="rotation" to="-360" relative="true" duration="700"  />
+			  <animator attribute="x" to="5 " relative="true" duration="150"  />
+			  <animator attribute="x" to="-10 " relative="true" duration="300"  />
+			  <animator attribute="x" to="5" relative="true" duration="150" />
+	 	  </animatorgroup>
+
+		</view>
+
+	</class>
+</library>

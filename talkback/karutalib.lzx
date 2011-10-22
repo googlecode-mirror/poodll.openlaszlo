@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	<class extends="text" name="phrasetext"  >
+					<attribute name="ms" />
+					<attribute name="start" />
+					<attribute name="duration" /> 
+					<attribute name="activestart" /> 
+					<attribute name="activeduration" /> 
+					<attribute name="active" value="false"/>
+					<handler name="oninit">
+						this.showHideDel = new LzDelegate(this, 'showMeHideMe');
+						this.showHideDel.register(lz.Idle, 'onidle');
+						this.start = parseFloat(this.start);
+						this.activestart= parseFloat(this.activestart);
+						this.duration = parseFloat(this.duration);
+						this.activeduration= parseFloat(this.activeduration);
+					</handler>
+					<handler name="onclick">
+						if(this.active){
+							this.setAttribute("visible",false);
+							this.showHideDel.unregisterAll();
+							this.parent.setAttribute("score" , this.parent.score + 1)
+						}
+					</handler>
+					<method name="showMeHideMe" args="ignore=null">
+						<![CDATA[
+							if (this.ms == null && !this.ms.playing) { return;}
+							//Debug.write("ms is activated ...");
+							var visi = (this.ms.time > this.start) && 
+										(this.ms.time < (this.duration + this.start));
+							
+							if (this.visible != visi) {
+								this.setAttribute('visible', visi);
+							}
+							
+							if(visi){
+								var acti = (this.ms.time > this.activestart) && 
+										(this.ms.time < (this.activeduration + this.activestart));
+								if (this.active != acti) {
+									this.setAttribute('active', acti);
+								}
+							}
+						]]>
+					</method>
+					
+					<state name="moving" applied="${parent.visible}">
+					   <animatorgroup duration="${classroot.duration * 1000}" process="sequential">
+						   <animatorgroup duration="${classroot.duration * 500 }" process="simultaneous">
+							 <animator attribute="x" from="0" to="-500" motion="linear" />
+							 <animator attribute="opacity" from ="0.2" to="1" motion="linear" />
+							 <animator attribute="fontsize" from="12" to="64" motion="linear" />
+							</animatorgroup>
+							
+							<animatorgroup duration="${classroot.duration * 500}" process="simultaneous">
+							 <animator attribute="x" from="-500" to="0" motion="linear" indirect="true" />
+							 <animator attribute="opacity" from="1" to="0.2"  motion="linear" indirect="true" />
+							 <animator attribute="fontsize" from="64" to="12" motion="linear" indirect="true" />
+							</animatorgroup>
+						</animatorgroup>
+						
+					</state>
+					
+				<!-- end of phrasetext class -->	
+				</class>
+</library>

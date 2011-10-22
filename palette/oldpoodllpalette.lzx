@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<canvas>
+
+
+ <goldstyle name="defaultstyle" isdefault="true"/>
+ <greenstyle name="specialstyle"/>
+
+	<include href="lz"/>	
+	<include href="fileexplorerlib.lzx"/>
+	<include href="../talkback/justinav/justinvideoplayer.lzx"/>
+	<include href="../42recorder/PoodLLTeachersRecorderLib.lzx"/>
+
+	<!-- The URL of the Red5 server -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  	
+	<attribute name="componentlist" value="lz.Browser.getInitArg('componentlist')" />  	
+	<attribute name="coursefiles" value="lz.Browser.getInitArg('coursefiles')" /> 
+	<attribute name="poodlllogicurl" value="lz.Browser.getInitArg('poodlllogicurl')" />  	 	
+
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename" value="lz.Browser.getInitArg('filename')" />  	
+
+	<!-- The course id (parent will pass -1 if there is no course id) -->
+	<attribute name="course"  value="lz.Browser.getInitArg('course')" />  	
+	
+	<!-- The id of the control on the enclosing HTMLpage to update with the ilename -->
+	<attribute name="updatecontrol"  value="lz.Browser.getInitArg('updatecontrol')" />  	
+
+	<!-- camera attributes -->
+	<!-- To set a particular camera as default -->
+	<attribute name="prefcam" value="lz.Browser.getInitArg('prefcam')" />
+	<attribute name="prefmic" value="lz.Browser.getInitArg('prefmic')" />
+
+	<!-- Some camera settings-->
+	<attribute name="capturewidth" value="lz.Browser.getInitArg('capturewidth')" />
+	<attribute name="captureheight" value="lz.Browser.getInitArg('captureheight')" />
+	<attribute name="bandwidth" value="lz.Browser.getInitArg('bandwidth')" />
+	<attribute name="picqual" value="lz.Browser.getInitArg('picqual')" />
+	<attribute name="capturefps" value="lz.Browser.getInitArg('capturefps')"  />
+	
+	<!-- The save name of our file. Added Justin 2009/06/12 -->
+	<attribute name="savefilename" value="''" />
+	
+	<!-- The path that gets set by the filechooser component -->
+	<attribute name="chosenpath" value="''"/>	
+	<handler name="onchosenpath">
+		//get name of selected tab and that tabs path field, and set this value
+		Debug.write("onchosenpath", this.chosenpath);
+	</handler>
+
+
+	<!-- This method is used to call in from javascript(editor:mediacoursefiles) and start playing Added Justin 2009/07/04 -->
+	<!-- This p attribute is for protocol, of course rtmp, so we ignore. For compat with simple vid player Add Justin 2009/07/06 -->
+	<method name="seturl" args="a,p">
+			<![CDATA[
+
+		
+				if (this.course!=-1){
+					Debug.write("a:",a);
+					Debug.write("p:",p);
+					this.setAttribute("filename",a);
+				/*
+					var strPatternOne= this.course + '/';
+					var strPatternTwo= '/' + this.course + '/';
+					if(a.indexOf(strPatternOne)==0){
+						a= a.substr(strPatternOne.length);
+					}else if(a.indexOf(strPatternTwo)==0){
+						a= a.substr(strPatternTwo.length);
+					}				
+				*/
+				}
+			]]>
+	</method>
+
+
+	<!-- Justin 2000/06/12-->
+	<!-- Had many problems keeping this logic central and used with constraints-->
+	<!-- This is not elegant but it works. The job is to start from courseid, if we have one-->
+	<handler name="onfilename">
+		<![CDATA[
+			
+			if (this.course!=-1){
+				this.setAttribute("savefilename", this.course + '/' + this.filename);
+			}else{ 
+				this.setAttribute("savefilename",this.filename);
+			}
+		]]>
+	</handler>
+	
+	<!-- The server connection -->
+	<rtmpconnection name="rtmpc"  src="${canvas.red5url}"  debug="true" />	
+	<dataset name="poodllcomponents"  type="http" src="${canvas.componentlist}" proxied="false" request="true">
+			<handler name="ondata">
+				Debug.write("components data src:",this.src);
+				//canvas.main.contents.completeInstantiation(); 
+			</handler>
+	</dataset>
+
+
+    <simplelayout axis="x" spacing="10"/>
+	<basetabs name="toptabs" bordersize="5" tabclass="tab" height="500">
+	 <basetabpane name="previewtab" text="PoodLL" bgcolor="#bdbdbd" selected="true" >
+		<tabslider  name="categorysliders" width="500" height="400" spacing="2" slideduration="200" >		 
+				<tabelement name="previewplayer"  text="Preview Player" >
+   					<simplelayout axis="y" spacing="10"/>
+					<edittext name="settext" width="300"  />
+					<justinvideoplayer  name="poodllplayer"  type="rtmp"  rtmp="${canvas.rtmpc}"  url="${canvas.course  + '/' + parent.settext.text}" showscreen="true" autoplay="false" width="300" height="200" >
+						<handler name="oninit">
+							<![CDATA[
+								var pathdelegate = new LzDelegate(this, 'updatePath');
+								pathdelegate.register(canvas, 'onfilename');
+								parent.setAttribute("selected",true);
+							]]>
+						</handler>
+						<method name="updatePath" args="ignore=null">
+							<![CDATA[
+							//I bet there is a more elegant way of achieving this,
+							//simply need to set a delgate on select of category tab slider and widget tab element somehow
+							if(this.parent.selected && this.parent.parent.parent.tab.selected){
+								parent.settext.setAttribute("text",canvas.filename);
+								}
+							]]>
+						</method>
+					</justinvideoplayer>
+				</tabelement>
+				<tabelement name="teacherrecorder"  text="Teacher's Recorder" >
+					<poodllteachersrecorder  name="poodllrecorder" 
+						red5url="${canvas.red5url}" 
+						filename="''" 
+						course="${canvas.course}" 
+						updatecontrol ="'notdefined'"
+						prefcam="canvas.prefcam"
+						prefmic="canvas.prefmic"
+						capturewidth="canvas.capturewidth"
+						captureheight="canvas.captureheight"
+						bandwidth="canvas.bandwidth"
+						picqual="canvas.picqual"
+						capturefps="canvas.capturefps"
+						width="300" 
+						height="350" >
+						
+						<handler name="oninit">
+							<![CDATA[
+								var pathdelegate = new LzDelegate(this, 'updatePath');
+								pathdelegate.register(canvas, 'onfilename');
+								
+							]]>
+						</handler>
+						<method name="updatePath" args="ignore=null">
+							<![CDATA[
+							//I bet there is a more elegant way of achieving this,
+							//simply need to set a delgate on select of category tab slider and widget tab element somehow
+							if(this.parent.selected && this.parent.parent.parent.tab.selected){
+								this.setAttribute("filename",canvas.filename);
+								}
+							]]>
+						</method>
+						
+					</poodllteachersrecorder>
+				</tabelement>
+		</tabslider>
+		</basetabpane>
+	 
+	
+	   <basetabpane text="$path{'@categoryname'}" bgcolor="#bdbdbd">
+		<datapath xpath="poodllcomponents:/components/category/" />
+				
+		 <tabslider  name="categorysliders" width="500" height="450" spacing="2" slideduration="200" >
+		 
+				<tabelement name="componentelements"  text="$path{'@componentname'}" >
+					<datapath xpath="component/">
+						<handler name="onclones">
+						if (!this['doneDel']) {
+						 this.doneDel = new LzDelegate(this, 'openTabOne');
+						 this.doneDel.register(clones[clones.length - 1], 'oninit');
+						 Debug.write("dondelregistered");
+						}
+					  </handler>
+					  <method name="openTabOne" args="ignore = null">
+						<![CDATA[
+							this.parent.selectItemAt(0);
+							]]>
+					  </method>
+				  </datapath>
+					<simplelayout axis="y" spacing="10" />
+					<attribute name="componenttype" value="$path{'@type'}" /> 
+					<poodllfield name="afield" datapath="field/" thecanvas="${canvas}" tooltip="$path{'@tooltip'}" label="$path{'@label'}" input="$path{'@input'}" def="$path{'@default'}" width="${parent.width}" />
+					<button name="gobutton" text="Insert Component">
+						<handler name="onclick">
+						
+							<![CDATA[
+								var retString="";
+								if(parent.afield['clones']) {
+									for (var x=0; x<parent.afield.clones.length; x++){
+										//Debug.write("x=",x);
+										//if (parent.subviews[x] instanceof lz.poodllfield){
+											retString=retString + ","
+											retString = retString + parent.afield.clones[x].label + "=" +  parent.afield.clones[x].getEntry();
+										//}
+									}
+								}else{
+									retString = retString + "," + parent.afield.label + "=" +  parent.afield.getEntry();
+								}
+								retString = "{POODLL:type=" + parent.componenttype + retString + "}";
+								Debug.write(retString);
+								
+								
+								 // var param = new Object();
+							    //param['filterstring'] = el.value;
+								 lz.Browser.loadJS("returnFilterString(\'" + retString + "\');");								
+								
+							]]>
+						</handler>
+					</button>
+					
+				</tabelement>					
+				
+			</tabslider>
+					
+		</basetabpane>	
+		
+	</basetabs>
+	<!-- html src="${canvas.coursefiles}" width="300" height="300" -->	
+	<fileexplorer  name="fileexplorer" bgcolor="0xBDBDBD" y="35" filedataurl="${canvas.poodlllogicurl}"  courseid="${canvas.course}" width="350" height="${canvas.toptabs.height - this.y}">
+		<handler name="onchoice" args="path">
+			canvas.setAttribute("filename",path);
+			Debug.write("path set to:",path);
+		</handler>
+	</fileexplorer>
+	<button text="R" >
+		<handler name="onclick">
+			parent.fileexplorer.filedata.doRequest();
+		</handler>
+	</button>
+	
+	<class name="poodllfield" extends="view">
+		<attribute name="label" value="null" />
+		<attribute name="def" value="null" />
+		<attribute name="input" value="null" />
+		<attribute name="thecanvas" value="null" />
+		<attribute name="tooltip" value="''" />
+		<attribute name="pathdelegate" value="null" />
+		
+		<handler name="oninit">
+			<![CDATA[
+				if (this.input=='path'){
+					this.pathdelegate = new LzDelegate(this, 'updatePath');
+					this.pathdelegate.register(this.thecanvas, 'onfilename');				
+				}
+			]]>
+		</handler>
+		<method name="updatePath" args="ignore=null">
+			<![CDATA[
+			//I bet there is a more elegant way of achieving this,
+			//simply need to set a delgate on select of category tab slider and widget tab element somehow
+			Debug.write("me:" + this.label + ":parent(3):" + this.parent.parent.parent.text + ":selected:" + this.parent.parent.parent.tab.selected);
+			if(this.parent.selected && this.parent.parent.parent.tab.selected){
+				this.inputtext.setAttribute("text",this.thecanvas.filename);
+				}
+			]]>
+		</method>
+	
+		<simplelayout inset="10" axis="x" spacing="10"/>
+		 <text name="labeltext" text="${classroot.label}" clickable="true">
+			<tooltip text="${classroot.tooltip}" />
+		 </text>
+		 <inputtext name="inputtext" width="${parent.width - parent.labeltext.width - 40}" bgcolor="0xCCCCCC" visible="${parent.input=='text' || parent.input=='path'}" text="${parent.def}"/>
+		 <inputtext name="inputnumber" width="60" pattern="[0-9]*" bgcolor="0xCCCCCC" visible="${parent.input=='number'}" text="${parent.def}" />
+		 <combobox name="inputchoice" editable="false"  bgcolor="0xCCCCCC" visible="${classroot.input != null &amp;&amp; classroot.input != 'number' &amp;&amp; classroot.input != 'text' &amp;&amp; classroot.input != 'path'}">
+			<handler name="oninit">
+				<![CDATA[
+				var toSelect = 0;
+				if (this.visible){
+					var tw = classroot.input.split("|");
+					for (var eg=0;eg<tw.length;eg++){
+						Debug.write(tw[eg],tw[eg]);
+						this.addItem(tw[eg],tw[eg]);
+						if (tw[eg] == canvas.def) toSelect=eg;
+					}   
+					this.selectItemAt(toSelect); 
+					//this.setAttribute("selected",0);
+				}				
+				]]>
+			</handler>
+		
+		</combobox>
+		
+		<method name="getEntry">
+			switch(this.input){
+
+				case 'path': 
+				case 'text': return this.inputtext.text;
+								break;
+				case 'number': return this.inputnumber.text;
+								break;
+				default: return this.inputchoice.value;
+								break;
+			
+			}
+		</method>
+		<button text="getvalue" visible="false">
+			<handler name="onclick">
+				Debug.write(parent.getEntry());
+			</handler>
+		</button>
+
+
+		 
+	</class>
+   
+</canvas>
+
+
+
+
+
+
+
+

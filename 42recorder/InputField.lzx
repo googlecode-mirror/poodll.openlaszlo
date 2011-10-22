@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<library>
+	<class name="InputField" extends="view">
+		<attribute name="fieldName" type="string"/>		
+
+		<method name="getText">
+			return input.getText()
+		</method>
+	
+		<simplelayout axis="x"/>
+		<text text="${parent.fieldName + ':'}"></text>
+		<edittext name="input"/>
+	</class>
+</library>

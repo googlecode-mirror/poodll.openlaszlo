@@ -1,0 +1,80 @@
+<canvas allowfullscreen="true">
+		
+		<include href="lz"/>
+		<include href="../utils/poodllfullscreen.lzx"/>
+		<include href="../talkback/justinav/justinvideoplayer.lzx"/>
+		<include href="incubator/boxview.lzx" />
+		
+		
+		
+		<!-- The URL of the Red5 server -->
+		<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  	
+
+		<!-- The URL of the playlist -->
+		<attribute name="playlist"   value="lz.Browser.getInitArg('playlist')"  />
+				
+		<!-- The background color -->
+		<attribute name="playerbackcolor" value="0x33bce5" />
+
+		<!-- The playertype -->
+		<attribute name="playertype" value="lz.Browser.getInitArg('playertype')"  />
+		
+		<!-- The font color -->
+		<attribute name="playerfontcolor" value="0x550000" />		
+		<dataset name="videos"  type="http" src="${unescape(canvas.playlist)}" proxied="false" request="true">
+			<handler name="ondata">
+				Debug.write("videos data src:",this.src);
+				canvas.main.contents.completeInstantiation(); 
+			</handler>
+		</dataset>
+
+	<!-- Connection to Red5 Server -->
+	<rtmpconnection name="autocon" src="${canvas.red5url}" autoconnect="true"/>
+	
+	<!-- The videoGallery view --> 
+	<view name="main" width="${parent.width}" height="${parent.height}" clip="true">
+		<view name="contents" width="${parent.width}" initstage="defer" >
+		
+			<resizelayout axis="y" />
+			<!-- text text="$path{'@videoname'}" -->
+			<datapointer name="mydp" xpath="videos:/videos"/>
+			<combobox name="videolist" shownitems="10" width="${parent.width}" editable="false" defaulttext="choose a video...">
+				<textlistitem name="videoitem" datapath="videos:/videos/video" 
+                               text="$path{'@videoname'}"
+                               value="$path{'position()'}" >									  
+				</textlistitem>			   				
+				<handler name="onselect">
+						doSelect();
+				</handler>
+				<method name="doSelect">
+						//Access selected data in dataset
+						Debug.write("this value:", this.value );
+						this.parent.mydp.setXPath("videos:/videos/video[" + this.value + "]");
+
+						//set mediastream protocol						
+						this.parent.poodllplayer.vscreen.stream.setAttribute("paused",true) ;
+						
+						//set mediastream protocol
+						this.parent.poodllplayer.vscreen.stream.setAttribute("type",parent.mydp.getNodeAttribute("playertype")) ;
+						
+						//set mediastream url
+						this.parent.poodllplayer.vscreen.stream.setAttribute("url",parent.mydp.getNodeAttribute("url")) ;
+						
+						//play video
+						this.parent.poodllplayer.vscreen.stream.play();
+				
+				</method>
+			</combobox>
+			<justinvideoplayer  name="poodllplayer"  type="${canvas.playertype}" bgcolor="${canvas.playerbackcolor}" fontcolor="${canvas.playerfontcolor}" rtmp="${canvas.autocon}" showscreen="true" autoplay="false" width="${parent.width}" height="${canvas.height-50}" />
+		
+		</view>
+	</view>
+
+    
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006 Laszlo Systems, Inc. All Rights Reserved.                    *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->
+

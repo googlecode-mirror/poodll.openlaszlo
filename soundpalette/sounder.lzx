@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="500" height="500">
+<include href="soundpalette.lzx" />	
+<soundpalette width="300" height="300" />
+</canvas>

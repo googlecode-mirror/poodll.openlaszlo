@@ -1,0 +1,10 @@
+<menuresource>
+       <slide>
+        <pictureurl>logo.png</pictureurl>
+        <jumpurl target="">http://192.168.187.62:8080/moodle</jumpurl>
+      </slide>
+	  <slide>
+        <pictureurl>profile.png</pictureurl>
+        <jumpurl target="">http://192.168.187.62:8080/moodle/user/view.php</jumpurl>
+      </slide>
+</menuresource>

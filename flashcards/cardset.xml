@@ -1,0 +1,18 @@
+ <stack frontfgcolor="0xDDDDDD" frontbgcolor="0x0000FF" backfgcolor="0x000000" backbgcolor="0xDDDDDD">
+	<card>
+		<front fontsize="24" type="text">Subaru</front>
+		<back fontsize="24" type="text">Japan</back>                
+	</card>
+	<card>
+        <front fontsize="24" type="text">Chrysler</front>
+        <back fontsize="24"  type="text">America</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="image">Hyundai</front>
+        <back fontsize="24" type="video">Korea</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">Holden</front>
+        <back fontsize="24" type="audio">Australia</back>                
+     </card>	 
+ </stack>

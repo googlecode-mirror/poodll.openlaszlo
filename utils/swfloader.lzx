@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	  <!-- Use this class to load external swf's into your laszlo apps -->  
+	 <class name="externalswfview" extends="view">
+		<switch>	
+			<when property="$as3">
+				<passthrough>
+					import flash.system.Security;
+					import flash.display.Loader;
+				        import flash.net.URLRequest;
+				        import flash.events.Event;
+				</passthrough>
+			</when>
+			<otherwise>
+				<passthrough>
+					import flash.display.Loader;
+				        import flash.net.URLRequest;
+				        import flash.events.Event;
+				</passthrough>
+
+			</otherwise>
+		</switch>
+
+
+	        
+              <attribute name="allowdomain" type="string" value="''" />	
+	      <attribute name="theloader" value="null" />
+	      <attribute name="theswf" value="null" />
+		<attribute name="target" value="null" />
+
+		
+	      
+
+		<method name="init">
+			super.init();
+			Security.allowDomain(this.allowdomain);
+        		Debug.showInternalProperties = true;
+			Debug.write("target: " , this.target);		
+			this.loadSWF(this.target);
+		</method>
+	      
+	      <method name="loadSWF" args="target">
+	        if ($as3) {
+	            var request:URLRequest = new URLRequest(target);
+	            var loader:Loader = new Loader();
+		    this.setAttribute("theloader", loader);	
+	            loader.contentLoaderInfo.addEventListener(Event.INIT, swfLoadComplete);
+	            loader.load(request);
+	            this.sprite.addChild(loader);
+	        }
+	      </method>
+
+
+		<!-- You will need to override this to setup your class -->
+		<!-- and call super.swfLoadComplete(e) as first line of overriding method -->      
+	      <method name="swfLoadComplete" args="e">
+		this.setAttribute("theswf",this.theloader.content);
+	        Debug.write("Event.INIT event");
+	        Debug.write("Content is", e.target.content);
+	        Debug.write("SWF version is ", e.target.swfVersion);
+	        Debug.write("URL of loaded file is ", e.target.url);	
+	      </method>
+
+	</class>
+</library>

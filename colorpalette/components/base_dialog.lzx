@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<library>
+
+   <resource name="dialog_top_left" src="images/top_left.png"></resource>
+   <resource name="dialog_top" src="images/top.png"></resource>
+   <resource name="dialog_top_right" src="images/top_right.png"></resource>
+   <resource name="dialog_left" src="images/left.png"></resource>
+   <resource name="dialog_right" src="images/right.png"></resource>
+   <resource name="dialog_bottom_left" src="images/bottom_left.png"></resource>
+   <resource name="dialog_bottom" src="images/bottom.png"></resource>
+   <resource name="dialog_bottom_right" src="images/bottom_right.png"></resource>
+
+   <class name="basedialog" defaultplacement="content" bgcolor="0xffffff">
+   
+      <!-- title text for the dialog                                         -->
+      <attribute name="title" type="html" value="Title"></attribute>
+      
+      <!-- center the confirmation dialog based on its immediate parent      -->
+      <attribute name="x" value="${immediateparent.width / 2 - this.width / 2}"></attribute>
+      <attribute name="y" value="${immediateparent.height / 2 - this.height / 2}"></attribute>
+      
+      <!-- make sure it ignores any layouts that might be applied against it -->
+      <attribute name="options" value="ignorelayout"></attribute>
+      
+      <!-- make sure the dialog window is not visible to begin with. Its 
+           visibility will be set by the open and close methods.             -->
+      <attribute name="visible" value="false"></attribute>
+      
+      <!-- set its default width and height to 640 X 480                     -->
+      <attribute name="width" value="640"></attribute>
+      <attribute name="height" value="480"></attribute>
+      
+      <!-- The string value in modalResult gets sent along with the onclose 
+           event, regardless of what it is. when extending this class, it is
+           a good idea to override this value to specify a default value.    -->
+      <attribute name="modalResult" type="string" value=""></attribute>   
+   
+      <!-- Events                                                            -->
+      <event name="onclose"></event>   
+      
+      <!-- Public Methods                                                    -->
+      <method name="open"><![CDATA[
+         //center the dialog box on its immediateparent
+         this.setAttribute("x",(immediateparent.width / 2 - this.width / 2));
+         this.setAttribute("y",(immediateparent.height / 2 - this.height / 2));      
+      
+         //Make this window visible, bring it to the front and make it modal
+         this.setAttribute('visible', true);
+         this.bringToFront();
+         lz.ModeManager.makeModal(this);
+         ]]>
+      </method>
+         
+      <method name="close"><![CDATA[
+         //release the modality of this view and hide it
+         lz.ModeManager.release(this);
+         this.setAttribute('visible', false);
+         
+         //determine the modal result
+         var _result = this.modalResult;
+         
+         //if there are onclose listeners, send the onclose event
+         if ( this.onclose != null ) this.onclose.sendEvent(_result);
+         ]]>
+      </method>      
+      
+      <!-- the dragstate is applied when the mouse is down on the title      -->
+      <dragstate name="dragger"></dragstate>
+      
+      <!-- build the window graphics using several views and layouts         -->
+      <resizelayout></resizelayout>
+      
+      <view name="_top" width="100%">
+         <!-- use a resize layout inside here to maintain images -->
+         <resizelayout axis="x"></resizelayout>
+         <view resource="dialog_top_left" width="7" height="43"></view>
+         <view options="releasetolayout" height="43">
+            <view width="100%" height="43" stretches="width" resource="dialog_top"></view>
+            <text fontstyle="bold" fontsize="14" fgcolor="0xffffff" x="10" width="${parent.width - 20}" text="${classroot.title}" y="7">
+               <handler name="onmousedown"><![CDATA[
+                  classroot.dragger.apply();
+                  ]]>
+               </handler>
+               <handler name="onmouseup"><![CDATA[
+                  classroot.dragger.remove();
+                  ]]>
+               </handler>         
+            </text>            
+         </view>
+         <view resource="dialog_top_right" width="7" height="43"></view>
+      </view>
+      
+      <view name="_middle" options="releasetolayout" width="100%">
+         <resizelayout axis="x"></resizelayout>
+         <view resource="dialog_left" width="7" height="100%" stretches="height"></view>
+         
+         <view name="content" height="100%" options="releasetolayout" clip="true"></view>
+         
+         <view resource="dialog_right" width="7" height="100%" stretches="height"></view>
+      </view>
+      
+      <view name="_bottom" width="100%">
+         <!-- use a resize layout inside here to maintain images -->
+         <resizelayout axis="x"></resizelayout>
+         <view resource="dialog_bottom_left" width="7" height="6"></view> 
+         <view resource="dialog_bottom" options="releasetolayout" height="6" stretches="width"></view>
+         <view resource="dialog_bottom_right" width="7" height="6"></view>     
+      </view>                     
+   
+   </class>
+
+</library>

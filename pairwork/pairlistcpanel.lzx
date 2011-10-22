@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+<include href="../poodllheader/consolebutton.lzx"/>
+
+<class name="pairlistcpanel" width="100%" height="100%" extends="view">
+
+<!--The pair list we will be controlling -->
+<!--if it is not set, things are, ahem,  meaningless -->
+<attribute name="refpairlist" />
+<attribute name="buttonwidth" value="84" />
+<attribute name="buttonheight" value="90" />
+
+
+<!--The view containing the buttons -->
+<view name="buttons" width="${parent.width}">
+	
+	<wrappinglayout axis="x" spacing="5" />
+
+	<consoleiconbutton name="makePairsButton" text="Make Pairs"  iconframe="16"  width="${classroot.buttonwidth}" height="${classroot.buttonheight}">
+
+	
+		<handler name="onclick">
+			<![CDATA[
+				var pairSize = parent.comboback.purplebox.pairsizelist.value;
+				classroot.refpairlist.api.makePairs(pairSize);
+			]]>
+		
+		</handler>
+
+	</consoleiconbutton>
+
+	<view name="comboback"  width="${classroot.buttonwidth - 10}" height="${classroot.buttonheight}">
+		<view name="purplebox" bgcolor="$style{'paircolor'}" width="${parent.width}" height="${classroot.buttonwidth-10}">
+			<combobox id="pairsizelist" name="pairsizelist" x="${(parent.height - this.width) /2}" y="${(classroot.buttonwidth - this.height) /2}" width="70" editable="false" defaultselection="2">
+						  <textlistitem text="2" value="2" selected="true"/>				  
+						  <textlistitem text="3" value="3"/>
+						  <textlistitem text="4" value="4"/>
+						  <textlistitem text="5" value="5"/>
+						  <textlistitem text="6" value="6"/>
+						  <textlistitem text="7" value="7"/>
+						  <textlistitem text="8" value="8"/>
+						  <textlistitem text="9" value="9"/>
+						  <textlistitem text="10" value="10"/>
+			</combobox>
+		</view>
+		<text fgcolor="$style{'fgcolor'}" y="${parent.purplebox.y + parent.purplebox.height}" >Member Count</text>
+	</view>
+
+	<consoleiconbutton name="addEmptyPairButton" text="Empty Pair"  iconframe="9"  width="${classroot.buttonwidth}" height="${classroot.buttonheight}">
+		<handler name="onclick">
+			classroot.refpairlist.api.addEmptyPair();
+		</handler>
+	</consoleiconbutton>
+	<consoleiconbutton name="shufflePairs" text="Shuffle"  iconframe="10"  width="${classroot.buttonwidth}" height="${classroot.buttonheight}">
+		<handler name="onclick">	
+			classroot.refpairlist.api.shufflePairs();
+		</handler>
+	</consoleiconbutton>
+	<consoleiconbutton name="clearPairsButton" text="Clear Pairs"  iconframe="8"  width="${classroot.buttonwidth}" height="${classroot.buttonheight}">
+		<handler name="onclick">	
+			classroot.refpairlist.api.clearPairs();
+		</handler>
+	</consoleiconbutton>
+	<consoleiconbutton name="applyButton" text="Apply"  iconframe="3"  width="${classroot.buttonwidth}" height="${classroot.buttonheight}">
+		<handler name="onclick">
+			classroot.refpairlist.api.applyChanges();
+			//tell client to slide open the pair view
+			//worried this might have been causing problems with other connections so commented
+			//classroot.refpairlist.api.openPairSession();
+		</handler>	
+	</consoleiconbutton>
+	<consoleiconbutton name="broadcastButton" text="Broadcast"  iconframe="${classroot.refpairlist.teachertoallstream.broadcasting ? 19 : 18}"  width="${classroot.buttonwidth}" height="${classroot.buttonheight}">
+		<handler name="onclick">
+				<![CDATA[
+						classroot.refpairlist.api.toggleBroadcast();					
+				]]>		
+			</handler>	
+	</consoleiconbutton>
+	
+
+</view>
+
+
+
+</class>
+
+</library>

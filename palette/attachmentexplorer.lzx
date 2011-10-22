@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+	<include href="moodlefileexplorerlib.lzx"/>
+	<include href="explorerservicelib.lzx"/>
+	<include href="feedbacklib.lzx"/>
+	<include href="incubator/hsplitpane.lzx" />
+	
+	<attribute name="filedataurl"  value="lz.Browser.getInitArg('filedataurl')" />
+	<attribute name="repopath"  value="'/repository/audiofiles'" />  
+	<attribute name="modfilepath"  value="''" />
+	<attribute name="courseid"  value="lz.Browser.getInitArg('courseid')" /> 
+	<attribute name="moduleid"  value="lz.Browser.getInitArg('moduleid')" /> 
+	
+	<!-- layout vertically -->
+	<simplelayout axis="y" spacing="10" />
+
+	
+	<handler name="oninit">
+		<![CDATA[
+		var fpath=this.filedataurl + '?datatype=instancedirlist&paramone=&paramtwo=content&courseid=' + this.courseid + '&moduleid=' + this.moduleid;
+		this.setAttribute("modfilepath",fpath);
+		Debug.write(fpath);
+		]]>
+	</handler>
+	
+	<explorerservice name="eService" feedback="${canvas.feedback}" filedataurl="${canvas.filedataurl}" courseid="$once{courseid}" >
+		<handler name="onActionComplete" args="message">
+			canvas.feedbak.addGreenRow("complete:",message);
+		</handler>
+		<handler name="onActionError" args="message">
+			canvas.feedbak.addErrorRow("error:", message);
+		</handler>
+		<handler name="onActionStart" args="message">
+			canvas.feedbak.addBlueRow("start:", message);
+		</handler>
+	</explorerservice>
+	
+	<view name="actionarea"  height="30" align="center">
+		<simplelayout axis="x" spacing="5" />
+		<button name="copyFileButton" text="CopyFile" onclick="parent.copyFile()"/>
+		<button name="delButton" text="Del" onclick="parent.del()"/>
+		<button name="makedirButton" text="MD" onclick="parent.makedir('afolder')"/>
+		<method name="fetchReqId">
+			<![CDATA[
+				var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+				var string_length = 12;
+				var randomstring = '';
+				for (var i=0; i<string_length; i++) {
+					var rnum = Math.floor(Math.random() * chars.length);
+					randomstring += chars.substring(rnum,rnum+1);
+				}
+				return randomstring;
+			]]>
+		</method>
+		<method name="copyFile">
+		<![CDATA[
+			with (repoexplorer.splitpane.filetreecontainer.filetree){
+				//get a handle on selected files
+				var pointerArray= getSelection();
+				
+				//can out if no selection
+				if(!pointerArray || pointerArray.length<1){return;}
+				
+				//set up a transaction count. simply so that we can refresh after all
+				canvas.eService.registerTransactions(pointerArray.length);
+				
+				//do the actions
+				for (var x=0;x < pointerArray.length; x++){
+					Debug.write(canvas.repopath + '/' + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name') );
+					var requestid = this.fetchReqId();
+					canvas.eService.registerAction(requestid,"copyacross " + pointerArray[x].p.getAttr('name'));
+					Debug.write("reqid:", requestid);
+					//we differentiate between copying files and copying directories 
+					if(pointerArray[x].p.getAttr('isleaf')){
+						canvas.eService.doCopyFile(requestid,modexplorer.selecteddir ,'content',canvas.repopath + '/' + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'));
+					}else{
+						canvas.eService.doCopyDir(requestid,modexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'),'content',canvas.repopath + '/' + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'));
+
+					}
+				}
+			
+			}
+			
+			]]>
+		</method>
+
+		<method name="del">
+			<![CDATA[
+			with (modexplorer.splitpane.filetreecontainer.filetree){
+				//get a handle on selected files
+				var pointerArray= getSelection();
+				
+				//can out if no selection
+				if(!pointerArray || pointerArray.length<1){return;}
+				
+				//set up a transaction count. simply so that we can refresh after all
+				canvas.eService.registerTransactions(pointerArray.length);
+				
+				//do the actions
+				for (var x=0;x < pointerArray.length; x++){
+					Debug.write("hash "+ pointerArray[x].p.getAttr('hash'));
+					var requestid = this.fetchReqId();
+					canvas.eService.registerAction(requestid,"delete " + pointerArray[x].p.getAttr('name')  );
+					canvas.eService.doDeleteFile(requestid,pointerArray[x].p.getAttr('hash'));
+					
+				}
+			
+			}
+		
+			]]>
+		</method>
+			<method name="makedir" args="newdir">
+			<![CDATA[
+				//can out if no selection
+				if(modexplorer.selecteddir){
+	
+					
+					//set up a transaction count. simply so that we can refresh after all
+					canvas.eService.registerTransactions(1);
+					//note the path must begin with a slash and have a trailing slash
+					var newpath = (modexplorer.selecteddir != '' ? '/' + modexplorer.selecteddir + '/' + newdir + '/' : '/' + newdir + '/');
+					
+						Debug.write("makedir: " + newpath);
+						var requestid = this.fetchReqId();
+						canvas.eService.registerAction(requestid,"makedir " + newpath);
+						canvas.eService.doMakeDir(requestid,'content',newpath);
+				
+				}
+		
+		
+			]]>
+		</method>
+	 </view> 
+	 <feedback name="feedbak" width="${parent.width}" height="20%" bgcolor="0xEEEEEE" clip="true" />
+	<view name="explorers" width="${parent.width}" height="60%">
+		<simplelayout axis="x" spacing="10" />
+		<!-- hsplitpane name="splitpane" bordersize="1"  width="${canvas.width}" bordercolor="#ff0000" -->
+		<moodlefileexplorer id="repoexplorer" name="repoexplorer" width="50%" filedataurl="${canvas.filedataurl + '?datatype=repodirlist&amp;paramone=' + canvas.repopath }" courseid="${canvas.courseid}" height="500"  >
+			<handler name="onchoice" args="path">
+				Debug.write("onchoice", path);
+			</handler>
+		</moodlefileexplorer>	
+		<moodlefileexplorer id="modexplorer" name="modexplorer" width="50%" 
+					filedataurl="${canvas.filedataurl + '?datatype=instancedirlist&amp;paramone=&amp;paramtwo=content&amp;courseid=' + canvas.courseid + '&amp;moduleid=' + canvas.moduleid}" 
+					courseid="${canvas.courseid}" height="500"  >
+			<handler name="onchoice" args="path">
+				Debug.write("onchoice", path);
+			</handler>
+			<handler name="onuntilrefresh" reference="canvas.eService">
+				if(canvas.eService.untilrefresh==0){
+					this.controlbox.doRefr();
+				}
+			</handler>
+		</moodlefileexplorer>
+		<!-- hsplitpane -->
+	</view><!-- end of explorers view -->
+
+	
+</canvas>

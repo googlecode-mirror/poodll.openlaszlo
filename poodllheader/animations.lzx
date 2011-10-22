@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<include href="incubator/roundrect.lzx" />
+	
+	<!-- This should be separate class -->
+	<!-- When time lets class-ify it -->
+	<class name="animations">
+		<animatorgroup name="anmSlideRight" start="false" process="simultaneous">
+			<animator attribute="x" from="1" to="1" duration="1000" motion="easeout">
+				<handler name="ontarget">
+					this.setAttribute("from",-1 * parent.target.width);
+				</handler>
+			</animator>
+		</animatorgroup>
+		<animatorgroup name="anmSlideLeft" start="false" process="simultaneous">
+			<animator attribute="x" from="1" to="1" duration="1000" motion="easeout">
+				<handler name="ontarget">
+					this.setAttribute("from",parent.target.width);
+				</handler>
+			</animator>
+		</animatorgroup>
+		<animatorgroup name="anmFadeIn" start="false" process="simultaneous">
+			<animator attribute="opacity" from="0" to="$style{'fadeopacity'}" duration="1000" motion="linear"/>
+		</animatorgroup>
+		<animatorgroup name="anmFadeOut" start="false" process="simultaneous">
+			<animator attribute="opacity" from="$style{'fadeopacity'}" to="0" duration="1000" motion="linear"/>
+		</animatorgroup>
+		<animatorgroup name="anmSlideUp" start="false" process="simultaneous">
+			<animator attribute="y" from="1" to="1" duration="1000" motion="easeout">
+				<handler name="ontarget">
+					this.setAttribute("from",parent.target.height);
+				</handler>
+			</animator>
+		</animatorgroup>
+		<animatorgroup name="anmSlideDown" start="false" process="simultaneous">
+			<animator attribute="y" from="1" to="1" duration="1000" motion="easeout">
+				<handler name="ontarget">
+					this.setAttribute("from",-1 * parent.target.height);
+				</handler>
+			</animator>
+			
+		</animatorgroup>
+	</class>
+	<class name="animatedview" extends="roundrect">
+			<attribute name="transition" value="null" />			<attribute name="maincolor" type="color" value="white" />
+			
+			<!--  Due to Openlaszlo 4.7 bug, replace these with bgcolor -->
+			<!--  or compile to 4.3 Justin 20100125 -->
+			<attribute name="backgroundStartColor" type="color" value="${this.maincolor}" />
+			<attribute name="backgroundStopColor" type="color" value="${this.maincolor}" />
+			<!-- attribute name="bgcolor" type="color" value="${this.maincolor}" -->
+
+			<attribute name="flatopacity" value="0.6" />
+			<attribute name="backgroundStartOpacity" value="${this.flatopacity}" />
+			<attribute name="backgroundStopOpacity" value="${this.flatopacity}" />               
+			<attribute name="bordersize" value="2" />
+			<handler name="onvisible">
+				<![CDATA[
+				if (this.visible && this.transition!=null){
+					this.transition.setAttribute("target", this);
+					this.transition.doStart();
+				}
+				]]>
+			</handler>	
+	</class>
+	
+</library>

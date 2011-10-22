@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="500" height="600">
+<script src="swfobject.js" />
+<script>
+    var params = { allowScriptAccess: "always" };
+    var atts = { id: "myytplayer" };
+    swfobject.embedSWF("http://www.youtube.com/v/VIDEO_ID?enablejsapi=1&amp;playerapiid=ytplayer","ytapiplayer", "425", "356", "8", null, null, params, atts);
+</script>
+
+
+<simplelayout axis="y" spacing="5" />
+
+<html>
+  <div id="ytapiplayer">
+    You need Flash player 8+ and JavaScript enabled to view this video.
+  </div>
+</html>
+
+</canvas>

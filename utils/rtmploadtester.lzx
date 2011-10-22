@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="100%" height="100%">
+
+<include href="../messaging/MessagingRtmpConnection.lzx" />
+<include href="../talkback/justinav/flashutils.lzx" />
+<include href="rtmploaderlib.lzx" />
+
+
+
+<!-- Declare our browser set attributes -->
+<attribute name="mename" value="lz.Browser.getInitArg('mename')" />    
+<attribute name="anothername" value="lz.Browser.getInitArg('anothername')" />    
+<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" /> 
+<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />   
+<attribute name="vidcount" value="0" />
+
+
+<attribute name="thisidtag" value="'rtmploader01'" />
+
+<!--rtmp connection -->
+<MessagingRtmpConnection name="thertmp" userid="${canvas.connectioninfo.anothername.text}" appprofileid="${canvas.thisidtag}" altsrc="${unescape(canvas.connectioninfo.red5url.text) + '/' + canvas.courseid + '/' + canvas.thisidtag}" src="${unescape(canvas.connectioninfo.red5url.text) + '/' + canvas.courseid + '/' + canvas.thisidtag}"  debug="false" autoconnect="false">
+			<handler name="onpeermessage" args="message">
+					<![CDATA[
+					Debug.write("message@thertmp:",message);
+					var messageKey = message.slice(0,5);
+					var messageBody = message.slice(5);
+					canvas.messages.setAttribute("text", canvas.messages.text + "\n" + message);
+					
+						]]>
+			</handler>
+</MessagingRtmpConnection>
+<!--rtmp connection -->
+<MessagingRtmpConnection name="broadcastrtmp" userid="${canvas.connectioninfo.mename.text}" appprofileid="${canvas.thisidtag}" altsrc="${unescape(canvas.connectioninfo.red5url.text) + '/' + canvas.courseid + '/' + canvas.thisidtag}" src="${unescape(canvas.connectioninfo.red5url.text) + '/' + canvas.courseid + '/' + canvas.thisidtag}"  debug="false" autoconnect="false">
+			<handler name="onpeermessage" args="message">
+					<![CDATA[
+					Debug.write("message@broadcastrtmp:",message);
+					var messageKey = message.slice(0,5);
+					var messageBody = message.slice(5);
+					canvas.messages.setAttribute("text", canvas.messages.text + "\n" + message);					
+						]]>
+			</handler>
+</MessagingRtmpConnection>
+
+<method name="removeMediaStream">
+				Debug.write("removing a stream");
+				this.listview.streamslist.removeItemAt(0);
+</method>
+<method name="createMediaStream">
+		this.setAttribute("vidcount", canvas.vidcount+1);
+		var newListItem = new lz.streamy(
+					this.listview.streamslist,
+					{'text' : "stream:" + this.vidcount,
+					'vidcount' : this.vidcount,
+					'red5url' : this.red5url,
+					'courseid' : this.courseid,
+					'thisidtag' : this.thisidtag,
+					'videourl' : this.connectioninfo.mename.text, 
+					'thertmp' : (this.options.oneconnstream.value ? null : this.thertmp),
+					'createconn' : this.options.oneconnstream.value}
+					);
+
+</method>
+<method name="recreateMediaStream">
+		<![CDATA[
+		Debug.write("refreshing a stream");
+		if(this.options.oneconnstream.value){
+			var numitems = this.listview.streamslist.getNumItems();
+			Debug.write("itemcount ", numitems);
+			for (var x=0; x < numitems ; x++){
+				var astreamy = this.listview.streamslist.getItemAt(x);
+				Debug.write("setting up stream for ", astreamy.thertmp.userid);
+				astreamy.setupStreamView();
+			}
+		}
+	
+		]]>
+
+</method>
+<method name="sendMessage">
+		<![CDATA[
+		Debug.write("Sending a message");
+		if(this.options.oneconnstream.value){
+			var numitems = this.listview.streamslist.getNumItems();
+			for (var x=0; x < numitems ; x++){
+				Debug.write("itemcount ", numitems);
+				var userid = this.listview.streamslist.getItemAt(x).thertmp.userid;
+				Debug.write("sending message to userid:", userid);
+
+				var messageString = userid + "@" + this.thisidtag 
+					+ "," + "chat:" + "<b>" + this.connectioninfo.mename.text + ":</b> " + this.inputview.sendText.text;
+				this.broadcastrtmp.sendMessage([messageString]);
+			
+			}
+		}else{
+			var messageString = this.connectioninfo.anothername.text + "@" + this.thisidtag 
+				+ "," + "chat:" + "<b>" + this.connectioninfo.mename.text + ":</b> " + this.inputview.sendText.text;
+			this.broadcastrtmp.sendMessage([messageString]);
+		}
+		]]>
+
+</method>
+<method name="testList">
+		<![CDATA[
+		Debug.write("testing list");
+		if(this.options.oneconnstream.value){
+			var numitems = this.listview.streamslist.getNumItems();
+			for (var x=0; x < numitems ; x++){
+				Debug.write("itemcount ", numitems);
+				var userid = this.listview.streamslist.getItemAt(x).thertmp.userid;
+				Debug.write("List index " + x + ":", userid);
+			}
+		}
+		]]>
+
+</method>
+
+
+   	<simplelayout axis="y" spacing="5" />
+	<view name="options">
+		<checkbox text="1 Conn per Stream" name="oneconnstream" />
+	</view>
+	<view name="connectioninfo">
+	    	<simplelayout axis="x" spacing="2" />
+			<text text="Me Name" />
+			<inputtext name="mename" text="${canvas.mename}" bgcolor="0xDDDDDD" width="40" />			
+			<text text="Another Name" />
+			<inputtext name="anothername" text="${canvas.anothername}"  bgcolor="0xDDDDDD" width="40" />
+			<text text="Red5" />
+			<inputtext name="red5url" text="${canvas.red5url}"  bgcolor="0xDDDDDD" width="40" />
+	        <button text="Connect">
+				<handler name="onclick">			
+					canvas.thertmp.connect();
+					canvas.broadcastrtmp.connect();
+				</handler>
+			</button>
+			<rtmpstatus rtmpc="${canvas.broadcastrtmp}"/>
+			<rtmpstatus rtmpc="${canvas.thertmp}"/>
+	</view>
+	<view name="buttons">
+	    	<simplelayout axis="x" spacing="5" />
+	        <button text="Create Stream">
+			<handler name="onclick">			
+				canvas.createMediaStream();
+			</handler>
+		</button>
+		<button text="Remove Stream">
+			<handler name="onclick">
+				canvas.removeMediaStream();
+			</handler>
+		</button>
+	</view>
+	<view name="inputview">
+				<inputtext name="sendText" width="300" bgcolor="0xCCCCCC"/> 
+				<simplelayout axis="x" spacing="5" />
+				<button text="Send Message">
+					<handler name="onclick">
+							canvas.sendMessage();
+					</handler>
+				</button>
+	</view>
+	<view name="batchview">
+				<inputtext name="batchText" width="300" bgcolor="0xCCCCCC"/> 
+				<simplelayout axis="x" spacing="5" />
+				<button text="Run Batch">
+					<handler name="onclick">					
+							var actions = parent.batchText.text.split(",");
+							for (var action in actions){
+								switch (actions[action]){
+									case 'c': canvas.createMediaStream();
+											break;
+									case 'r': canvas.removeMediaStream();
+											break;		
+									case 's': canvas.sendMessage();
+											break;	
+									case 'f': canvas.recreateMediaStream();
+											break;	
+									case 't': canvas.testList();
+											break;												
+								}
+								
+							}
+
+					</handler>
+				</button>
+	</view>
+	<view name="broadcast">
+		<poodllmicrophone name="poodllmic" > 
+			<handler name="oninit">
+				this.setAttribute("rate",22);
+				this.setAttribute("gain",50);
+				this.setAttribute("capturing",true);
+			</handler>
+		</poodllmicrophone>
+		<poodllcamera name="poodllcam" /> 
+
+
+		<!--mediastreams -->
+		  <mediastream name="mestream" type="rtmp" mic="${parent.poodllmic}"
+				cam="${parent.poodllcam}" rtmp="${canvas.broadcastrtmp}">
+			
+			<handler name="onconnect" reference="canvas.broadcastrtmp">
+					this.setAttribute("url",canvas.connectioninfo.mename.text);
+					this.broadcast();	
+			</handler>
+		  </mediastream>		
+	</view>
+
+	<view name="listview">
+		<list name="streamslist" width="400" height="150" />		
+	</view>
+
+	<text name="messages" width="400" height="250" bgcolor="0xCCCCCC" />  
+
+    
+</canvas>

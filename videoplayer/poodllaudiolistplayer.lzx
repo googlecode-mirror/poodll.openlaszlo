@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas >
+		
+		<include href="lz"/>
+		<include href="../talkback/justinav/poodllaudioplayerclass.lzx"/>
+		
+		<!-- The URL of the Red5 server -->
+		<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />
+		
+		<!-- The type of player -->
+		<attribute name="playertype"  value="lz.Browser.getInitArg('playertype')" />
+		
+		<!-- The URL of the playlist -->
+		<attribute name="playlist"   value="lz.Browser.getInitArg('playlist')"  />
+		
+		<!-- The autoplay -->
+		<attribute name="autoplay" value="$once{lz.Browser.getInitArg('autoplay')=='true'}" />
+		
+		<!-- Play sequentially or stop after each track -->
+		<attribute name="sequentialplay" value="$once{lz.Browser.getInitArg('sequentialplay')=='true'}" />
+
+		<!-- The border color -->
+		<attribute name="playerbordercolor" value="0x0000FF" />
+
+		<!-- The border width -->
+		<attribute name="playerborderwidth" value="1" />
+		
+		
+		
+		<!-- The background color -->
+		<attribute name="playerbackcolor" value="0x9abce5" />
+		
+		<!-- The font color -->
+		<attribute name="playerfontcolor" value="0x550000" />
+		
+		<!-- Current Playing Index -->
+		<attribute name="currentindex" value="0" />
+		<attribute name="currentfilename" value="''" />
+		<!-- Total Audios -->
+		<attribute name="totalaudios" value="0" />
+
+		<dataset name="audios"  type="http" src="${unescape(canvas.playlist)}" proxied="false" request="true">
+			<handler name="ondata">
+				Debug.write("audios data src:",this.src);
+				
+				canvas.mydp.setAttribute("xpath","audios:/audios");
+				canvas.setAttribute("totalaudios", canvas.mydp.getNodeCount());
+				//added the instantiation thingy because University of Austin Texas had problems with IE8
+				canvas.border.completeInstantiation();
+			</handler>
+		</dataset>
+	<datapointer name="mydp" />
+
+	<rtmpconnection  name="autocon" src="${canvas.red5url}" autoconnect="true"/>
+	<view name="border" bgcolor="${canvas.playerbackcolor}" width="${parent.width}" height="${parent.height}" initstage="defer">	
+		<simplelayout axis="y" inset="10" spacing="5" />
+		<view name="listcontainer" width="${canvas.width - (canvas.playerborderwidth  *2)}" height="${parent.height-parent.controlcontainer.height -10}">
+			<simplelayout axis="y" />	
+					<view name="listview" align="center" width="${parent.width - 20}"  height="${parent.height - 10}" >
+						
+						<list name="audiolist"  height="100%" width="100%" defaultselection="0">
+							<textlistitem name="videoitem" datapath="audios:/audios/audio" 
+										   text="$path{'@audioname'}"
+										   value="$path{'position()'}" >									  
+							</textlistitem>			   				
+							<handler name="onselect">
+									if(canvas.currentindex != this.value){
+										canvas.setAttribute("currentindex",this.value);
+										parent.doSelect();
+									}
+							</handler>
+						</list>	
+						<method name="doSelect">
+								//Access selected data in dataset
+								Debug.write("this value:", this.value );
+								canvas.mydp.setXPath("audios:/audios/audio[" + canvas.currentindex  + "]");
+
+								//set mediastream protocol						
+								canvas.border.controlcontainer.audioplayer.ms.setAttribute("paused",true) ;
+								
+								//set mediastream protocol
+								canvas.border.controlcontainer.audioplayer.ms.setAttribute("type",canvas.mydp.getNodeAttribute("playertype")) ;
+								
+								//Set the text label
+								canvas.setAttribute("currentfilename",canvas.mydp.getNodeAttribute("audioname") + " (" + canvas.currentindex + "/" + canvas.totalaudios + ")"); 
+								
+								//set mediastream url
+								canvas.border.controlcontainer.audioplayer.setAttribute("url",canvas.mydp.getNodeAttribute("url")) ;
+								
+								//play audio
+								canvas.border.controlcontainer.audioplayer.ms.play();
+						
+						</method>
+						<method name="selectprevious">
+						<![CDATA[
+							if (canvas.currentindex < 2){return;}
+							canvas.setAttribute("currentindex", canvas.currentindex -1);
+							Debug.write("currentindex",canvas.currentindex);
+							this.doSelect();
+							this.audiolist.selectItemAt(canvas.currentindex -1);
+							//this.audiolist.ensureItemInView(canvas.currentindex -1);
+							]]>
+						</method>
+						<method name="selectnext">
+							<![CDATA[
+							if (canvas.currentindex >= canvas.totalaudios){
+								canvas.setAttribute("currentindex", 0);
+								//Set the text label
+								canvas.setAttribute("currentfilename",'');
+								return;
+							}
+							canvas.setAttribute("currentindex", canvas.currentindex + 1);
+							Debug.write("currentindex",canvas.currentindex);
+							this.doSelect();
+							this.audiolist.selectItemAt(canvas.currentindex -1);
+							//this.audiolist.ensureItemInView(canvas.currentindex -1);
+							]]>
+						</method>
+					</view>
+				<handler name="onstop" reference="ms">
+					if(canvas.sequentialplay){
+						listview.selectnext();
+					}
+				</handler>
+			<!-- end of listcontainer -->	
+			</view>
+			<view name="controlcontainer" align="center" width="${parent.listcontainer.listview.width}" height="40">
+					<simplelayout axis="x" spacing="5" />
+					<!-- button name="startbutton" visible="${canvas.currentindex==0}" align="center"  text="${'Play All ' + canvas.totalaudios + ' Files'}" onclick="parent.selectnext()" -->
+					<button name="backbutton"  enabled="${canvas.currentindex &gt;  1}" text="back" onclick="canvas.border.listcontainer.listview.selectprevious()" />
+					<poodllaudioplayer name="audioplayer" bgcolor="${canvas.playerbackcolor}" fontcolor="${canvas.playerfontcolor}" 
+					rtmp="${canvas.autocon}" type="${canvas.playertype}"  autoplay="${canvas.autoplay}" 
+					width="${parent.width - parent.nextbutton.width - parent.backbutton.width - 10}" height="30" />
+					
+				  <button name="nextbutton"  enabled="${(canvas.currentindex &lt; canvas.totalaudios)}" text="next" onclick="canvas.border.listcontainer.listview.selectnext()" />
+
+		  <!-- end of controlcontainer -->
+		  </view>
+		
+			<!-- end of border -->
+	  </view>
+
+
+		
+
+
+
+    
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006 Laszlo Systems, Inc. All Rights Reserved.                    *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->
+

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="100%" debug="true" height="100%" >
+
+<!-- Since we are crashing browsers, if you pass in your red5 server url as a parameter, you can save typing after each crash --> 
+<attribute name="red5param" value="lz.Browser.getInitArg('red5')" />
+
+<!-- Setup Connectivity -->  
+<!--rtmp connection and broadcast stream and mike-->
+<rtmpconnection id="mecon" name="mecon" src="${canvas.inputs.red5url.text}" autoconnect="false" />
+<mediastream name="mestream" type="rtmp" rtmp="${canvas.mecon}" />
+<microphone name="themic" capturing="true" />
+
+<!--Dataset for generating stream names and urls -->
+<dataset name="msdata">
+	<msdata>
+		<user username="jimbob" url="jimbob" />
+		<user username="johnboy" url="johnboy" />
+		<user username="jason" url="jason" />
+		<user username="maryellen" url="maryellen" />
+		<user username="ben" url="ben" />
+	</msdata>
+</dataset>
+	
+
+<!--  UI -->  
+<simplelayout axis="y" />
+<rtmpstatus />
+<view name="inputs">
+	<simplelayout axis="x" spacing="5" />
+	<text>Red5 Url:</text>
+	<edittext name="red5url" width="200" bgcolor="0xCCCCCC" text="${canvas.red5param}"/>
+	<button name="connectbutton" text="connect">
+		<handler name="onclick" >
+				canvas.mecon.connect();
+		</handler>
+	</button>
+
+	<!--Select the user you will broadcast as -->
+	<combobox name="selectedrole" shownitems="10" width="160" editable="false" >
+				<textlistitem datapath="msdata:/msdata/user" text="$path{'@url'}" />
+	</combobox>
+
+	<!--Start the broadcast -->
+	<button name="broadcastbutton" text="broadcast">
+		<handler name="onclick" >
+			canvas.mestream.setAttribute("url",parent.selectedrole.value);
+			canvas.mestream.setAttribute("mic",canvas.themic);
+			canvas.mestream.broadcast();
+			Debug.write("started broadcasting:", canvas.mestream.url);
+		</handler>
+	</button>
+
+	<!--Display broadcast status -->
+	<view name="indicatorview">	
+		<text name="broadcasting" visible="${canvas.mestream.broadcasting}" text="${canvas.mestream.url + ': is broadcasting'}"/>	
+	</view>	
+</view>
+
+
+
+	<!--Select Listen stream type, and listen stream -->
+	<!--Declarative and scripted use data replication, static does not -->
+	<!--Any of the three types will cause a crash. -->
+	 <!-- At first I thought the crash may have been caused by the way I created the stream -->
+<view name="boxes">
+	<simplelayout axis="x" spacing="20" />
+	
+	<!--Listen streams replicated using declarative syntax -->
+	<vbox name="typeDeclared">
+		<text>declared</text>
+		<button name="startbutton" text="Load(declared)" >
+			<handler name="onclick">
+				<![CDATA[
+					parent.userstreams.setAttribute("datapath", "msdata:/msdata/user");
+				]]>
+
+			</handler>
+		</button>
+		<userstream_typedeclared name="userstreams" url="$path{'@url'}" username="$path{'@username'}">
+			<handler name="ondata">
+				this.initstream();
+			</handler>
+		</userstream_typedeclared>
+	</vbox>
+
+	<!--Listen streams replicated using scripting -->
+	<vbox name="typeScripted">
+		<text>scripted</text>
+		<button name="startbutton" text="Load(scripted)" >
+			<handler name="onclick">
+				<![CDATA[
+					parent.userstreams.setAttribute("datapath", "msdata:/msdata/user");
+				]]>
+
+			</handler>
+		</button>
+		<userstream_typescripted name="userstreams" url="$path{'@url'}" username="$path{'@username'}">
+			<handler name="ondata">
+				this.initstream();
+			</handler>
+		</userstream_typescripted>
+	</vbox>
+
+	<!--Listen streams declared statically ie no replication -->
+	<vbox name="typeStatic">
+			<text>static</text>	
+			<view>
+				<text>jimbob</text>
+				<simplelayout axis="x" spacing="5" />
+				<button name="playButton" text="listen" visible="${!parent.parent.jimbobstream.playing}" onclick="parent.parent.jimbobstream.play()"/>
+				<button name="stopButton" text="stop" visible="${parent.parent.jimbobstream.playing}" onclick="parent.parent.jimbobstream.stop()"/>
+			</view>
+			<view>
+				<text>johnboy</text>
+				<simplelayout axis="x" spacing="5" />
+				<button name="playButton" text="listen" visible="${!parent.parent.johnboystream.playing}" onclick="parent.parent.johnboystream.play()"/>
+				<button name="stopButton" text="stop" visible="${parent.parent.johnboystream.playing}" onclick="parent.parent.johnboystream.stop()"/>
+			</view>
+			<view>
+				<text>jason</text>
+				<simplelayout axis="x" spacing="5" />
+				<button name="playButton" text="listen" visible="${!parent.parent.jasonstream.playing}" onclick="parent.parent.jasonstream.play()"/>
+				<button name="stopButton" text="stop" visible="${parent.parent.jasonstream.playing}" onclick="parent.parent.jasonstream.stop()"/>
+			</view>
+			<view>
+				<text>maryellen</text>
+				<simplelayout axis="x" spacing="5" />
+				<button name="playButton" text="listen" visible="${!parent.parent.maryellenstream.playing}" onclick="parent.parent.maryellenstream.play()"/>
+				<button name="stopButton" text="stop" visible="${parent.parent.maryellenstream.playing}" onclick="parent.parent.maryellenstream.stop()"/>
+			</view>
+			<view>
+				<text>ben</text>
+				<simplelayout axis="x" spacing="5" />
+				<button name="playButton" text="listen" visible="${!parent.parent.benstream.playing}" onclick="parent.parent.benstream.play()"/>
+				<button name="stopButton" text="stop" visible="${parent.parent.benstream.playing}" onclick="parent.parent.benstream.stop()"/>
+			</view>
+
+			<mediastream name="jimbobstream" type="rtmp" rtmp="${mecon}" url="jimbob" />
+			<mediastream name="johnboystream" type="rtmp" rtmp="${mecon}" url="johnboy" />
+			<mediastream name="jasonstream" type="rtmp" rtmp="${mecon}" url="jason" />
+			<mediastream name="maryellenstream" type="rtmp" rtmp="${mecon}" url="maryellen" />
+			<mediastream name="benstream" type="rtmp" rtmp="${mecon}" url="ben" />
+		</vbox>
+</view>
+
+
+<!-- these classes simulate how I create streams and assoc'd user data in my app-->
+<!-- the details are probably not important to the crash problem. -->
+<!-- It now seems the statically declared listenstreams lead to the exact same results. -->
+
+<!-- this class is to be replicated, and creates an individual mediastream declaritively-->
+<class name="userstream_typedeclared" bgcolor="0xffffaa"  extends="view">
+	<attribute name="url" value="null"/>
+	<attribute name="username" value="null"/>
+
+	<simplelayout axis="x" spacing="5" />
+	<text text="${classroot.username}" />		
+	<mediastream name="listenstream" type="rtmp" rtmp="${mecon}" url="${classroot.url}" />
+	<button name="stopButton" text="stop" visible="${classroot.listenstream.playing}" onclick="classroot.listenstream.stop()" />
+	<button name="startButton" text="listen" visible="${!classroot.listenstream.playing}" onclick="classroot.listenstream.play()" />	
+	<method name="initstream">
+		<![CDATA[
+			Debug.write("entered initstream");
+			//Debug.write("playing mediastream for:", this.username);
+			//this.listenstream.play();
+		]]>
+	</method>
+</class>
+
+<!-- this class is to be replicated, and creates an individual mediastream using scripting-->
+<class name="userstream_typescripted" bgcolor="0xffffaa"  extends="view">
+	<attribute name="url" value="null"/>
+	<attribute name="username" value="null"/>
+	<attribute name="listenstream" value="null"/>
+
+	<!-- Here we create the stream in script. Declaritively leads to big probelms on replication-->
+	<!-- It appears 1st ms gets created before data arrives, screws up, and screws up events. + Later data instantiates attributes haphazardly and ms couldn't handle it -->
+	<method name="initstream">
+		<![CDATA[
+		Debug.write("making mediastream for:", this.username);
+		this.listenstream = new lz.mediastream(this, 
+				{'type': 'rtmp',
+				'rtmp': mecon,
+				'url': this.url
+			  });
+		this.startButton.addConstraint();
+		this.stopButton.addConstraint();
+		]]>
+	</method>
+
+	<simplelayout axis="x" spacing="5" />
+
+	<text name="usernameText" text="$path{'@username'}" />		
+
+	<button name="stopButton" text="stop" visible="false" onclick="classroot.listenstream.stop()" >
+		<method name="addConstraint">
+			this.applyConstraintMethod("updateVisibility", [classroot.listenstream, "playing"]);					
+		</method>
+		<method name="updateVisibility" args="ignore=null">
+			this.setAttribute("visible", classroot.listenstream.playing);
+		</method>
+	</button>
+
+	<button name="startButton" text="listen" visible="true" onclick="classroot.listenstream.play()"  >
+		<method name="addConstraint">
+			this.applyConstraintMethod("updateVisibility", [classroot.listenstream, "playing"]);					
+		</method>
+		<method name="updateVisibility" args="ignore=null">
+			this.setAttribute("visible", !classroot.listenstream.playing);
+		</method>
+	</button>
+</class>
+ 
+
+</canvas>

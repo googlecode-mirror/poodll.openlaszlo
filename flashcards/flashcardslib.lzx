@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<include href="cardanimations.lzx" />	
+	<!-- The Stylesheet: Good for customising -->
+	<stylesheet src="../poodllheader/poodll.css" />
+	
+<class name="flashcards" extends="view">
+
+
+
+	<attribute name="cardset" value="null" />  
+	<attribute name="randomize" value="true"/>
+	<attribute name="showingFront" value="true"/>
+	<attribute name="cardElement" value="null"/>
+	<attribute name="totalCards" value="0"/>
+	<attribute name="currentIndex" value="0"/>
+	<attribute name="selectedCard" value="null"/>
+	<attribute name="cardwidth" value="150"/>
+	<attribute name="cardheight" value="100"/>
+	<attribute name="frontfgcolor" value="0x00FF00" />
+	<attribute name="frontbgcolor" value="null" />
+	<attribute name="backfgcolor" value="null" />
+	<attribute name="backbgcolor" value="null" />
+	
+
+	
+	<dataset name="cards" type="http"  src="${unescape(classroot.cardset)}" request="true">
+		<handler name="ondata">		
+					<![CDATA[
+				var dp=this.getPointer();
+				dp.selectChild();
+				classroot.totalCards=dp.getNodeCount();
+				Debug.write("Node Count:",classroot.totalCards);
+				
+				//If we are randomizing, do the harlem shuffle man
+				//we defer card instantiation till after this step
+				if (classroot.randomize){
+					//this randomize method is better than the normal one(.. return 0.5 - Math.random() .. ), which doesn't ork so well in laszlo
+					dp.p.childNodes.sort(function() {return (Math.random() > 0.5) ? 1  : -1});
+				}
+				
+				classroot.setAttribute("frontfgcolor", dp.xpathQuery('@frontfgcolor'));
+				classroot.setAttribute("frontbgcolor", dp.xpathQuery('@frontbgcolor'));
+				classroot.setAttribute("backfgcolor", dp.xpathQuery('@backfgcolor'));
+				classroot.setAttribute("backbgcolor", dp.xpathQuery('@backbgcolor'));
+				Debug.write("cardfgcolor:",classroot.frontfgcolor);
+				
+				//allow the cards to instantiate
+				classroot.deckview.completeInstantiation();
+				]]>
+		</handler>
+	
+	</dataset>
+<attribute name="cardorder" value="null" />
+	
+
+<view name="deckview" y="0" width="${parent.width}" height="${parent.height -parent.buttonsview.height - 10}" initstage="defer">
+	<animatedview name="cardview" bordersize="10" valign="middle" x="$once{-1 * classroot.cardwidth}"  width="${classroot.cardwidth}" height="${classroot.cardheight}" 
+			maincolor="${this.showingfront ? classroot.frontbgcolor : classroot.backbgcolor}" 
+			onscreen="false"
+			showingfront="true"
+			defaultfontsize="$once{Math.round(classroot.cardwidth * 0.1)}"
+			clip="true"
+			cardwidth="$once{classroot.cardwidth}"
+			cardheight="$once{classroot.cardheight}"
+			clickable="true" 
+			>
+			
+		<datapath xpath="local:classroot.cards:/stack/card">			
+			  <handler name="onclones">
+				if (!this['doneDel']) {
+				  this.doneDel = new LzDelegate(this, 'showFirstCard')
+				  this.doneDel.register(clones[clones.length - 1], 'oninit')
+				}
+			  </handler>
+			  <method name="showFirstCard" args="ignore=null">
+				<![CDATA[
+					
+					/*
+					* This didnt work, because somehow setting the dort function in a clone is weird
+					* ended up doing it on data load
+					
+					if (classroot.randomize){
+						this.clones.sort(function() {return 0.5 - Math.random()});						
+						Debug.write("xpah:");
+					}
+					*/
+					
+					classroot.switchCard(this.getCloneNumber(0));
+				]]>
+			  </method>
+			 
+        </datapath>	
+		
+
+		<!-- view bgcolor="$path{'background/text()'}" width="${parent.width}" height="${parent.height}" -->
+		<text align="center" valign="middle" 
+				datapath="front/text()"
+				fgcolor="${classroot.frontfgcolor}"
+				textalign="center" 
+				fontsize="$path{'@fontsize'}" 
+				name="fronttext" 
+				height="${this.innerheight ? classroot.cardheight * this.innerheight : null}"
+			width="${classroot.cardwidth * 0.8}"  
+			multiline="true" 
+			resize="true"
+			visible="${parent.showingfront}" >
+				<attribute name="innerheight" value="$path{'@innerheight'}" />
+			</text>
+
+		<text 
+			datapath="back/text()"
+			align="center" 
+			fgcolor="${classroot.backfgcolor}"
+			valign="middle" 
+			textalign="center" 
+			fontsize="$path{'@fontsize'}" 
+			name="backtext" 
+			height="${this.innerheight ? classroot.cardheight * this.innerheight : null}"
+			width="${classroot.cardwidth * 0.8}"  
+			multiline="true" 
+			resize="true" 
+			visible="${!parent.showingfront}" >
+				<attribute name="innerheight" value="$path{'@innerheight'}" />
+			</text>
+			
+		<handler name="onclick">
+			this.swivelcard();			
+		</handler>
+	</animatedview>
+</view>
+<view align="center" name="buttonsview" y="${parent.height - this.height - 5}" width="${classroot.cardwidth}">	
+<simplelayout axis="x" spacing="5" />
+	<button name="backButton"  width="${(parent.width - 5) / 2}"  height="30" text="Back">
+        	<handler name="onclick" >
+			<![CDATA[
+				Debug.write("started", classroot.deckview.cardview.clones[classroot.currentIndex]._swiveltransition.isactive);
+				if (classroot.deckview.cardview.clones[classroot.currentIndex]._swiveltransition.isactive){
+					return;
+				}
+				classroot.deckview.cardview.clones[classroot.currentIndex].setTransition('anmSlideAwayLeft');			
+				classroot.deckview.cardview.clones[classroot.currentIndex].setAttribute("onscreen",false);
+				classroot.currentIndex--;
+				if (classroot.currentIndex < 0){
+					classroot.setAttribute("currentIndex",classroot.totalCards -1);
+				}
+				classroot.deckview.cardview.clones[classroot.currentIndex].setTransition('anmSlideInLeft');
+				classroot.switchCard(classroot.deckview.cardview.clones[classroot.currentIndex]);
+				Debug.write("currentIndex" , classroot.currentIndex);
+				]]>
+			</handler>
+	</button>
+	<button name="nextButton" valign="middle"  width="${parent.backButton.width}" height="30" text="Next">
+        	<handler name="onclick" >	
+					<![CDATA[
+					if (classroot.deckview.cardview.clones[classroot.currentIndex]._swiveltransition.isactive){
+					return;
+				}
+				classroot.deckview.cardview.clones[classroot.currentIndex].setTransition('anmSlideAwayRight');	
+				classroot.deckview.cardview.clones[classroot.currentIndex].setAttribute("onscreen",false);	
+				classroot.currentIndex++;
+				if (classroot.currentIndex > classroot.totalCards -1){
+					classroot.setAttribute('currentIndex',0);
+				}
+					
+				classroot.deckview.cardview.clones[classroot.currentIndex].setTransition('anmSlideInRight');
+				classroot.switchCard(classroot.deckview.cardview.clones[classroot.currentIndex]);
+					Debug.write("currentIndex" , classroot.currentIndex);
+				]]>
+			</handler>
+	</button>
+
+	
+</view>
+
+	<!--method that is called to switch the active card -->
+	<method name="switchCard" args="cardref">
+		<![CDATA[
+			//exit if we are already selected
+			if (this.selectedCard == cardref) return;
+			
+			//if this is the first load then the existing selection will be null
+			//otherwise we  need to unselect the card
+			if (this.selectedCard != null){					
+					//hide currentwidget
+					this.selectedCard.setAttribute("onscreen",false);	
+			}
+
+			//show new widget and set it as current
+			this.setAttribute("selectedCard",cardref);
+			this.selectedCard.setAttribute("onscreen",true);
+
+
+		]]>
+	</method>
+
+
+</class>
+
+</library>

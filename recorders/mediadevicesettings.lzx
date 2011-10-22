@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006-2009 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<library>
+
+<include href="flashutils.lzx" />
+
+<class name="mediadevicesettings" extends="view">
+		<attribute name="themic" />
+		<attribute name="thecam" />
+
+		<!-- Flash Utilities Class -->
+		<flashutils name="futils" />
+
+		<simplelayout axis="y" spacing="10" />
+		<text>Cameras:</text>
+		   <combobox name="availableCams" width="200" editable="false">
+			<handler name="oninit">
+				<![CDATA[
+				//Get all availible Cam's
+				var tw = classroot.futils.getCameraNames();
+				var t = "";
+				this.addItem("default(" + classroot.thecam.devicename + ")",-1);
+				for (var eg=0;eg<tw.length;eg++){
+					Debug.write(tw[eg],eg);
+					this.addItem(tw[eg],eg);
+					t=eg;
+				}   
+				this.selectItem(-1); 			  
+				]]>
+			</handler>
+			<handler name="onselect" args="v">
+				<![CDATA[
+					//we have to be careful here because if we set the device to something
+					//before user has granted permissions(settings dialog is popped up)
+					//nothing will get recorded
+					if (classroot.thecam.getcam() == null || !classroot.thecam.allowed) return; 
+
+					if(v.value == -1){
+						if (classroot.thecam.deviceindex != null){
+							classroot.thecam.setAttribute("deviceindex",null);
+						}
+						return;
+					}
+
+					if(v.value != classroot.thecam.deviceindex){
+						classroot.thecam.setAttribute("deviceindex",v.value);
+					}
+					Debug.write("camera: " + classroot.thecam.deviceindex + ":" + classroot.thecam.devicename);					
+				]]>
+			</handler>
+		</combobox>
+		<text>Microphones:</text>		
+		<combobox name="availableMics" width="200" editable="false">
+			<handler name="oninit">
+				<![CDATA[
+				//Get all availible Mike's
+				var tw = classroot.futils.getMicrophoneNames();
+				var t = "";
+				this.addItem("default(" + classroot.themic.devicename + ")",-1);
+				for (var eg=0;eg<tw.length;eg++){
+					Debug.write(tw[eg],eg);
+					this.addItem(tw[eg],eg);
+					t=eg;
+				}   
+				this.selectItem(-1);    
+				]]>
+			</handler>
+			<handler name="onselect" args="v">		
+				<![CDATA[
+					//we have to be careful here because if we set the device to something
+					//before user has granted permissions(settings dialog is popped up)
+					//nothing will get recorded
+					if (classroot.themic.getmic() == null || !classroot.themic.allowed) return; 
+
+					if(v.value == -1){
+						if (classroot.themic.deviceindex != null){
+							classroot.themic.setAttribute("deviceindex",null);
+						}
+						return;
+					}
+
+					if(v.value != classroot.themic.deviceindex){
+						classroot.themic.setAttribute("deviceindex",v.value);
+					}
+					Debug.write("mike: " + classroot.themic.deviceindex + ":" + classroot.themic.devicename);					
+				]]>
+			</handler>
+		</combobox>
+</class>
+
+</library>

@@ -1,0 +1,36 @@
+<pairsets>
+	<teacher name="justin" stream="justintoall"/>
+      <pair name="abc456">
+        <pairelement username="annette" showname="Anette Leslie" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/11/f2.jpg" />
+	  	  <pairelement username="aki" showname="Aki Haru" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/19/f2.jpg"/>
+	  	  <pairelement username="jenny" showname="Jenny Boo" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/19/f2.jpg"/>
+      </pair>
+	   <pair name="abc789">
+        <pairelement username="masakia" showname="masakia" pictureurl="http://tbn3.google.com/images?q=tbn:sQwvC69mlxKncM:http://www.belleiq.com/wp-content/uploads/2009/03/audrey-hepburn.jpg"/>
+		  <pairelement username="katsurat" showname="Ms Tsuruno" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/8/f2.jpg"/>
+      </pair>
+	   <pair name="abc101112">
+        <pairelement username="richie" showname="Ron Howard" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/1/f2.jpg"/>
+		  <pairelement username="spock" showname="Leonard Nimoy" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/10/f2.jpg"/>
+      </pair>
+	   <pair name="abc131415">
+        <pairelement username="james" showname="Darth Vader" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/12/f2.jpg"/>
+		  <pairelement username="pokemon" showname="Pika Chu" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/13/f2.jpg"/>
+      </pair>
+	   <pair name="abc161718">
+        <pairelement username="prezzie" showname="Barack Obama" pictureurl="http://tbn0.google.com/images?q=tbn:006ISX6lafJNUM:http://www.takegreatpictures.com/content/images/Audrey_Hepburn_1965_2_.jpg"/>
+		  <pairelement username="repoman" showname="George Bush" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/15/f2.jpg"/>
+      </pair>
+	   <pair name="abc192021">
+        <pairelement username="madonna" showname="Madonna" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/16/f2.jpg"/>
+		  <pairelement username="rocky" showname="Sly Stallone" pictureurl="http://tbn0.google.com/images?q=tbn:006ISX6lafJNUM:http://www.takegreatpictures.com/content/images/Audrey_Hepburn_1965_2_.jpg"/>		
+      </pair>
+	   <pair name="abc212223">
+        <pairelement username="etgirl" showname="Drew Barrymore" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/18/f2.jpg"/>
+		  <pairelement username="arnie" showname="The Terminator" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/21/f2.jpg"/>
+      </pair>
+	   <pair name="abc242526">
+        <pairelement username="myanmar" showname="Aung Syun" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/20/f2.jpg"/>
+		  <pairelement username="northkorea" showname="Kim Il" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/22/f2.jpg"/>
+      </pair>	  
+</pairsets>

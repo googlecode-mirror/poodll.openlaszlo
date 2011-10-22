@@ -1,0 +1,244 @@
+<library>
+	<!-- A class for showing text which can align horizontally
+			and vertically and control spacing between lines -->
+	<class name="ExtendedText" clip="true">
+		<!-- The text that will be displayed by this wdiget -->
+		<attribute name="text" value="" type="string" />
+
+		<!-- The text's horizontal alignment L/l, C/c, R/r for left, center, and
+			right, default is left -->
+		<attribute name="horizontalAlign" type="string" value="l" />
+
+		<!-- The text's vertical alignment T/t, C/c, B/b for top center and bottom
+			default is top -->
+		<attribute name="verticalAlign" type="string" value="t" />
+
+		<!-- If the widget should determine its own size, default is true -->
+		<attribute name="autoSize" type="boolean" value="true" />
+
+		<!-- The amount of spacing between lines of text, default is 0 -->
+		<attribute name="verticalSpacing" type="number" value="0" />
+
+		<!-- Our internal map's of the text string we display and the standard
+			text widgets used to display them -->
+		<attribute name="viewMap" type="expression" />
+
+		<attribute name="hasInited" type="boolean" value="false" />
+
+		<handler name="onheight">
+			if(!this.autoSize){
+				updateVAlign();
+			}
+		</handler>
+
+		<handler name="oninit">
+			//WE ALWAYS WANT TO HAVE AT LEAST ONE INTERNAL WIDGET
+			this.viewMap = new Array();
+			this.viewMap[0] = new Object();
+			this.viewMap[0].view = new lz.text(this, {resize: true, multiline: false, x: 0, y: 0});
+			setHorizontalAlign(this.viewMap[0].view);
+			this.viewMap[0].text = "";
+			this.horizontalAlign = this.horizontalAlign.toUpperCase();
+			this.verticalAlign = this.verticalAlign.toUpperCase();
+			if(this.verticalSpacing &lt; 0){
+				this.verticalSpacing = 0;
+			}
+
+			this.hasInited = true;
+			updateVAlign();
+			updateText();
+		</handler>
+
+		<handler name="ontext">
+			updateText();
+		</handler>
+
+		<!-- This method will construct and destory our internal text views as necessary
+			and update the strings for existing text widgets. It will also apply constraints
+			as necessary and if required resize this widget -->
+		<method name="updateText"><![CDATA[
+			if(!this.hasInited){
+				return;
+			}
+			//WE WANT ONE LINE OF TEXT FOR EACH INTERNAL WIDGET
+			var strings = this.text.split("\n");
+
+			//MAKE SURE WE HAEV AT LEAST ONE STRING
+			if(strings.length == 0){
+				strings = new Array("");
+			}
+
+			//IF OUR SIZE SHOULD BE CHECKED/UDPATED
+			var update = false;
+
+			for(var i=0;i<strings.length;i++){
+				//WE NEED TO CREATE A NEW INTERNAL WIDGET
+				if(this.viewMap[i] == undefined){
+					update = true;	//OUR SIZE WILL NEED TO BE UPDATED
+					//SETUP THE MAP OBJECT
+					this.viewMap[i] = new Object();
+					this.viewMap[i].view = new lz.text(this, {resize: true, multiline: false, x: 0, y: 0});
+					this.viewMap[i].text = "";
+					var applyTo = this.viewMap[i].view;
+					if(i > 0){
+						//CONSTRAIN TO BOTTOM OF PREVIOUS VIEW
+						makeYConstraint(applyTo, this.viewMap[i-1].view);
+					}
+					//SET HORIZONTAL ALIGNMENT
+					setHorizontalAlign(applyTo);
+				}
+				//UPDATE THE WIDGET STRING IF IT HAS CHANGED
+				if(this.viewMap[i].text != strings[i]){
+					update = true;	//NOTE OUR SIZE MAY NEED TO BE UPDATED
+					this.viewMap[i].view.setAttribute('text', strings[i]);
+					this.viewMap[i].text = strings[i];
+				}
+			}
+			//CHECK TO SEE IF ANY WIDGETS NEED TO BE REMOVED
+			for(var i=strings.length;i<this.viewMap.length;i++){
+				update = true;
+				if(i == 0){
+					//ALWAYS LEAVE THE FIRST ONE
+					this.viewMap[i].view.setAttribute('text', "");
+					this.viewMap[i].text = "";
+				}else{
+					//OTHERWISE JUST DESTROY
+					this.viewMap[i].view.destroy();
+					this.viewMap[i] = null;
+				}
+			}
+			//MAKE SURE OUR INTERNAL ARRAY IS THE CORRECT SIZE
+			this.viewMap.length = strings.length > 0 ? strings.length : 1;
+			if(this.autoSize && update){
+				//WE MAY NEED TO UPDATE
+				var newWidth = calculateWidth();
+				if(newWidth != this.width)		this.setAttribute('width', newWidth);
+				var newHeight = calculateHeight();
+				if(newHeight != this.height)	this.setAttribute('height', newHeight);
+			}
+		]]></method>
+
+		<!-- Method to constrain one view to the bottom of another -->
+		<method name="makeYConstraint" args="applyTo,constrainTo">
+			applyTo.releaseConstraintMethod('fy');
+			var spacing = this.verticalSpacing;
+			applyTo.fy = function(arg){
+				applyTo.setAttribute('y', constrainTo.y+constrainTo.height+spacing);
+			};
+			applyTo.applyConstraintMethod('fy', [constrainTo, 'y', constrainTo, 'height']);
+		</method>
+
+		<!-- When the align changes we will need to update the internal views -->
+		<handler name="onhorizontalAlign"><![CDATA[
+			if(!this.hasInited){
+				return;
+			}
+			this.horizontalAlign = this.horizontalAlign.toUpperCase();
+			for(var i=0;i<this.viewMap.length;i++){
+				setHorizontalAlign(this.viewMap[i].view);
+			}
+		]]></handler>
+
+		<!-- When the align changes we will need to update the internal views -->
+		<handler name="onverticalAlign"><![CDATA[
+			if(!this.hasInited){
+				return;
+			}
+			this.verticalAlign = this.verticalAlign.toUpperCase();
+			updateVAlign();
+		]]></handler>
+
+		<!-- When the spacing changes we will need to update the internal views' constraints -->
+		<handler name="onverticalSpacing"><![CDATA[
+			if(!this.hasInited){
+				return;
+			}
+			if(this.verticalSpacing < 0){
+				setAttribute("verticalSpacing", 0);
+				return;
+			}
+			for(var i=1;i<this.viewMap.length;i++){
+				makeYConstraint(this.viewMap[i].view, this.viewMap[i-1].view);
+			}
+			if(this.autoSize){
+				var newHeight = calculateHeight();
+				if(newHeight != this.height)	this.setAttribute('height', newHeight);
+			}
+		]]></handler>
+
+		<!-- Update the vertical alignment of the text -->
+		<method name="updateVAlign">
+			if(!this.hasInited){
+				return;
+			}
+			var textHeight = calculateHeight();		//HOW TALL IS THE TEXT?
+			var currentHeight = this.height;		//HOW TALL ARE WE?
+
+			//EVERY OTHER TEXT VIEW IS CONSTRAINED TO THE FIRST, SO WE ONLY NEED TO UPDATE THAT...
+			var newY = 0;
+			if(this.verticalAlign == 'C')		newY = (currentHeight-textHeight)/2;
+			else if(this.verticalAlign == 'B')	newY = currentHeight-textHeight;
+			this.viewMap[0].view.setAttribute('y', newY);
+		</method>
+
+		<!-- Calculate the height necessary to display the strings -->
+		<method name="calculateHeight"><![CDATA[
+			if(!this.hasInited){
+				return 0;
+			}
+			var height = 0;
+			for(var i=0;i<this.viewMap.length;i++){
+				height += this.viewMap[i].view.height;
+			}
+			height += (this.viewMap.length-1)*this.verticalSpacing;
+			return height;
+		]]></method>
+
+		<method name="measureHeight">
+			return calculateHeight();
+		</method>	
+		
+		<!-- Apply a constraint based on the horizontal alignment to the view -->
+		<method name="setHorizontalAlign" args="view">
+			view.releaseConstraintMethod('fx');
+			if(this.horizontalAlign == 'C'){
+				makeCenter(view);
+			}else if(this.horizontalAlign == 'R'){
+				makeRight(view);
+			}else{
+				view.setAttribute('x', 0);
+			}
+		</method>
+
+		<method name="measureWidth">
+			return calculateWidth();
+		</method>
+
+		<!-- Calculate the width necessary to display the strings -->
+		<method name="calculateWidth"><![CDATA[
+			if(!this.hasInited){
+				return 0;
+			}
+			var width = 0;
+			var max = 0;
+			for(var i=0;i<this.viewMap.length;i++){
+				width = this.viewMap[i].view.width;
+				if(width > max)	max = width;
+			}
+			return max;
+		]]></method>
+
+		<!-- Create a constraint on the view so it is centered -->
+		<method name="makeCenter" args="view">
+			view.fx = function(arg){	view.setAttribute('x', (view.parent.width-view.width)/2);	};
+			view.applyConstraintMethod('fx', [view, 'width', view.parent, 'width']);
+		</method>
+
+		<!-- Create a constraint on the view so it is right aligned -->
+		<method name="makeRight" args="view">
+			view.fx = function(arg){	view.setAttribute('x', view.parent.width-view.width);	};
+			view.applyConstraintMethod('fx', [view, 'width', view.parent, 'width']);
+		</method>
+	</class>
+
+</library>

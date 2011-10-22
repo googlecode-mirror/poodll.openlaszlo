@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="100%" debug="true" height="100%" >
+
+<attribute name="mename" />    
+<attribute name="themname" /> 
+<attribute name="themfullname" /> 
+<attribute name="thempictureurl" /> 
+<attribute name="mefullname" /> 
+<attribute name="mepictureurl" />
+<attribute name="red5url" />   
+<attribute name="teacherpairstreamname" />
+<attribute name="teacherallstreamname" />
+
+<!-- The server connection -->
+<rtmpconnection name="autocon" src="${unescape(red5url)}" autoconnect="true" />
+<!--mediastreams -->
+  <mediastream name="mestream" type="rtmp">
+	<microphone name="mic" id="mic" > 
+		<handler name="oninit">
+		    this.setAttribute("rate",22);
+			this.setAttribute("gain",50);
+			this.setAttribute("capturing",true);
+		</handler>
+	</microphone>
+	<handler name="oninit">
+			this.setAttribute("url",mename);
+			this.broadcast();	
+	</handler>
+  </mediastream>
+  <mediastream name="themstream" type="rtmp" rtmp="autocon" >
+	<handler name="oninit">
+			this.setAttribute("url",themname);
+			themstream.play();	
+	</handler>
+  </mediastream>
+ 
+  <mediastream name="teachertopairstream" type="rtmp" rtmp="autocon" >
+  <handler name="oninit">
+			this.setAttribute("url",teacherpairstreamname);
+			teachertopairstream.play();	
+	</handler>
+  </mediastream>
+  <mediastream name="teachertoallstream" type="rtmp" rtmp="autocon" >
+  <handler name="oninit">
+			this.setAttribute("url",teacherallstreamname);
+			teachertoallstream.play();	
+	</handler>
+  </mediastream>
+
+  
+
+  <simplelayout axis="x" spacing="15"/>
+
+   <!-- rtmpstatus -->  
+   <view name="themview" >
+		 <simplelayout />
+		<view name="theirname" >
+			<text fontsize="11" text="${themfullname}" />		
+		</view>
+		<view name="theirpicture" x="27" xoffset="17"  resource="${unescape(thempictureurl)}" onclick="this.animThem.doStart()">
+		<animatorgroup name="animThem" process="sequential" start="false">
+			<animator attribute="rotation" to="-360" relative="true" duration="700"  />
+			<animator attribute="x" to="5 " relative="true" duration="150"  />
+			<animator attribute="x" to="-10 " relative="true" duration="300"  />
+			<animator attribute="x" to="5" relative="true" duration="150" />
+		</animatorgroup>
+
+		</view>
+	</view>
+	<view name="meview" >
+		 <simplelayout  />
+		<view name="mename" >
+			<text fontsize="11" text="${mefullname}" />		
+		</view>
+		<view name="mepicture" x="27" xoffset="17" resource="${unescape(mepictureurl)}" onclick="this.animMe.doStart()" >
+			<animatorgroup name="animMe" start="false" process="sequential">
+				<animator attribute="rotation" to="360" relative="true" duration="700"  />
+				<animator attribute="x" to="5 " relative="true" duration="150"  />
+				<animator attribute="x" to="-10 " relative="true" duration="300"  />
+				<animator attribute="x" to="5" relative="true" duration="150" />
+			</animatorgroup>
+		</view>
+	</view>
+</canvas>

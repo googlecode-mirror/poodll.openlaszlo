@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+<!-- Library for basetabs component -->
+<include href="lz"/>
+	
+<!-- Use messaging rtmp class to manage peer to remote calls -->
+<include href="../messaging/MessagingRtmpConnection.lzx" />
+<include href="../talkback/justinav/videosettings.lzx" />
+<include href="../talkback/justinav/audiosettings.lzx" />
+<include href="../talkback/justinav/mediadevicesettings.lzx" />
+<include href="../talkback/justinav/flashutils.lzx" />
+
+<class width="100%" height="100%" name="cambroadcast" extends="view">		   
+	<attribute name="red5url" />   
+	<attribute name="broadcastkey" />  
+	<attribute name="capturedevice" /> 
+
+	<!-- To set a particular camera as default -->
+	<attribute name="prefcam"  />
+	<attribute name="prefmic" />
+
+	<!-- Some camera settings-->
+	<attribute name="capturewidth"  />
+	<attribute name="captureheight"  />
+	<attribute name="capturefps"  />
+	<attribute name="bandwidth" />
+	<attribute name="picqual"  />
+		
+	
+	<attribute name="coursedataurl" />	
+	<attribute name="jlnpurl"/>
+	<attribute name="courseid" />  
+	<attribute name="mename" />  
+	<attribute name="capturesizeindex" value="1" />
+	<attribute name="screencastidtag" value="'screencast01'" />  	
+	
+	<!-- our class for communicating with header clients -->
+	<attribute name="headercomm" />
+
+	<!-- 	rtmpconnection  -->	
+	<MessagingRtmpConnection name="cambroadcastcon" userid="${classroot.mename}" appprofileid="${classroot.screencastidtag}" src="${unescape(classroot.red5url) + '/' + classroot.courseid + '/' + classroot.screencastidtag}" altsrc="${unescape(classroot.red5url) + '/' + classroot.courseid + '/' + classroot.screencastidtag}" debug="false" autoconnect="true">
+		<handler name="onpeermessage" args="message">
+			Debug.write("peermessage_received:",message);
+		</handler>
+		<handler name="onconnect">
+	        Debug.write("connected");
+				<!-- Here we should make sure cameras are set up and clients have been informed; -->
+	    </handler>
+	    <handler name="onerror" >
+	        Debug.write("error ",this.status);
+	    </handler>  
+	</MessagingRtmpConnection>
+		
+	<!-- The media stream -->
+	 <mediastream name="thestream" type="rtmp" url="${classroot.broadcastkey}" rtmp="${classroot.cambroadcastcon}" />	
+	  
+	<simplelayout axis="y" spacing="2" />
+		<basetabs name="broadcasttabs" y="10" bordersize="5" tabclass="tab">
+		   <basetabpane name="maintab" text="Main" selected="true" bgcolor="#bdbdbd">
+			<!-- Start of videos-->
+			<view name="videoview"  layout="axis:x; inset:10; spacing:10" >	
+			<!-- 
+				Video output area
+			 -->	
+				
+			   <videoview name="liveView" visible="${this.livecam.cameracount != 0}" stream="${classroot.thestream}"  type="rtmp" width="300" height="240">
+				   <poodllcamera name="livecam" show="true" 
+				   	prefdevice="${classroot.prefcam}"
+				   	capturing="true">
+				   			<handler name="oninit">
+								this.setQuality(classroot.bandwidth,classroot.picqual);
+								this.setMode(classroot.capturewidth,classroot.captureheight,classroot.capturefps,true);
+								Debug.write("bandwidth: " + classroot.bandwidth);
+								Debug.write("picqual: " + classroot.picqual);
+								Debug.write("capturewidth: " + classroot.capturewidth);
+								Debug.write("captureheight: " + classroot.captureheight);
+								Debug.write("capturefps: " + classroot.capturefps);											
+							</handler>
+				   </poodllcamera>	
+				   <poodllmicrophone name="livemic" prefdevice="canvas.prefmic" gain="49" rate="11" capturing="true"  />
+			   </videoview>
+			   <view name="nocamview" visible="${parent.liveView.livecam.cameracount == 0}" width="${parent.liveView.width}" height="${parent.liveView.height}" bgcolor="0xCCCCCC">
+					<text text="No Camera Detected" align="center" valign="middle" />
+			   </view>
+
+			</view>   
+		</basetabpane> 
+		<basetabpane name="settingstab" text="Settings" bgcolor="#bdbdbd">
+			<basetabs name="devicesettingstabs" y="10" bordersize="5" tabclass="tab">
+				<basetabpane name="device" text="Device" bgcolor="#cbcbcb">
+					<mediadevicesettings thecam="${classroot.broadcasttabs.maintab.videoview.liveView.livecam}" themic="${classroot.broadcasttabs.maintab.videoview.liveView.livemic}" />
+				</basetabpane>	
+				<basetabpane name="video" text="Video" bgcolor="#cbcbcb">
+					<videosettings name="videosettings" camsize="${classroot.capturesizeindex}" thecam="${classroot.broadcasttabs.maintab.videoview.liveView.livecam}" />	 
+				</basetabpane> 	
+				<basetabpane name="audio" text="Audio" bgcolor="#cbcbcb">
+					<audiosettings name="audiosettings" themic="${classroot.broadcasttabs.maintab.videoview.liveView.livemic}" />	
+				</basetabpane> 				
+			</basetabs>	
+		</basetabpane>  	
+
+		<basetabpane name="javaapplettab" text="Javacast" bgcolor="#bdbdbd">
+			<!-- Applet Button -->
+			<button name="camStopButton" y="90" x="50" text="Java Screencast">
+				<handler name="onclick">
+					<![CDATA[
+					var widgetURL = classroot.coursedataurl + 'datatype=poodllcastapplet&courseid=' + classroot.courseid;
+					//javascript for popping open a window
+					var somejs= "window.open ('" + widgetURL + "','poodllcast','resizable=1,width=330,height=400')"; 
+					lz.Browser.loadJS(somejs);			
+					]]>
+				</handler>
+			</button>
+		</basetabpane>
+	</basetabs>
+	     
+	<!-- 
+		buttons settings
+	 -->
+			
+	<view name="buttonsView" width="${parent.width}">  
+		<wrappinglayout  axis="x" spacing="15" />
+		<view name="status">
+			<simplelayout  axis="y" spacing="2" />
+			<rtmpstatus rtmpc="${classroot.cambroadcastcon}"/>
+			<text name="status" text="${classroot.thestream.broadcasting ? 'broadcasting' : 'stopped'}" />
+		</view>
+	    <button name="camStartButton" text="Start">
+	        <handler name="onclick">
+	           	classroot.broadcasttabs.settingstab.devicesettingstabs.video.videosettings.updateAll();
+				classroot.thestream.broadcast();
+				
+				//open the pair widget on clients
+				//classroot.headercomm.sendBroadcast();		
+				Debug.write("url:",classroot.thestream.url);
+				Debug.write("src:",classroot.cambroadcastcon.src);
+	        </handler>
+	    </button>  		
+	    <button name="camStopButton" text="Stop">
+	        <handler name="onclick">
+				classroot.thestream.stop();
+				//inform users of screencast session closing
+				//classroot.headercomm.sendShut();
+	        </handler>
+	    </button>             			
+	</view>  
+	
+		<!-- This is untested but might work, as an alternative way of showing the java applet within laszlo
+		<window>
+			<html name="poodllcastwidget" src="${classroot.coursedataurl + 'datatype=poodllcastjnlpapplet&amp;courseid=' + classroot.courseid}" 
+			width="${immediateparent.width}" height="${immediateparent.height}" 
+			visible="${parent.visible}" />	 
+		</window>
+		-->
+	 
+	</class>
+</library>

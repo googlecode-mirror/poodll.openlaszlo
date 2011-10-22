@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<!-- A room connection with additional methods for moderated connections -->
+	
+	
+	<class name="ModeratedRoomConnection" extends="RoomConnection">
+	
+		<attribute name="queueHandler"/>
+		<method name="init">
+			<![CDATA[
+				super.init();
+				
+				this._nc.refreshQueue = function(speakersList){
+					queueHandler.refreshSpeakersList(speakersList.split(","));
+				}
+				
+			]]>
+		</method>
+		
+		<ExtendedNetRemoteCall name="callHandover" funcname="handover"/>
+	
+		<ExtendedNetRemoteCall name="callPrefer" funcname="prefer"/>
+		
+		<ExtendedNetRemoteCall name="callRequestPermission" funcname="requestSpeakPermission"/>
+	
+		<method name="handover">
+			callHandover.callRemoteFunction([]);
+		</method>
+		
+		<method name="prefer" args="clientId">
+			callPrefer.callRemoteFunction([clientId]);
+		</method>
+	
+		<method name="setQueueHandler" args="qh">
+			this.queueHandler=qh;
+		</method>
+		
+		<method name="requestSpeakPermission">
+			callRequestPermission.callRemoteFunction([]);
+		</method>
+	
+	</class>
+
+</library>

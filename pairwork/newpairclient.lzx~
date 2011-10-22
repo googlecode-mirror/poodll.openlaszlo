@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="100%" height="100%" >
+
+<!-- Use messaging rtmp class to manage peer to remote calls -->
+<include href="../messaging/MessagingRtmpConnection.lzx" />
+<!-- The partner widget we will use to show and hear our partners (data replicated) -->
+<include href="partnerwidget.lzx" />
+
+<!-- Declare our attributes -->
+<attribute name="mename" />    
+<attribute name="mefullname" /> 
+<attribute name="mepictureurl" />
+<attribute name="red5url" />   
+<attribute name="teacherallstreamname" />
+
+
+	<!--   Am empty dataset to be filled with information recieved by rtmp messaging -->
+	<!--   the group elements are partners. The group name is also the stream the teacher uses to comm with the group-->
+  <dataset name="partnerData">
+  <pairsets>
+	 <pair name="abc456">
+        <pairelement username="annette" showname="Anette Leslie" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/11/f2.jpg" />
+	  	  <pairelement username="aki" showname="Aki Haru" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/19/f2.jpg"/>
+	  	  <pairelement username="jenny" showname="Jenny Boo" pictureurl="http://192.168.187.62:8080/moodle/user/pix.php/19/f2.jpg"/>
+    </pair>
+   </pairsets>
+  </dataset>
+
+   <!-- A datapointer for other purposes -->
+ <datapointer id="dpurl" name="dpurl" xpath="partnerData:/pairsets" />
+
+<!--rtmp connections -->
+<MessagingRtmpConnection id="autocon" userid="${mename}" appprofileid="pairclient01" src="${unescape(red5url)}"  debug="false" autoconnect="true">
+	<handler name="onpeermessage" args="message">
+		<![CDATA[
+		Debug.write("peermessage:",message);
+		var messageKey = message.slice(0,5);
+		var messageBody = message.slice(5);
+		switch(messageKey){
+			case 'drag:':
+				var newNode = lz.DataElement.stringToLzData(messageBody);
+				if(newNode){			
+					Debug.write("newNode:createdOK");
+					//remove self from list of nodes before adding
+					if(newNode.hasChildNodes()){
+						var pElement= newNode.getFirstChild();
+						while (pElement != null){
+							if (pElement.getAttr("username")== mename){
+								newNode.removeChild(pElement);
+								Debug.write("Deleting me from tolisten nodes:me:", mename);
+								break;								
+							}
+							pElement = pElement.getNextSibling();
+						}
+					}
+					dpurl.setXPath('partnerData:/pairsets/pair');
+					dpurl.deleteNode();
+					dpurl.setXPath('partnerData:/pairsets');
+					dpurl.p.appendChild(newNode);
+				}else{
+					Debug.write("newNode:NOT created ok");
+					Debug.write("newNode messageBody:", messageBody);
+				}
+				break;
+			case 'chat:':	
+				chatHistory.setAttribute('text', chatHistory.text + "\n" + messageBody);
+				break;
+				
+			default: 
+				Debug.write("peermessage:unknown message key:",messageKey);
+				break;
+		
+		}//end of switch	
+		
+				
+		]]>
+		
+	</handler>
+ </MessagingRtmpConnection>
+
+<!--mediastreams -->
+  <mediastream name="mestream" type="rtmp">
+	<microphone name="mic" id="mic" > 
+		<handler name="oninit">
+		    this.setAttribute("rate",22);
+			this.setAttribute("gain",50);
+			this.setAttribute("capturing",true);
+		</handler>
+	</microphone>
+	<handler name="oninit">
+			this.setAttribute("url",mename);
+			this.broadcast();	
+	</handler>
+  </mediastream>
+  
+  
+  
+  	
+  <mediastream name="teachertopairstream" type="rtmp" rtmp="autocon" url="${dpurl.xpathQuery('pair/@name')}" >
+  	<handler name="oninit">
+				teachertopairstream.play();	
+		</handler>
+  </mediastream>
+  <mediastream name="teachertoallstream" type="rtmp" rtmp="autocon" url="${teacherallstreamname}" >
+  <handler name="oninit">
+			//this.setAttribute("url",teacherallstreamname);
+			this.play();	
+	</handler>
+  </mediastream>
+
+  
+
+  <simplelayout axis="x" spacing="15"/>
+
+   <!-- rtmpstatus -->  
+	<view name="meview" >
+		 <simplelayout  />
+		<view name="mename" >
+			<text fontsize="11" text="${mefullname}" />		
+		</view>
+		<view name="mepicture" x="27" xoffset="17" resource="${unescape(mepictureurl)}" onclick="this.animMe.doStart()" >
+			<animatorgroup name="animMe" start="false" process="sequential">
+				<animator attribute="rotation" to="360" relative="true" duration="700"  />
+				<animator attribute="x" to="5 " relative="true" duration="150"  />
+				<animator attribute="x" to="-10 " relative="true" duration="300"  />
+				<animator attribute="x" to="5" relative="true" duration="150" />
+			</animatorgroup>
+		</view>
+	</view>
+
+<!-- Init pair views and contained pairelements-->
+  <partnerwidget datapath="partnerData:/pairsets/pair/pairelement"
+	rtmpc="${autocon}"
+	partnerpictureurl="$path{'@pictureurl'}"    	
+	partnerfullname="$path{'@showname'}"  
+	partnerusername="$path{'@username'}" 
+  />	
+<view name="ChatView">
+	<simplelayout axis="y" spacing="5"/>
+	<text id="chatHistory" name="chatHistory" multiline="true" clip="true" bgcolor="0xFFCCFF" width="200" height="40">
+		<vscrollbar /> 
+	</text>
+	<view name="ChatSendControlsView">
+		<simplelayout axis="x" spacing="10"/>
+		<inputtext id="sendText" name="sendText" bgcolor="0xFFCCFF" width="150"/>
+		<button name="connectButton" width="40" text="Send">
+			<handler name="onclick">
+				<![CDATA[
+					var pairNode = dpurl.xpathQuery("partnerData:/pairsets/pair");
+					
+					if(pairNode != null && pairNode.hasChildNodes()){
+						var pElement = pairNode.getFirstChild();
+						while (pElement != null){
+							var messageString = pElement.getAttr("username") + "@pairclient01," + "chat:" + sendText.text;
+							autocon.sendMessage([messageString]);		
+							pElement = pElement.getNextSibling();
+						}
+					}					
+					chatHistory.setAttribute("text", sendText.text + "\n" + chatHistory.text );
+
+				]]>
+			</handler>	
+		</button>
+	</view>
+</view>
+	
+</canvas>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="500" height="600">
+
+<include href="../utils/youtubelib.lzx" />
+<include href="../talkback/justinav/justinvideoslider.lzx" />
+
+    	<simplelayout axis="y" spacing="5" />
+	<view name="buttons">
+	    	<simplelayout axis="x" spacing="5" />
+		<inputtext name="vidurl" text="tZlgNj-rIxw" bgcolor="0xCCCCCC" width="100"/>
+	        <button text="Send URL">
+			<handler name="onclick">
+				myView.setAttribute("url", parent.vidurl.text);
+				Debug.write("set url to", parent.vidurl.text);
+			</handler>
+		</button>
+	</view>
+
+    	<youtubeview id="myView" 
+				starttime="10"
+				autoplay="false" x="50" y="50" 
+				width="400" height="300" 
+				playvolume="${parent.vslider.volume}"				
+				bgcolor="#dddddd"/>
+				
+		   <justinvideoslider name="vslider" 
+			fontcolor="${parent.fontcolor}"
+			bgcolor="${parent.bgcolor}"
+            width="${myView.width}"
+            height="50"
+            visible="true"
+            ms="${myView.stream}"
+            time="${myView.stream.time}"
+            totaltime="${myView.stream.totaltime}"
+			slidercolor="0x0000FF"
+			progresscolor="0x00FF00"			
+        />
+        
+	
+    
+
+    
+</canvas>

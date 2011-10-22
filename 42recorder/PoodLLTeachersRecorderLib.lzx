@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+<include href="../talkback/justinav/audiosettings.lzx" />
+<include href="../talkback/justinav/videosettings.lzx" />
+<include href="../talkback/justinav/mediadevicesettings.lzx" />
+<include href="../talkback/justinav/flashutils.lzx" />
+<include href="lz"/>
+   
+<class name="poodllteachersrecorder" extends="view">	
+	<!-- Attributes set by canvas or holding class -->
+	<!-- The URL of the Red5 server -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  	
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename" value="lz.Browser.getInitArg('filename')" />  	
+	<!-- The course id (parent will pass -1 if there is no course id) -->
+	<attribute name="course"  value="lz.Browser.getInitArg('course')" />  	
+	<!-- The id of the control on the enclosing HTMLpage to update with the ilename -->
+	<attribute name="updatecontrol"  value="lz.Browser.getInitArg('updatecontrol')" /> 
+ 	
+	<!-- To set a particular camera as default -->
+	<attribute name="prefcam"  />
+	<attribute name="prefmic" />
+
+	<!-- Some camera settings-->
+	<attribute name="capturewidth"  />
+	<attribute name="captureheight"  />
+	<attribute name="capturefps"  />
+	<attribute name="bandwidth" />
+	<attribute name="picqual"  />
+	
+	<!-- The save name of our file. Added Justin 2009/06/12 -->
+	<attribute name="savefilename" value="''" />
+	
+	<attribute name="gShowing" value="true" />
+	<attribute name="gCapturing" value="true" />
+	<attribute name="gBroadcasting" value="false" />
+	
+
+	<!-- Flash Utilities Class -->
+	<flashutils name="futils" />
+
+	<!-- This method is used to call in from javascript(editor:mediacoursefiles) and start playing Added Justin 2009/07/04 -->
+	<!-- This p attribute is for protocol, of course rtmp, so we ignore. For compat with simple vid player Add Justin 2009/07/06 -->
+	<method name="seturl" args="a,p">
+			<![CDATA[
+				this.buttonbar.stopButton.stop();
+				Debug.write("setting url now:", a);
+				//Sometimes the course id ges passed in (ie from editor)
+				//we don't want this, so we test and truncate it.
+				if (this.course!=-1){
+					var strPatternOne= this.course + '/';
+					var strPatternTwo= '/' + this.course + '/';
+					if(a.indexOf(strPatternOne)==0){
+						a= a.substr(strPatternOne.length);
+					}else if(a.indexOf(strPatternTwo)==0){
+						a= a.substr(strPatternTwo.length);
+					}					
+				}
+				this.fileinput.setAttribute("text",a);
+				//playButton.playRecording();
+			]]>
+	</method>
+
+
+	<!-- Justin 2000/06/12-->
+	<!-- Had many problems keeping this logic central and used with constraints-->
+	<!-- This is not elegant but it works. The job is to start from courseid, if we have one-->
+	<handler name="onfilename">
+		<![CDATA[
+			
+			if (this.course!=-1){
+				this.setAttribute("savefilename", this.course + '/' + this.filename);
+			}else{ 
+				this.setAttribute("savefilename",this.filename);
+			}
+		]]>
+	</handler>
+	
+								
+	
+	<!-- The microphone object -->
+	<poodllmicrophone name="mymic" gain="49" rate="11" prefdevice="${classroot.prefmic}" capturing="${classroot.gCapturing}">
+		<handler name="oninit">
+	if($as3){
+	this.setAttribute("gain",49);
+	this.setAttribute("rate",11);
+	this.setAttribute("echosuppression",false);
+	this.setAttribute("loopback",true);
+	this.setAttribute("silencelevel",0);
+	this.setAttribute("silencetimeout",1000);
+
+	
+							
+	Debug.write("on init silence Level: "  + this.getmic().silenceLevel);
+	Debug.write("on init Mike Rate: " + this.getmic().rate);
+	Debug.write("on init Mike Gain: " + this.getmic().gain);
+	Debug.write("on init Mike useechosuppression: " + this.getmic().useEchoSuppression);
+	//Debug.write("on init Mike useechosuppression: " + this.getmic().useEchoSuppression);
+	//There is no associated property for loopback. Odd.
+	//Debug.write("on init Mike loopback: " + this.getmic().loopBack);
+			}
+		</handler>
+	</poodllmicrophone>
+
+	<!-- The server connection -->
+	<rtmpconnection name="rtmpc" src="${classroot.red5url}"  debug="true">	
+
+		<handler name="oninit" >
+			Debug.write("filename:" + classroot.filename);
+			Debug.write("course:" + classroot.course);
+			//If we don't do this, the course attribute is not accessible from the same level
+			//as it was defined. It will say "undefined" no matter classroot this or what.			
+			
+			//no longer necessary, did not understand global scope concept of laszlo j 
+			//classroot.setAttribute("course", course );
+			//classroot.setAttribute("filename", filename );
+		</handler>
+		    
+		
+	</rtmpconnection>
+
+	<!-- The media streams -->
+	<mediastream name="recordstream" type="rtmp" url="${classroot.savefilename}" rtmp="${classroot.rtmpc}" />
+	<mediastream name="playstream" type="rtmp"   url="${classroot.savefilename}" rtmp="${classroot.rtmpc}" />
+	
+
+	
+	
+	<!-- The layout structure
+		canvas layout: top=toptabs bottom=buttonbar
+		tabs are: main / audio / video / device
+		main tab: view:videosview:  leftcol=vview_tslider (record/play/snapshot tabslider)
+		main tab: view:videosview:  rightcol=sesset1 and sesset2
+		audio tab: left col(view:audiosettings1) and right col(view:audiosettings2)
+		video tab: left col(view:videosettings1) and right col(view:videosettings2)
+		device tab: 
+		button bar = record/play/stop/snapshot buttons | mic volume | record time		
+	-->
+
+	
+
+    <simplelayout axis="y" spacing="10"/>
+
+	<edittext name="fileinput" text="${classroot.filename}" width="${parent.width -10}"/>				 		
+	<basetabs name="toptabs" bordersize="5" tabclass="tab">
+	   <basetabpane name="maintab" text="Main" selected="true" bgcolor="#bdbdbd">
+		<!-- Start of videos-->
+		<view name="videosview"  layout="axis:x; inset:10; spacing:10" >
+			 <tabslider name="vview_tslider" width="160" height="160" spacing="2" slideduration="200">
+				<tabelement name="record_tpane" text="Record" selected="true">
+					<videoview bgcolor="#c0f4ad" name="recordview"  mic="${classroot.mymic}" height="${parent.height}" width="${parent.width}" stream="${classroot.recordstream}" >							
+						<!-- The camera object -->
+						<poodllcamera name="poodllcam" prefdevice="${classroot.prefcam}"  show="${classroot.gShowing}" >
+							<handler name="oninit">
+								this.setQuality(classroot.bandwidth,classroot.picqual);
+								this.setMode(classroot.capturewidth,classroot.captureheight,classroot.capturefps,true);
+								Debug.write("bandwidth: " + classroot.bandwidth);
+								Debug.write("picqual: " + classroot.picqual);
+								Debug.write("capturewidth: " + classroot.capturewidth);
+								Debug.write("captureheight: " + classroot.captureheight);
+								Debug.write("capturefps: " + classroot.capturefps);											
+							</handler>
+						</poodllcamera>	
+
+					</videoview>
+				</tabelement>
+				<tabelement name="playback_tpane" text="Playback" >
+					<videoview bgcolor="#c0f4ad" name="playview"  height="${parent.height}" width="${parent.width}" stream="${classroot.playstream}" />
+				</tabelement>	
+			</tabslider>
+			<view name="sessset2">
+				<simplelayout axis="y" spacing="10"/>	
+				<checkbox name="cCapturing" onvalue="classroot.setAttribute('gCapturing', value)" text="Record Audio" value="true"/>
+				<checkbox name="cShowing" onvalue="classroot.setAttribute('gShowing', value)" text="Record Video"  value="true" />
+				<checkbox name="cBroadcasting" onvalue="classroot.setAttribute('gBroadcasting', value)" text="Broadcast Test"  value="false" />				
+				<!-- Connection status light -->
+				 <rtmpstatus rtmpc="${classroot.rtmpc}" />				 
+			</view>
+		<!-- end of videos-->	
+		</view>
+	</basetabpane>	
+	<basetabpane text="Audio" bgcolor="#bdbdbd">
+			<audiosettings name="audiosettings" themic="${classroot.mymic}" />	
+	</basetabpane>		
+	<basetabpane text="Video" bgcolor="#bdbdbd">
+		<!-- Start of videosettings-->
+			<!-- Start of videosettings-->
+				<videosettings name="videosettings" 
+					thecam="${classroot.toptabs.maintab.videosview.vview_tslider.record_tpane.recordview.poodllcam}" >
+						<attribute name="usableDelegate" value="null" />
+						<handler name="oninit">
+							if(classroot.toptabs.maintab.videosview.vview_tslider.record_tpane.recordview.poodllcam.usable){
+								Debug.write("called from init");
+								this.initvalues();								
+							}else{
+								this.usableDelegate = new LzDelegate(this,"initsettings");
+								usableDelegate.register(classroot.toptabs.maintab.videosview.vview_tslider.record_tpane.recordview.poodllcam,"onusable");
+							}
+						</handler>
+						<method name="initsettings"  args="value=null">
+							Debug.write("called from delegate");
+							this.initvalues();	
+							this.usableDelegate.unregisterAll();
+							
+						</method>
+					</videosettings>
+	</basetabpane>	
+	<basetabpane text="Device" bgcolor="#bdbdbd">
+		<mediadevicesettings thecam="${classroot.toptabs.maintab.videosview.vview_tslider.record_tpane.recordview.poodllcam}" themic="${classroot.mymic}" />
+	</basetabpane>
+	</basetabs>
+
+	
+	
+	
+	 
+	 <view name="buttonbar" bgcolor="#bdbdbd" valign="middle" width="${parent.width}" height="${this.recordButton.height + 8}">
+      <simplelayout axis="x" spacing="5" />
+	  	
+    
+        <button name="recordButton" valign="middle"  width="30" height="30" enabled="${classroot.recordstream.recording == false  &amp;&amp; classroot.playstream.playing == false}">
+        	<handler name="onclick" >
+				//use textbox here for filename simplerecorder
+				classroot.setAttribute("filename",classroot.fileinput.text);
+				
+				//this should work but doesnt
+				//need to extand tabs. search forum for programmatically tab select
+				//toptabs.select(maintab);
+				
+				classroot.toptabs.maintab.videosview.vview_tslider.select(classroot.toptabs.maintab.videosview.vview_tslider.record_tpane);
+				classroot.recordstream.setAttribute("url",classroot.savefilename);
+				Debug.write("course from record:" + classroot.course);
+				Debug.write("classroot.recordstream.url:" + classroot.recordstream.url);
+        		classroot.recordstream.setAttribute("totaltime", 0);
+				
+				if(classroot.gBroadcasting){					
+					classroot.playstream.setAttribute("url","broadcasttest");
+					classroot.recordstream.setAttribute("url",classroot.playstream.url);
+					classroot.recordstream.broadcast();
+					classroot.playstream.play();
+				}else{
+					classroot.recordstream.record();
+					
+					//Update enclosing pages "alltext"(filename) field
+					//we do not add the courseid here. The moodle filter will add the relative course id				
+					var js2	= 'document.getElementById(\"' + classroot.updatecontrol + '\").value=\"'  + classroot.filename + '\"';  				
+					lz.Browser.loadJS(js2);
+					}
+				
+        	</handler>
+			<view name="recordicon" width="24" height="24"  x="3" y="3" opacity="${0.2 + (parent.enabled ? 0.8 : 0)}" resource="icons/24x24/PlainGreen/RecordNormalRed.png" ></view>	
+        </button>
+		
+		<button name="playButton" valign="middle"  width="30" height="30" enabled="${classroot.playstream.playing == false &amp;&amp; classroot.recordstream.recording == false }" onclick="playRecording()">
+			<method name="playRecording" args="">
+				classroot.setAttribute("filename",classroot.fileinput.text);	
+				classroot.toptabs.maintab.videosview.vview_tslider.select(classroot.toptabs.maintab.videosview.vview_tslider.playback_tpane);			
+				classroot.playstream.setAttribute("url",classroot.savefilename);
+				Debug.write("classroot.playstream.url:" + classroot.playstream.url);
+				classroot.playstream.setAttribute("paused",false);
+				classroot.playstream.play();
+			</method>
+			<view name="playicon" width="24" height="24"  x="3" y="3" opacity="${0.2 + (parent.enabled ? 0.8 : 0)}" resource="icons/24x24/CircleBlue/Play1Normal.png" ></view>	
+		</button>
+
+        <button
+			name = "stopButton"
+			width="30" 
+			height="30" 
+			valign="middle"            
+			enabled="${classroot.playstream.playing  || classroot.recordstream.recording || classroot.recordstream.broadcasting}"
+            onclick="stopAll()">
+       		<method name="stopAll" args="">
+				if (classroot.recordstream.recording || classroot.recordstream.broadcasting){								
+					classroot.recordstream.stop();
+					Debug.write("classroot.recordstream stopped");
+					Debug.write("classroot.recordstream recording:" + classroot.recordstream.recording);
+					Debug.write("classroot.recordstream broadcasting:" + classroot.recordstream.broadcasting);
+					Debug.write("classroot.playstream playing:" + classroot.playstream.playing);
+					Debug.write("classroot.playstream paused:" + classroot.playstream.paused);
+				}
+				if (classroot.playstream.playing ){								
+					classroot.playstream.stop();
+					Debug.write("classroot.playstream stopped");
+					Debug.write("classroot.recordstream recording:" + classroot.recordstream.recording);
+					Debug.write("classroot.recordstream broadcasting:" + classroot.recordstream.broadcasting);
+					Debug.write("classroot.playstream playing:" + classroot.playstream.playing);
+					Debug.write("classroot.playstream paused:" + classroot.playstream.paused);
+				}   			       			
+       		</method>
+			<view name="stopicon" width="24" height="24"  x="3" y="3" opacity="${0.2 + (parent.enabled ? 0.8 : 0)}" resource="icons/24x24/CircleBordered/Stop1NormalOrange.png" ></view>	
+        </button>	
+		<!-- snapshots doesn't work on swf9, mcref issue, so disabled -->
+		<button name="snapshotButton" valign="middle"  enabled="true" width="30" height="30" visible="false">	
+					<view name="snapshoticon" width="24" height="24"  x="3" y="3" resource="icons/24x24/CircleBordered/YellowCamera.png" ></view>	
+					<flashutils name="futils" />
+					<handler name="onclick" >
+						if (classroot.playstream.playing){
+						//	captureAndCopyView(classroot.toptabs.maintab.videosview.vview_tslider.playback_tpane.playview,snapshotview);
+							Debug.write("we dont currently capture playview:");
+						}else{
+							classroot.futils.captureAndCopyView(classroot.toptabs.maintab.videosview.vview_tslider.record_tpane.recordview,classroot.toptabs.maintab.videosview.vview_tslider.playback_tpane.playview);
+							Debug.write("capturing recordview:");
+						}
+						classroot.toptabs.maintab.videosview.vview_tslider.select(classroot.toptabs.maintab.videosview.vview_tslider.playback_tpane);		
+					</handler>
+										
+		</button>
+		
+		<view name="recordinfo">
+			<simplelayout axis="y"/>
+			<text text="${'recording time: ' + classroot.recordstream.totaltime}"/>
+			<!-- Indicator for microphone level -->
+			<view width="184" resource="volumemeter.gif" height="12" bgcolor="black">       
+				<view x="${parent.width - this.width}" y="0"  bgcolor="black" width="${parent.width - (classroot.mymic.level * 1.8 * classroot.recordstream.recording)}" height="12"/>
+			</view>
+		</view>
+      
+        <text valign="middle" fgcolor="red" name="errorText" width="200"/>
+
+    </view>
+   
+</class>
+</library>
+
+
+
+
+
+
+
+

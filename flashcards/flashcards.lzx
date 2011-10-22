@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+
+	<include href="flashcardslib.lzx"/>
+	<attribute name="cardset" value="lz.Browser.getInitArg('cardset')" />
+	<attribute name="cardwidth" value="lz.Browser.getInitArg('cardwidth')" />  
+	<attribute name="cardheight" value="lz.Browser.getInitArg('cardheight')" /> 
+	<attribute name="randomize" value="lz.Browser.getInitArg('randomize') == 'yes'" />   	
+	
+	<flashcards align="center" cardset="${canvas.cardset}" cardwidth="${canvas.cardwidth}" cardheight="${canvas.cardheight}" height="${canvas.height}" width="${canvas.width}" randomize="${canvas.randomize}" clip="true"  />
+</canvas>

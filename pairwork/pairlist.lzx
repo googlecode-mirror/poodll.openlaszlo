@@ -1,0 +1,809 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+<!--our main widget class -->
+<include href="pairwidget.lzx"/>
+<include href="../messaging/MessagingRtmpConnection.lzx"/>
+<include href="../poodllheader/headercommunications.lzx"/>
+
+
+<class name="pairlist"  extends="view">
+
+ <!-- info to be passed in via constructor-->
+<attribute name="red5url" />   
+<attribute name="teacherpairstreamname" />
+<attribute name="coursedataurl" />
+<attribute name="courseid" />
+<attribute name="mename" />    
+<attribute name="showvideo" />    
+
+ <!-- other variables-->
+<attribute name="pairsidtag" value="'pairs01'" />  
+
+
+<!-- our class for communicating with clients -->
+<attribute name="headercomm" />
+
+<!-- our class for getting settings -->
+<attribute name="settings" />
+
+<!-- pair member audiostreams -->
+ <!-- streamset name="streams" rtmp="${classroot.paircon}" -->
+
+
+  
+<!-- The server connection -->
+<!--rtmp connections -->
+<MessagingRtmpConnection name="paircon" userid="${classroot.mename}" appprofileid="${classroot.pairsidtag}" src="${unescape(classroot.red5url) + '/' + classroot.courseid + '/' + classroot.pairsidtag}" altsrc="${unescape(classroot.red5url) + '/' + classroot.courseid + '/' + classroot.pairsidtag}" debug="false" autoconnect="true">
+	<handler name="onpeermessage" args="message">
+		Debug.write("peermessage:",message);
+	</handler>
+ </MessagingRtmpConnection>
+
+<!--teacher to pair mediastreams -->
+  <mediastream name="teachertopairstream" type="rtmp" rtmp="${classroot.paircon}">
+	<microphone name="mic" > 
+		<handler name="oninit">
+			Debug.write("coursedata url:", classroot.coursedataurl);
+	    	this.setAttribute("rate","22");
+			this.setAttribute("gain","50");
+		</handler>
+	</microphone>
+
+  </mediastream>
+  <mediastream name="teachertoallstream" type="rtmp" rtmp="${classroot.paircon}" url="voiceofauthority">
+	<!-- A microphone object for this stream-->
+	<microphone name="mike" > 
+		<handler name="oninit">
+	    	this.setAttribute("rate","22");
+			this.setAttribute("gain","50");
+		</handler>
+	</microphone>
+	<!-- Set the mic-->
+	<handler name="oninit">
+	    	this.setAttribute("mic",mike);
+	</handler>
+
+  </mediastream>
+  
+  <!-- The dataset containing info about pairs -->
+  <!-- We no longer rely on moodle for this data -->
+ <!-- dataset name="pairdata" type="http"  src="${unescape(pairdataurl)}" request="true" -->
+ <dataset name="pairdata">
+	<pairsets>
+
+	</pairsets>
+
+	<handler name ="ondata">	
+			<![CDATA[
+			//Debug.write("ondata pairurl:",pairdataurl);
+			Debug.write("ondata pairurl:");
+			//this works in with initstage=defer to ensure initiation onlly occurs after the ondata event fires
+			classroot.widgets.assigned.completeInstantiation(); 
+		]]>
+	</handler>
+ </dataset>
+
+
+  <!-- The dataset containing info about users not online to a pair --> 
+<!-- Changed Logic so that all users are initially offline, until red5 informs otherwise --> 
+ <dataset name="offlinedata"  type="http" src="${unescape(classroot.coursedataurl  + 'datatype=courseusers&amp;courseid=' + classroot.courseid)}" request="true" >
+	<attribute name="presenceDelegate" value="$once{ new LzDelegate(this, 'handlePresenceUpdate') }" />
+
+
+	<handler name ="ondata">	
+	<![CDATA[
+		Debug.write("ondata offlineurl:",this.src);
+		Debug.write("getting peer data:ondata");
+
+		//register our presence delegate to handle presence updates
+		this.presenceDelegate.register(classroot.headercomm,"presenceupdate");
+		
+		//after this is done show our data on screen
+		classroot.widgets.offlineunassigned.offline.completeInstantiation(); 
+		classroot.widgets.offlineunassigned.unassigned.completeInstantiation(); 
+		classroot.widgets.assigned.completeInstantiation(); 
+
+		
+	]]>
+	</handler>
+
+
+		
+
+	<!-- Here we handle the presence update info-->
+	<method name="handlePresenceUpdate" args="peerinfo">
+		<![CDATA[
+	
+
+		Debug.write("entered handlePeersResult:peers:", peerinfo);
+		
+		//move offline users out of online and into offline
+		//get pointer for fetching list of alluses from dataset data
+		var dpelement = this.getPointer();
+			
+		//no longer need this online/offline shori, cos done differently in hewadercomm	
+		//move offline users out of online area
+		//var searchPath= "/pairsets/usersummary/text()";
+		//var allUsers = dpelement.xpathQuery(searchPath);
+		//var offlineusers =  classroot.headercomm.getOfflineUsers(allUsers);	
+		
+		var offlineusers =  classroot.headercomm.getOfflineUsers();	
+		
+			var d = new Date();
+			var curr_hour = d.getHours();
+			var curr_min = d.getMinutes();
+			var curr_sec = d.getSeconds();
+			var startTime= "Begining movepeerto:" + curr_hour + ":" + curr_min + ":" + curr_sec;
+			
+		classroot.movePeerTo(offlineusers,classroot.unassigneddata,this,1);
+		
+		//move online users out of offline and into online
+		classroot.movePeerTo(peerinfo,this,classroot.unassigneddata,1);
+		
+			d = new Date();
+			curr_hour = d.getHours();
+			curr_min = d.getMinutes();
+			curr_sec = d.getSeconds();
+			var endTime= "Ending movepeerto:" + curr_hour + ":" + curr_min + ":" + curr_sec;
+			Debug.write(startTime);
+			Debug.write(endTime);
+			
+		//update our parents pairs user count
+		//canned this in favor of antoher headercomm for transparency sake
+		/*
+		var peersarray = peerinfo.split("\;");
+		if (peersarray != null){
+			classroot.parent.setAttribute("pairsusercount",peersarray.length );
+		}
+		*/
+
+
+
+		]]>
+
+	</method>
+
+
+ </dataset>
+
+  <!-- The dataset containing info about users online but not assigned to a pair -->
+  <!-- We no longer rely on moodle for this data -->
+ <!-- dataset name="unassigneddata" type="http" src="${unescape(unassigneddataurl)}" request="true" -->
+ <dataset name="unassigneddata">
+	<pairsets>
+		 <pair name="unassignedusers" dirty="false">
+	        
+	    	</pair>
+	</pairsets>
+ 	<handler name ="ondata">	
+		//Debug.write("ondata unassignedurl:",unassigneddataurl);
+		Debug.write("ondata unassignedurl fired:");
+		classroot.widgets.offlineunassigned.unassigned.completeInstantiation(); 
+	</handler>
+ </dataset>
+
+<!--"API" Methods to be called externally, ie from the pair list control panel -->
+ <!-- ************************************************************************ -->
+<view name="api" >
+	<method name="openPairSession">		
+		Debug.write("starting pair session");
+		classroot.headercomm.sendPairs();	
+	</method>
+
+	<method name="closePairSession">		
+		Debug.write("stopping pair session");
+		classroot.headercomm.sendShut();	
+	</method>
+
+	<method name="getPresenceData" >
+		Debug.write("getting presence data");
+		classroot.offlinedata.updatePresence();		
+	</method>
+
+	<method name="fetchpartnerlist" args="appprofileid" >
+		<![CDATA[
+	
+		Debug.write("getting partnerlist");
+		var dpPair = classroot.pairdata.getPointer();
+		var userList = "";
+		
+		//search for people in pairs
+		var userNodes=dpPair.xpathQuery("/pairsets/pair/pairelement");
+		
+		//if none or one we simply bail
+		if (userNodes == null){
+			//if null do nothing;
+			Debug.write("found no users");
+
+		}else if(userNodes instanceof lz.DataElement){
+			//if single data element, can't pair it (easily..);
+			Debug.write("found single user in a pair. weird. quitting");
+
+		//if more then one we return the list
+		}else {	
+			var separator="";
+			for(var i = 0; i < userNodes.length; i++){
+				if (userNodes[i] instanceof lz.DataElement){
+					userList += separator + userNodes[i].getAttr("username") + "@" + appprofileid;
+					separator="|";
+				}//end of if dataelement, why wouldn't it be?
+			}//end of for loop					
+		}//end of if userNodes ...
+		
+			Debug.write("pairs user list:", userList);
+			return userList;
+			]]>
+	
+		
+		
+	</method>
+
+	<method name="makePairs" args="pairSize">
+			<![CDATA[
+			Debug.write("making pairs");
+			var dpPair = classroot.pairdata.getPointer();
+			dpPair.setXPath("/pairsets");
+			var dpUnassigned = classroot.unassigneddata.getPointer();
+			var unassignedElements =dpUnassigned.xpathQuery("/pairsets/pair/pairelement");
+			if (unassignedElements == null){
+				//if null do nothing;
+				Debug.write("found no unassigned users")
+
+			}else if(unassignedElements instanceof lz.DataElement){
+				//if single data element, can't pair it (easily..);
+				Debug.write("found single unassigned user,quitting");
+
+			}else {		
+				//if array of dataelements loop through them and update them
+				//we use a nested loop with non 1 counters, so that we can add
+				//elements to pairs depending on what size the pairs should be.
+				Debug.write("found array of unassigned users");
+				//Sort array randomly
+				unassignedElements.sort(function() {return 0.5 - Math.random()}) ;
+				
+				//loop through randomised array and make pairs
+				for(var i = 0; i < unassignedElements.length; i=i+pairSize){
+					//we need to check that we can make a full pair from the remaining elements
+					if ((i + pairSize-1) < unassignedElements.length){
+						Debug.write("making pairs ..");				
+						Debug.write("unassigned elements length =:", unassignedElements.length);	
+						
+						var pairNode = dpPair.addNode("pair", "",  {'name': "pair_" + Math.floor(Math.random()*10001),  'dirty': 'true' } );
+						//add elements to pairs
+						for(var j = 0; (j < pairSize) && (i+j < unassignedElements.length); j++){
+							pairNode.appendChild(unassignedElements[i+j]);
+						}//end of j for loop
+					} //end of if (i + pairSize-1) < unassignedElements.length					
+
+				}//end of i loop
+				
+			}
+			]]>
+
+	</method>
+
+	<method name="shufflePairs" >
+			Debug.write("Clearing pairs");
+			//get pointer to the pairs dataset
+			var dpPair = classroot.pairdata.getPointer();
+
+			//search for pairs
+			var toShufflePairs=dpPair.xpathQuery("/pairsets/pair");
+			if (toShufflePairs == null){
+				//if null do nothing;
+				Debug.write("found no pairs to shuffle");
+			}else if(toShufflePairs instanceof lz.DataElement){
+				//if only one pair, there is nothing to shuffle;
+				Debug.write("found only one pair. Can't shuffle.");
+			}else {		
+				//if array of dataelements loop through them and update them
+				Debug.write("found array of pairs to shuffle"); 
+				//loop through array, 
+				//first remove last element, then add previous pairs removed last element
+				var addElement=null;
+				for  (var pairIndex in toShufflePairs){
+					var removeElement=toShufflePairs[pairIndex].removeChild(toShufflePairs[pairIndex].getLastChild());	
+					if(addElement !=null){
+						toShufflePairs[pairIndex].appendChild(addElement);
+					}
+					addElement=removeElement;
+					//flag this pair as having changed and needing updating at client end
+					toShufflePairs[pairIndex].setAttr('dirty','true');
+				}
+				//finally add the element removed from the final pair, to the first pair.
+				if (addElement!=null){
+					toShufflePairs[0].appendChild(addElement);
+				}
+
+			}
+			
+	</method>
+
+	<method name="addEmptyPair" >
+		var dpPair = classroot.pairdata.getPointer();		
+		dpPair.setXPath("/pairsets");
+		dpPair.addNode("pair", "",  {'name':  "pair_" + Math.floor(Math.random()*10001),  'dirty': 'false' } );
+	</method>
+
+	<method name="clearPairs" >
+			Debug.write("Clearing pairs");
+			//get pointer to the pairs dataset
+			var dpPair = classroot.pairdata.getPointer();
+
+			//search for pairs
+			var toClearPairs=dpPair.xpathQuery("/pairsets/pair");
+			var pairsTop=dpPair.xpathQuery("/pairsets");
+			if (toClearPairs == null){
+				//if null do nothing;
+				Debug.write("found no pairs to clear");
+			}else if(toClearPairs instanceof lz.DataElement){
+				//if single data element, clear it;
+				Debug.write("found single pair to clear");
+				clearSinglePair(toClearPairs);
+				//remove the empty pair
+				pairsTop.removeChild(toClearPairs);
+			}else {		
+				//if array of dataelements loop through them and update them
+				Debug.write("found array of pairs to clear");
+				for  (var pairIndex in toClearPairs){
+					clearSinglePair(toClearPairs[pairIndex]);
+					//remove the empty pair
+					pairsTop.removeChild(toClearPairs[pairIndex]);
+				}
+			}
+			
+	</method>
+	<method name="clearSinglePair" args="pairData">
+			//get pointer to the unassigned pairelement dataset
+			var dpUnassigned = classroot.unassigneddata.getPointer();
+			Debug.write("clearing a single pair");
+			//Set up the loop, to get all users who need to know
+			var pElement= pairData.getFirstChild();
+			var separator = "";
+			var userList = "";
+			while (pElement != null ){
+				if (pElement instanceof lz.DataElement){
+					userList += separator + pElement.getAttr("username");
+					separator=";";
+				}
+				pElement = pElement.getNextSibling();
+			}
+			classroot.movePeerTo(userList, classroot.pairdata, classroot.unassigneddata);
+
+	</method>
+
+	<method name="applyChanges" >
+			//get pointer to the pairs and unassigned pair
+			var dpPair = classroot.pairdata.getPointer();
+			var dpUnassigned = classroot.unassigneddata.getPointer();
+
+			//search for dirty pairs
+			var dirtyPairs=dpPair.xpathQuery("/pairsets/pair[@dirty='true']");
+			if (dirtyPairs == null){
+				//if null do nothing;
+				Debug.write("found no assigned dirty pair")
+			}else if(dirtyPairs instanceof lz.DataElement){
+				//if single data element, update it;
+				Debug.write("found single assigned dirty pair")
+				sendUpdate(dirtyPairs);		
+			}else {	
+				//if array of dataelements loop through them and update them
+				Debug.write("found array of assigned dirty pairs")
+				for  (var pairIndex in dirtyPairs){
+					sendUpdate(dirtyPairs[pairIndex]);
+				}
+			}
+
+			//unassigned list is a single pair so we search for a single dirty pair
+			var dirtyUnassigned=dpUnassigned.xpathQuery("/pairsets/pair[@dirty='true']");
+			if (dirtyUnassigned != null){
+				Debug.write("found single unassigned dirty pair");
+				sendUpdate(dirtyUnassigned);
+			}
+			
+			//if we were listening or broadcasting to a pair. lets just reset that too.
+			classroot.widgets.assigned.holder.setAttribute("currentwidget",-1);
+			
+	</method>	
+	<method name="toggleBroadcast" args="">
+
+				if (classroot.teachertoallstream.broadcasting){
+						classroot.teachertoallstream.stop();
+						classroot.teachertoallstream.mic.setAttribute("capturing",false);
+						Debug.write("broadcast stopped,yeah");
+							
+				}else{
+						classroot.teachertoallstream.mic.setAttribute("capturing",true);
+						classroot.teachertoallstream.broadcast();
+						Debug.write("teachertoallstream url:",classroot.teachertoallstream.url);	
+						Debug.write("broadcast started,yeah");					
+				}
+			
+	
+	</method>
+	<method name="sendUpdate" args="pairData">
+		<![CDATA[
+		Debug.write("sendingUpdate");
+		Debug.write(pairData);
+		if (!pairData.hasChildNodes()){
+			Debug.write("Empty pair. Nobody to send update to");
+			return;						
+		}
+		
+		//Set up message content
+		//a message should have a 5 character key, to help the client
+		var messageKey = "drag:";
+		//get the pairData as an xml string
+
+		//if we are updating an unassigned dataset, we only send a blank
+		//pairset tag, because user doesn't need to know
+		var pairXML ="";
+		var dpPairData = new lz.datapointer();
+			dpPairData.setPointer(pairData);
+		if (dpPairData.getNodeAttribute("name")== 'unassignedusers'){
+			pairXML = "<pair name='unassignedusers' dirty='false'></pair>";
+		}else{
+			pairXML = pairData.serialize();
+		}
+
+		//Set up the loop, to update all users who need to know
+		var pElement= pairData.getFirstChild();
+		var separator = "";
+		var userList = "";
+		while (pElement != null ){
+			if (pElement instanceof lz.DataElement){
+				userList += separator + pElement.getAttr("username") + "@" + classroot.pairsidtag;
+				separator="|";
+			}
+			pElement = pElement.getNextSibling();
+		}
+
+		Debug.write("userlist:", userList);
+		var messagestring = userList + "," + messageKey + pairXML;
+		Debug.write("messagestring:", messagestring);
+		classroot.paircon.sendMessage([messagestring]);
+		Debug.write("sending node as XML", pairXML);
+		//reset the dirty flag on this data element
+		pairData.setAttr("dirty","false");
+
+	]]>
+	</method>
+</view>
+ <!-- ************************************************************************ -->
+ <!-- End of "API" methods -->
+
+
+
+ <!-- Widgets view contains pairs and users -->
+<view name="widgets" width="${parent.width-15}" height="100%">
+
+<resizelayout axis="x" spacing="10" />
+
+<!-- drag-and-drop library -->
+<dragutil name="dragUtil" />
+
+
+<!-- The container view containing offline and unassigned views -->
+<view name="offlineunassigned" height="100%">
+<simplelayout axis="x" spacing="10" />
+
+	<!-- The view containing unassigned but online users -->
+	<boxview name="unassigned"  title="Unassigned Users" bordersize="0"  width="190" height="${parent.height-10}" bgcolor="$style{'bgcolor'}" opacity="$style{'opacity'}"  clip="true"  initstage="defer">
+		<!-- view name="opacityfilter" width="${parent.width}" height="${parent.height}" bgcolor="$style{'bgcolor'}" opacity="$style{'opacity'}" options="ignorelayout" -->
+			<scrollbar name="unassignedscrollbar"/>
+
+			<!--  Call the moveElement method, we do it like this, to be sure the move element method-->
+			<!--  Knows which dataset we are coming from -->
+			<method name="moveElement" args="newWidgetIndex, elementUsername">
+				<![CDATA[
+					classroot.moveElement(classroot.unassigneddata,newWidgetIndex,elementUsername);				
+				]]>
+			</method>
+
+			<!-- A holder for our current widget index--> 
+			<attribute name="currentwidget" type="number"  value="-1"/>
+
+			<pairwidget 
+				teachertopairstream="${classroot.teachertopairstream}"
+				teachername="${parent.parent.offline.dpurl.xpathQuery('teacher/@name')}"  	
+				teachertopairstreamname="$path{'@name'}"
+				dirty="$path{'@dirty'}"  
+				pos="$path{'position()'}" 
+				rtmpc="${classroot.paircon}"
+				dragUtil="${classroot.widgets.dragUtil}"
+				showvideo="${classroot.showvideo}"
+				iscurrentwidget="${parent.currentwidget==this.pos}"
+				listenable="false"
+			  > 
+				<datapath xpath="local:classroot.unassigneddata:/pairsets/pair" pooling="true" />
+			  </pairwidget>
+			  
+			  
+			  <!--widgetset="${classroot.widgets.offlineunassigned.unassigned}" -->
+			  
+		<!-- end of assigned view -->
+		</boxview>
+
+	
+	<!-- The view containing offline users -->
+	<!-- boxview name="offline" title="Offline Users" width="200" height="410" clip="true" bordersize="1" bordercolor="0x000000" initstage="defer" -->
+		<boxview name="offline" visible="${classroot.settings.offlineview.showofflineusers.value}" title="Offline Users" bordersize="0" width="190" height="${parent.height-10}" clip="true" bgcolor="$style{'bgcolor'}" opacity="$style{'opacity'}"  initstage="defer">
+			<!-- view name="opacityfilter" width="${parent.width}" height="${parent.height}" bgcolor="$style{'bgcolor'}" opacity="$style{'opacity'}" options="ignorelayout" -->
+			<scrollbar name="offlinescrollbar" />
+
+			 <!-- A datapointer for other purposes -->
+			   <!-- We put it here so it is instantiated, but not till the coursedata(offline) dataset ondata fires-->
+			 <datapointer name="dpurl" xpath="local:classroot.pairdata:/pairsets" />
+
+			<method name="moveElement" args="newWidgetIndex, elementUsername">
+				<![CDATA[
+					classroot.moveElement(classroot.offlinedata,newWidgetIndex,elementUsername);
+				]]>
+			</method>
+			
+			<!-- A holder for our current widget index--> 
+			<attribute name="currentwidget" type="number"  value="-1"/>
+
+			  <pairwidget 
+				teachertopairstream="${classroot.teachertopairstream}"
+				teachername="${parent.dpurl.xpathQuery('teacher/@name')}"  	
+				teachertopairstreamname="$path{'@name'}"
+				dirty="$path{'@dirty'}"  
+				pos="$path{'position()'}" 
+				rtmpc="${classroot.paircon}"
+				dragUtil="${classroot.widgets.dragUtil}"
+				showvideo="${classroot.showvideo}"				
+				iscurrentwidget="${parent.currentwidget==this.pos}"
+				listenable="false"
+			  >					
+			  
+			  <!--widgetset="${classroot.widgets.offlineunassigned.offline}" -->
+			  
+						<datapath xpath="local:classroot.offlinedata:/pairsets/pair" pooling="true" />
+				</pairwidget>
+
+		<!-- end of offline view -->
+		</boxview>
+
+<!--End of The container offline unassigned view-->
+</view>
+
+<boxview name="assigned" title="Pairs" bordersize="0" clip="true" height="${parent.height-10}" bgcolor="$style{'bgcolor'}" opacity="$style{'opacity'}" initstage="defer" options="releasetolayout">
+	<!-- view name="opacityfilter" width="${parent.width}" height="${parent.height}" bgcolor="$style{'bgcolor'}" opacity="$style{'opacity'}" options="ignorelayout" -->
+	<simplelayout axis="x" />	
+	<view name="holder" width="${parent.width - parent.assignedscrollbar.width}" >
+	
+	<!-- Wrap the pair views --> 
+	  <wrappinglayout axis="x" spacing="10" />
+	
+	<!-- A holder for our current widget index-->   
+	<attribute name="currentwidget" type="number"  value="-1"/>
+	
+	<!-- Init pair views and contained pairelements-->
+	  <pairwidget 
+		teachertopairstream="${classroot.teachertopairstream}"
+		teachername="${classroot.widgets.offlineunassigned.offline.dpurl.xpathQuery('teacher/@name')}"  	
+		teachertopairstreamname="$path{'@name'}"
+		dirty="$path{'@dirty'}"  
+		pos="$path{'position()'}" 
+		rtmpc="${classroot.paircon}"
+		dragUtil="${classroot.widgets.dragUtil}"
+		showvideo="${classroot.showvideo}"
+		iscurrentwidget="${parent.currentwidget==this.pos}"	
+		listenable="true"		
+	  >
+	  
+	  <!--widgetset="${classroot.widgets.assigned.holder}" -->
+			<!-- Turning pooling on, will make faster, but instantation is then hit and miss, a bug?-->
+			<datapath xpath="local:classroot.pairdata:/pairsets/pair" pooling="true" />
+		</pairwidget>
+
+
+
+		<method name="moveElement" args="newWidgetIndex, elementUsername">
+			<![CDATA[
+				classroot.moveElement(classroot.pairdata,newWidgetIndex,elementUsername);
+			]]>					
+				
+		</method>
+	</view>
+	<scrollbar name="assignedscrollbar" scrolltarget="${this.holder}"/>		  
+	 
+<!-- end of assigned view -->
+</boxview>
+
+
+
+<!--End of the widgets view-->
+</view>
+
+<!-- Here we handle the moving from one dataset to another -->
+<!-- On presence update or drag and drop -->
+	<method name="movePeerTo" args="moveusers, olddataset, newdataset, newwidgetindex=1">
+		<![CDATA[
+
+
+		Debug.write("handling peer data", moveusers);
+		var users = moveusers.split("\;");
+
+		for(var i = 0; i < users.length; i++){
+
+			//get pointer for old data dataset
+			var dpelement = olddataset.getPointer();
+
+			//here jim@header01 -> jim
+			var elementUsername =users[i];
+			Debug.write("@" + elementUsername + "@");
+
+			//the search string for this username in old data dataset
+			var searchPath= "/pairsets/pair/pairelement[@username='" + elementUsername + "']";	
+
+			//search for user in old data dataset
+			var foundOk = dpelement.setXPath(searchPath);
+			
+			
+			Debug.write("movePeerTo:checking:", users[i]);
+
+
+			//do our moving if we found a user that needs moving
+			if (foundOk){
+				//get and init pointer	to new data dataset	
+				var dpnewhome =  newdataset.getPointer();
+				dpnewhome.selectChild(2);
+				
+				//moves the pointer forward to newWidgetIndex, provided it is def. properly
+				//moveing 0 places, leads to problems so we check for that scenario first
+				if (newwidgetindex > 1){dpnewhome.selectNext(newwidgetindex-1);}
+				Debug.write("newwidgetindex:",newwidgetindex);
+
+				//get and init our oldhome pointer			
+				var dpoldhome= dpelement.dupePointer();
+				dpoldhome.selectParent();
+
+				//for debugging strange false positives when moving into unassigned data pairset
+				Debug.write("olddataset pairgroup name:",dpoldhome.getNodeAttribute("name"));
+				Debug.write("newdataset pairgroup name:",dpnewhome.getNodeAttribute("name"));
+				Debug.write("moveusers:",moveusers);
+
+				//using comparePointer led to inconsistent and strange results, so resorted to comparing name attribute
+				if (dpoldhome.getNodeAttribute("name")==dpnewhome.getNodeAttribute("name")){
+					Debug.write("Can't move within the same pairgroup. quitting.");
+					 return;
+				}
+
+				
+				//copy the node
+				dpnewhome.addNodeFromPointer(dpelement);
+				dpnewhome.setNodeAttribute("dirty",true);
+
+				//and then delete the original node
+				dpelement.deleteNode();
+				dpoldhome.setNodeAttribute("dirty",true);				
+
+
+				//inform the world
+				Debug.write("moved:", users[i]);
+			} //end of if foundOK
+
+		}//end of for loop
+
+
+
+		]]>
+
+</method>
+
+<!--classroot level method that handles moving pairelements between pairwidgets-->
+<method name="moveElement" args="currentDataset, newWidgetIndex, elementUsername">
+	<![CDATA[
+Debug.write("entered move element, username:" , elementUsername);
+				var oldDataSet = null;
+				//get and init our "to be moved element" pointer
+				var dpelement = pairdata.getPointer();
+				//select for the correct user element
+				//first in current pairs, then in unassigned, then in offline (meaningless)
+				var foundOk = false;
+				var searchPath= "/pairsets/pair/pairelement[@username='" + elementUsername + "']";	
+				foundOk = dpelement.setXPath(searchPath);
+
+				if (foundOk){
+					oldDataSet= pairdata;
+				}else{
+					dpelement = unassigneddata.getPointer();
+					searchPath="/pairsets/pair/pairelement[@username='" + elementUsername + "']"	;
+					foundOk = dpelement.setXPath(searchPath);
+
+					if (foundOk){
+						oldDataSet= unassigneddata;
+					}else{
+						dpelement = offlinedata.getPointer();
+						searchPath="/pairsets/pair/pairelement[@username='" + elementUsername + "']"	;	
+						foundOk = dpelement.setXPath(searchPath);
+						if (foundOk){
+							oldDataSet= offlinedata;
+						}
+
+					}
+				}
+
+				//if we found our user, move  them
+				if (oldDataSet != null){
+					movePeerTo(elementUsername,oldDataSet,currentDataset,newWidgetIndex);
+				}else{
+					//if we did not find the element cry foul and cancel
+					Debug.write("search Path not found:",elementUsername);
+				 	return;
+				 }
+		
+				
+	]]>					
+		
+</method>
+
+<!--classroot level method that handles moving pairelements between pairwidgets-->
+<method name="oldMoveElement" args="currentDataset, newWidgetIndex, elementUsername">
+	<![CDATA[
+
+
+				//get and init our "to be moved element" pointer
+				var dpelement = pairdata.getPointer();
+				//select for the correct user element
+				//first in current pairs, then in unassigned, then in offline (meaningless)
+				var foundOk = false;
+				var searchPath= "/pairsets/pair/pairelement[@username='" + elementUsername + "']";
+	
+				foundOk = dpelement.setXPath(searchPath);
+				if (!foundOk){
+					dpelement = unassigneddata.getPointer();
+					searchPath="/pairsets/pair/pairelement[@username='" + elementUsername + "']"	;
+					foundOk = dpelement.setXPath(searchPath);
+
+					if (!foundOk){
+						dpelement = offlinedata.getPointer();
+						searchPath="/pairsets/pair/pairelement[@username='" + elementUsername + "']"	;	
+						foundOk = dpelement.setXPath(searchPath);
+
+					}
+				}
+
+				//if we did not find the element cry foul and cancel
+				if (!foundOk){
+					Debug.write("search Path not found:",searchPath);
+					 	return;
+				 }
+		
+				//get and init our "newhome" pointer		
+				var dpnewhome =  currentDataset.getPointer();
+				dpnewhome.selectChild(2);
+				//moves the pointer forward to newWidgetIndex, provided it is def. properly
+				if (newWidgetIndex > 0){
+					dpnewhome.selectNext(newWidgetIndex-1);
+				}
+				
+
+				//get and init our oldhome pointer
+				var dpoldhome= dpelement.dupePointer();
+				dpoldhome.selectParent();
+				if (dpoldhome.comparePointer(dpnewhome)){
+					Debug.write("Can't move within the same pairgroup. quitting.");
+					 return;
+				}
+				
+				//copy the node , set the new pair flag to dirty, 
+				dpnewhome.addNodeFromPointer(dpelement);
+				dpnewhome.setNodeAttribute("dirty",true);
+
+				//set old pair flag to dirty				
+				dpoldhome.setNodeAttribute("dirty",true);
+
+				//and then delete the original node
+				dpelement.deleteNode();
+
+	]]>					
+		
+</method>
+
+
+</class>
+</library>

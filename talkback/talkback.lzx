@@ -1,0 +1,822 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+		
+		<include href="lz"/>
+		<include href="../42recorder/ExtendedMicrophone.lzx"/>
+		<include href="justinav/justinvideoplayer.lzx"/>
+		<include href="justinav/flashutils.lzx"/>
+		<include href="justinav/justinvideoslider.lzx"/>
+		<include href="justinav/justinvideotogglebutton.lzx"/>
+		<include href="justinav/poodllbigbutton.lzx"/>
+		
+			<!-- Navigation resources -->
+		<resource name="verysimple_play_button" src="justinav/newicons/48/0_play_button.png" />	
+		<resource name="simple_play_button" src="justinav/newicons/48/1_blue_button.png" />
+		<resource name="simple_record_button" src="justinav/newicons/48/2_red_button.png" />
+		<resource name="rec_playback_button" src="justinav/newicons/48/3_green_button.png" />
+		<resource name="playall_button" src="justinav/newicons/32/4_red_button.png" />
+		
+
+		<!-- Attributes to be set by http paramaters  -->
+		<!-- *************************************************************** -->
+		<!-- The URL of the Red5 server -->
+		<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />
+
+		<!-- The dataset to be used -->
+		<attribute name="mediadescriptor" value="lz.Browser.getInitArg('mediadescriptor')" />
+		
+		<!-- The courseid to be used -->
+		<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />
+
+		<!-- The Control on the page to update with the recorded filename-->
+		<attribute name="updatecontrol"  value="lz.Browser.getInitArg('updatecontrol')" />
+		
+		<!-- The basefile path to be used -->
+		<attribute name="basefile"  value="lz.Browser.getInitArg('basefile')" />
+		
+		<!-- The streamtype to be used -->
+		<attribute name="streamtype"  value="lz.Browser.getInitArg('streamtype')" />	
+		
+		<!-- The username and other filename components-->
+		<attribute name="username"  value="lz.Browser.getInitArg('username')" />
+		
+		<!-- This determines whether we randomize the recording filenames -->
+		<!-- necessary because some servers lock the files for long periods and overwriting wont work -->
+		<attribute name="randomfnames" value="lz.Browser.getInitArg('randomfnames')"/>
+		
+		<!-- this is the save file directory for the recordings, prepared in poodllresourcelib.php -->
+		<attribute name="fileroot"  value="lz.Browser.getInitArg('fileroot')" />
+	
+		<!-- If we are not recording, say a music video, we do not need all the recording buttons. -->
+		<!-- This hides them, if set to false -->
+		<attribute name="recordable"  value="lz.Browser.getInitArg('recordable')=='true'" />
+		
+		
+		
+		<!-- *************************************************************** -->
+		
+		<!-- Read Only. -->
+		<!-- If recordable and readonly are both true, we can only listen to the previously recorded session -->
+		<attribute name="readonly"  value="${this.currentmode.text=='Review Mode'}" />
+				
+		<!-- When user selects a role we want all the tabs to change also -->
+		<!--  really should be better design than this .... -->
+		<attribute name="selectedrole" />
+		
+		<attribute name="playerurl" type="string" value=""/>	
+
+		<!-- A flag to let the microphone know that it should be capturing now -->
+		<attribute name="recording" type="boolean" value="false"/>	 	
+		
+		<!-- A flag to indicate if we have ever played before Justin 20100801-->
+		<!-- We should not seek on a stream that is not playing, the ms flags can't be relied on to indicate that-->
+		<attribute name="firstplay" value="true"/>		
+
+
+		<!-- A flag to let the tabs know they should autoplay the recordings in sequence -->
+		<attribute name="playAll" value="false"/>					
+
+
+		<!-- The video to be played -->
+		<!-- attribute name="videopath"  value="lz.Browser.getInitArg('videopath')" -->		
+		<attribute name="playingtabid" type="string" value=""/>		
+
+		<!-- The background color -->
+		<attribute name="playerbackcolor" value="${this.recording ? 0xCC0000 : 0x9abce5}" />
+		<attribute name="controllerbackcolor" value="${this.recording ? 0xCC0000 : 0x8b72ef}" />
+		
+		<!-- The font color -->
+		<attribute name="playerfontcolor" value="0x550000" />	
+
+		<!-- The names of the characters -->
+		<attribute name="roleAName"  value="${canvas.dpurl.xpathQuery('roleAName/text()')}" />
+		<attribute name="roleBName"  value="${canvas.dpurl.xpathQuery('roleBName/text()')}" />
+
+		<!-- Record File Settings -->
+		<attribute name="fileprefix"  type="string" value="tbk" />
+		
+		<!-- This is a  flag to let play all button know we have at least one tab's recording, and enable the button -->
+		<attribute name="haverecording" value="false" />
+		
+		<!--Our RTMP connection -->
+		<rtmpconnection name="autocon" src="${canvas.red5url}" autoconnect="true"/>
+
+		<!-- The recording media stream -->	
+		<mediastream name="recms" rtmp="${canvas.autocon}" type="rtmp" /> 
+		<!-- The play media stream for the recording-->
+		<mediastream name="playbackms" rtmp="${canvas.autocon}" type="rtmp" />
+	
+		
+
+		<!-- The microphone object -->
+		<!-- poodllmicrophone name="mic"  capturing="${player.vscreenslider.volumebutton.value==0}" stream="${canvas.recms}" --> 
+		<!-- the whole mike mute thing with capturing is hit and miss. So set gain instead.  --> 		
+		<poodllmicrophone name="mic" capturing="${canvas.recording}" gain="${this.capturing ? 50 : 0}" stream="${canvas.recms}"> 
+			<handler name="oninit">
+				//this.setAttribute("rate",22);
+				//this.setAttribute("gain",50);
+				//this.setAttribute("capturing",true);
+				this.setAttribute("silencelevel",0);
+				this.setAttribute("silencetimeout",1000);
+				
+				if (lz.Browser.getVersion() >= 9 ){
+					Debug.write("FlashVersion:",lz.Browser.getVersion());						
+					Debug.write("Setting E S:false");
+					this._dev.setUseEchoSuppression(false);					
+				}
+			</handler>
+
+		</poodllmicrophone>
+		
+		
+
+		
+		<!-- The dataset containing info about the media resource -->
+		<!-- The timestamp is to get us over crap browser caching which should not but does occur-->
+		<dataset name="mediaresource" type="http" src="${canvas.mediadescriptor + '?timestamp=' + new Date().getTime()}" request="true"/>
+		<!-- This is a datapointer to allow us to get the URL of the media file for the vid player -->
+		<!-- We also use it to determine http/rtmp streaming -->
+		<datapointer name="dpurl" xpath="mediaresource:/mediaresource" >
+			<handler name="ondata">
+				//the dataset alwaysinits later than the player, which gets reinited causing confusion.
+				//if the streamtype is http it starts to play earlier than
+				//the data has arrived and jams because it does not have the filename
+				//here we stop the stream so that it will start again 
+				//(otherwise it tries to unpause on an empty streamconstantly
+				//rtmp seems unaffected by this.
+				if (canvas.streamtype=='http'){
+					player.vscreen.stream.stop();					
+				}
+
+				Debug.write("setting url:");
+				if(canvas.streamtype=='rtmp'){
+					canvas.setAttribute("playerurl", canvas.courseid + "/" + this.xpathQuery('mediapath/text()'));
+					Debug.write("setting url:", canvas.courseid + "/" + this.xpathQuery('mediapath/text()'));
+				}else if(canvas.streamtype=='http'){
+					canvas.setAttribute("playerurl", canvas.basefile + "/" +  this.xpathQuery('mediapath/text()'));				
+					Debug.write("setting url:", canvas.basefile  + "/" +  this.xpathQuery('mediapath/text()'));
+				}else if(canvas.streamtype=='yutu'){
+					canvas.setAttribute("playerurl", this.xpathQuery('mediapath/text()'));				
+					Debug.write("setting url:", this.xpathQuery('mediapath/text()'));
+				}
+				
+				canvas.topbar.rightcol.toptabs.completeInstantiation();
+
+
+								
+			</handler>
+		</datapointer>
+		
+		<!-- this overlays over the player, is not bound by a layout -->
+		<text name="currentmode" bgcolor="0xFFCCCC" text="Try Mode" 
+				height="18" options="ignorelayout" visible="$once{canvas.recordable}"
+				x="0" y="0" >
+			<handler name="onclick">
+				if(this.text=='Try Mode'){
+					this.setAttribute('text','Review Mode');
+					this.setAttribute('bgcolor','0xCCCCFF');
+				}else{
+					this.setAttribute('text','Try Mode');
+					this.setAttribute('bgcolor','0xFFCCCC');
+				}
+			</handler>
+				
+		</text>
+		
+		
+		<!--Horizontal layout -->
+		<simplelayout axis="x" inset="10" spacing="0"/>
+
+		
+		<view name="topbar">
+			<simplelayout axis="x" spacing="0"/>
+
+			<!-- Left Side -->	
+			<view name="leftcol">
+			
+		
+				<simplelayout axis="y" spacing="10"/>
+				<!-- If we are loading via http, we do not know what flash will see as the current directory, so we use absolute paths, 
+				hence poodllresource crafts url depending on protocol -->						
+				<justinvideoplayer  id="player" name="player"  bgcolor="${canvas.playerbackcolor}" 
+					fontcolor="${canvas.playerfontcolor}"  rtmp="${canvas.autocon}" type="${canvas.streamtype}" 
+					url="${canvas.playerurl}" showscreen="true" autoplay="false" width="350" height="382" >
+					
+					<handler name="onvolume" reference="this.vscreenslider">
+						<![CDATA[
+								if ($as3) {				
+									//only after recording will this be non null
+									//I did not bother to make pre as2 for this, but to do so refer
+									//to justinvideoview playvolume and attachstream methods
+									//THIS DOESN'T WORK YET .....why? Justin 20100728
+									if(canvas.playbackms._flashstream != null){
+										Debug.write("would set the playback stream volume here");
+										//canvas.playbackms._flashstream.soundTransform.volume =  player.vscreenslider.value * 0.1;	
+									}
+								}
+							]]>
+					</handler>	
+					
+				</justinvideoplayer>						
+							
+			</view>
+		
+
+			<!-- Right Side -->	
+			<view name="rightcol" bgcolor="${canvas.controllerbackcolor}">
+				<simplelayout axis="y" spacing="5"/>
+				
+				<basetabs name="toptabs" y="10" bordersize="1" tabclass="tab" initstage="defer" >
+							
+					<!-- replicator datapath="mediaresource:/mediaresource/segment" -->
+				   <basetabpane text="$path{'title/text()'}"  >
+							  <datapath xpath="mediaresource:/mediaresource/segment">
+						          <handler name="onclones">
+						            if (!this['doneDel']) {
+						             this.doneDel = new LzDelegate(this, 'openTabOne')
+						             this.doneDel.register(clones[clones.length - 1], 'oninit')
+						            }
+						          </handler>
+						          <method name="openTabOne" args="ignore = null">
+						            <![CDATA[
+										canvas.topbar.rightcol.toptabs.bar.selectItemAt(0);
+										//parent.subviews[0].setAttribute('selected',true);
+										Debug.write("basetabpane:openTabOne:fired");
+										]]>
+						          </method>
+						        </datapath>
+				   
+							<attribute name="selecttabDelegate" value="$once{new LzDelegate(this, 'selectTabHandler')}" />
+							
+							<handler name="oninit" ><![CDATA[
+								//add delegate to select/deselect this tab according to ms pos
+								lz.Idle.onidle.addDelegate( this.selecttabDelegate);
+								canvas.currentmode.bringToFront();								
+								 ]]>
+							</handler>
+							<handler name="onselect" reference="this.tab">
+							<![CDATA[							
+								var ms = player.vscreen.stream;
+								var start = this.datapath.xpathQuery('start/text()');
+								//the previous tab also gets fired (why?)
+								//the current tab condition is to ensure we don't double seek
+								if (ms!=null && ms.paused && this.tab.selected) {
+									ms.seek(start);
+									Debug.write("basetabpane:tabselect:seeking:", start);
+									Debug.write("splashresource",canvas.basefile + '/' + this.datapath.xpathQuery('splash/text()'));
+									Debug.write("basefile",canvas.basefile);
+									Debug.write("splashresource",respath);
+								}
+								 ]]>
+							</handler>
+							
+							<attribute name="respath" value="$path{'splash/text()'}"/>										
+							<view x="${(0 - canvas.topbar.rightcol.x - canvas.topbar.rightcol.toptabs.x - 8 ) + player.vscreen.x}" y="${0 - canvas.topbar.rightcol.y - canvas.topbar.rightcol.toptabs.y -33}" 
+							width="${player.vscreen.width}" stretches="both" height="${player.vscreen.height}" 
+							name="splashview"  visible="true" resource="${canvas.basefile + '/' + this.parent.respath}"									
+							/>
+							
+					
+							<method name="selectTabHandler" args="ignore = null"><![CDATA[
+										var ms = player.vscreen.stream;
+										if(ms==null){return;}
+										//Select or not select this tab
+										var end = this.datapath.xpathQuery('end/text()');
+										var start = this.datapath.xpathQuery('start/text()');									
+										if (parseFloat(ms.time) <= parseFloat(end) && parseFloat(ms.time)  >= parseFloat(start)  && ms.playing && !ms.paused){
+											
+											
+											
+											//We do this to make sure tabs are only selected when playing from main player
+											//or when we are not playing
+											var selectable = canvas.playingtabid == ""  || canvas.playingtabid== this.text;
+											this.setAttribute("selected",selectable);
+											
+											/*
+											if we are playing back as part of playAll
+											We need to make  sure recorded part has not been played yet. We need to do this because sometimes
+											this logic will be entered again once the recorded part has finished playing
+											but while still on this tab. Then the recorded part will play AGAIN, as 
+											part of the play all sequence. To avoid another confusing round of flags and delegates
+											we just assume that after 3 seconds the stream should have begun already and this is a
+											repeat call.
+											*/
+											var timeDiff = parseFloat(ms.time) - parseFloat(start);
+											var firstTime = (timeDiff < 3) && (timeDiff > 0);
+											
+											//Debug.write("timeDiff:", timeDiff);
+											
+											if(canvas.playAll && selectable ){
+												if(this.mainrightholder.buttonbar.isRecordable && 
+														firstTime && 
+														ms.playing && 
+														!ms.paused &&
+														!canvas.playbackms.playing && 
+														!canvas.recms.recording &&
+														(this.mainrightholder.buttonbar.filename != "" || canvas.readonly)){
+															this.mainrightholder.buttonbar.playAsPartOfAll();														
+												}													
+											}
+							
+										}
+							 ]]>
+							</method>
+							
+							<!-- the maim holding view for the right col. The splashes need tobe outside this-->
+							<view name="mainrightholder">
+						
+							<simplelayout axis="y" spacing="8"/>
+							<view name="scrollContainer" clip="true" bgcolor="0xFFFFFF" width="350" height="$once{195 + (canvas.recordable ? 0 : 63)}">
+								<text bgcolor="${parent.bgcolor}" name="readtext"  multiline="true" resize="false" width="${parent.readTextScrollbar.x}" datapath="script/text()"  />
+								<!-- text bgcolor="${parent.bgcolor}" name="readtext"  multiline="true" resize="false" width="${parent.readTextScrollbar.x}" text="$path{'script/text()'}"  -->
+
+								<scrollbar name="readTextScrollbar"/>
+							</view>
+							<view name="roleContainer" width="${parent.scrollContainer.width}">
+								<radiogroup name="role" visible="${canvas.recordable}" align="center" layout="class:simplelayout; axis:x; spacing:5">>
+						                <radiobutton value="'A'" text="${canvas.roleAName}" visible="${canvas.roleAName != null}" />
+						                <radiobutton value="'B'" text="${canvas.roleBName}" visible="${canvas.roleBName != null}" />
+										<handler name="onselectedrole" reference="canvas">
+											if (this.value != canvas.selectedrole){
+												this.selectItem(canvas.selectedrole);
+											}
+										</handler>
+										<handler name="onselect">
+											if (this.value != canvas.selectedrole){
+												canvas.setAttribute("selectedrole",this.value);
+											}
+										</handler>
+						         </radiogroup>								
+							</view>
+							<view name="buttonbar" width="${parent.scrollContainer.width}">
+								
+								<attribute name="autoStopDelegate" value="$once{new LzDelegate(this, 'handleAutoStop')}" />
+								<attribute name="playerStopDelegate" value="$once{new LzDelegate(this, 'handleClickOnPlayer')}" />
+								<attribute name="muteHandlerDelegate" value="$once{new LzDelegate(this, 'handleMuting')}" />
+								<attribute name="red5messageDelegate" value="$once{new LzDelegate(this, 'handleRed5Message')}" />
+								<attribute name="filename"  type="string" value="" />
+								<attribute name="start"   value="${this.parent.parent.datapath.xpathQuery('start/text()')}" />
+								<attribute name="end"  value="${this.parent.parent.datapath.xpathQuery('end/text()')}" />
+								<attribute name="tabtext"  value="${this.parent.parent.text}" />
+								<attribute name="ms" value="${player.vscreen.stream}" />
+								<attribute name="isRecordable" value="${this.parent.parent.datapath.xpathQuery('@recordable') == 'true' &amp;&amp; canvas.recordable}" />
+								<simplelayout axis="x" 
+									inset="0" 
+									spacing="5"/>								
+								
+								<poodllbigbutton name="simpleplaybutton"
+									x="0"
+									y="0"
+									width="$once{(parent.isRecordable) ? 110 : parent.width}"
+									height="60"
+									resourcename="$once{canvas.recordable ? 'simple_play_button' : 'verysimple_play_button'}"
+									enabled="${!player.vscreen.stream.playing || player.vscreen.stream.paused}"
+									text="Play"
+									>
+
+
+
+									<handler name="onclick"><![CDATA[							
+										
+								       	if (!this.parent.ms.playing || this.parent.ms.paused){
+											this.parent.doPlay();
+										}else{
+											this.parent.doStop();										}																						 
+
+										  ]]>
+									</handler>			
+
+								</poodllbigbutton>
+								
+								<poodllbigbutton name="simplerecordbutton"
+									x="0"
+									y="0"
+									width="110"
+									height="60"
+									resourcename="simple_record_button"
+									visible="${(parent.isRecordable)}"
+									enabled="${(!player.vscreen.stream.playing || player.vscreen.stream.paused) &amp;&amp; !canvas.readonly}"
+									text="Record">
+
+									
+												
+									<handler name="onclick"><![CDATA[								
+
+								       	if (!this.parent.ms.playing || this.parent.ms.paused){
+											this.parent.doMutePlay();
+											this.parent.doRecord();
+										}else{
+											this.parent.doStop();
+										}
+
+										  ]]>
+									</handler>
+
+								</poodllbigbutton>
+								<poodllbigbutton name="playrecordingbutton"
+									x="0"
+									y="0"
+									width="110"
+									height="60"
+									visible="${parent.isRecordable}"
+									resourcename="rec_playback_button"
+									enabled="${!player.vscreen.stream.playing || player.vscreen.stream.paused}"
+									text="Check">
+
+										<handler name="onclick"><![CDATA[								
+			
+											if (!this.parent.ms.playing || this.parent.ms.paused){
+												this.parent.doMutePlay();
+												this.parent.doPlayRecording();
+											}else{
+												this.parent.doStop();
+											}
+
+											  ]]>
+										</handler>
+																									
+								</poodllbigbutton>
+						             
+							 <!-- This method is called to play both stream of this tab, 
+							 immed after the previous tab and before the next. We do not want to stop the main player stream-->
+							<method name="playAsPartOfAll"><![CDATA[
+								lz.Idle.onidle.addDelegate(this.muteHandlerDelegate);
+								lz.Idle.onidle.addDelegate(this.autoStopDelegate);														
+								this.doPlayRecording();
+								]]>
+							</method>
+							
+
+							<method name="doPlayRecording"><![CDATA[
+								if(canvas.readonly){
+									this.setAttribute("filename",this.getFilename());
+								}
+								Debug.write("doplayrecording filename", this.filename);
+								if (this.filename=="") return;
+								Debug.write("doplayrecording filename", this.filename);
+								if(canvas.playbackms.url != this.filename){
+									canvas.playbackms.setAttribute("url",this.filename);
+									}												
+								if (canvas.playbackms.paused) {
+									canvas.playbackms.setAttribute("paused",false);
+									}
+								canvas.playbackms.play();
+																														
+								  ]]>
+							</method>
+							
+							
+
+							<method name="doMutePlay"><![CDATA[
+								canvas.playingtabid = this.tabtext;										
+							
+								//if we should be playing, lets do that
+								//if we have not started , start
+								if (!this.ms.playing){		
+									Debug.write("letsmuteplay");									
+									this.seekplay(this.start);
+															
+									
+								//if we are paused, resume	
+								}else if(this.ms.paused){
+									Debug.write("letsunpause");	
+									this.ms.setAttribute("paused", false); 																					
+								}
+																				
+								lz.Idle.onidle.addDelegate(this.autoStopDelegate);	
+								lz.Idle.onidle.addDelegate(this.muteHandlerDelegate);				
+								Debug.write("sought",this.start);									
+								
+								 ]]>
+							</method>
+							<method name="seekplay" args="offset">
+								<![CDATA[	
+									//The sequence seems to work best, seeking then playing
+									//but if we have never playing already, we should do that.
+									//the delay for firstplay is to give time for metadata (totattime) to arrive
+									//the delay for seek is to allow the result of the seek operation to arrive before we start
+									//otherwise it wil loccasionally stop immediately on the arrival of that sometimes (why?)
+									if (canvas.firstplay && canvas.streamtype=="rtmp"){
+										this.ms.play();
+										canvas.setAttribute("offset",offset);
+										lz.Timer.addTimer( new LzDelegate( canvas, "handlePlaySeek" ), 100 );
+										canvas.setAttribute("firstplay",false);										
+									}else{
+										this.ms.seek(offset);
+										lz.Timer.addTimer( new LzDelegate( canvas, "handleSeekPlay" ), 100 );
+									} 									
+								]]>								
+							
+							</method>
+						
+							<!-- this never worked, why not?, but for future ref. kept it -->
+							<method name="handleRed5Message" args="red5code">
+								<![CDATA[	
+								switch (red5code){
+									case "Netstream.seek.notify" : this.ms.play();
+																	Debug.write("played, then removed red5messagedelegate");
+																	break;
+									default: Debug.write("red5code", red5code);
+											this.ms.onred5message.removeDelegate(this.red5messageDelegate);
+											Debug.write("removed red5message delegate");
+
+								}
+								]]>
+							</method>
+							<method name="doPlay"><![CDATA[										
+								canvas.playingtabid = this.tabtext;
+/*								
+								
+								if (this.ms.paused) {
+										//for rtmp streams this is important(pause erroneous)
+										//but for http streams it sucks and starts stream from0 etc
+										if (player.type=="rtmp"){
+											this.ms.setAttribute("paused",false);
+										}
+									}
+								//the order of seek then play, was initially, play then seek.
+								//July 30th altered it, because youtube was faltering. and I think distance 
+								//from rtmp server, lag conntributed to falters on rtmp.
+								//may yet be a mistake though ...
+								
+									
+									this.ms.seek(this.start);
+									this.ms.play();
+													
+								
+*/
+							//if we should be playing, lets do that
+								//if we have not started , start
+								if (!this.ms.playing){		
+									Debug.write("letsplay");
+									Debug.write("msstate",ms.mode);
+									this.seekplay(this.start);
+																		
+									
+								//if we are paused, resume	
+								}else if(this.ms.paused){
+									Debug.write("letsunpause");	
+									this.ms.setAttribute("paused", false); 
+																					
+								}
+									
+																	
+								lz.Idle.onidle.addDelegate(this.autoStopDelegate);	
+								this.playerStopDelegate.register(player.vscreenslider.playbutton, "onengaged");	
+								this.playerStopDelegate.register(player.vscreenslider.slider, "onmousedown");	
+								//player.vscreenslider.playbutton.onengaged.addDelegate(this.playerStopDelegate);
+								Debug.write("sought",this.start);									
+								
+								 ]]>
+							</method>
+							<method name="getFilename">
+								var tabnumber = this.tabtext;															
+								return canvas.courseid + "/" + canvas.fileroot + "/"  + canvas.username + "/" + canvas.fileprefix + "_" 
+									+ tabnumber + "_" + this.parent.roleContainer.role.value + "_" + (canvas.randomfnames=="true" ? Math.floor(Math.random()*100001) : 'default') + ".flv";
+							</method>
+							<method name="doRecord"><![CDATA[
+								this.filename = this.getFilename();
+								//this.filename = assigName + "_" + uid + "_" + Math.floor(Math.random()*100001) + ".flv";
+								canvas.recms.setAttribute("url",this.filename);
+								Debug.write("recmssss.url:" + canvas.recms.url);																
+								canvas.recms.setAttribute("totaltime", 0);
+					        	canvas.recms.record();									
+								Debug.write("started recording");
+								canvas.setAttribute("haveRecording",true);
+								 ]]>
+							</method>
+							<method name="doStop"><![CDATA[
+							
+								this.ms.seek(this.start);	
+								this.ms.setAttribute("paused",true);
+								if (canvas.recms.recording){
+										canvas.setAttribute("recording",false);
+										//canvas.mic.setAttribute("capturing",canvas.recording);
+										
+										canvas.recms.stop();
+										
+										Debug.write("stopped recording");
+								}
+								if (canvas.playbackms.playing){
+									//trying to see if stopping improves stability
+									canvas.playbackms.stop();
+									//canvas.playbackms.setAttribute("paused",true)
+								};
+									//remove delegates, reset flags, reset mute
+									tidyUp();
+									
+									//if we were playing all, we better cut that out right now.
+									canvas.setAttribute("playAll", false);
+								 ]]>
+							</method>
+							<method name="handleAutoStop" args="ignore = null"><![CDATA[
+	
+									
+								if (parseFloat(this.ms.time) >= parseFloat(this.end)){
+									Debug.write("bingo_time::",this.ms.time);								
+									Debug.write("bingo_end::",this.end);
+									if(canvas.playAll){
+										if (canvas.playbackms.playing){
+											canvas.playbackms.stop();
+										};									
+										lz.Idle.onidle.removeDelegate(
+								                    this.autoStopDelegate);
+										lz.Idle.onidle.removeDelegate(
+								                    this.muteHandlerDelegate);
+										canvas.playingtabid = "";
+										player.vscreenslider.setAttribute("mute",false);
+									}else{
+										doStop();
+									}
+								}
+								 ]]>
+							</method>
+							<method name="handleClickOnPlayer" args="ignore = null"><![CDATA[	
+									tidyUp();												
+								 ]]>
+							</method>
+							<method name="tidyUp"><![CDATA[
+								//After we have stopped streaming remove delegates and reset flags
+								//player.vscreenslider.playbutton.onengaged.removeDelegate(this.playerStopDelegate);
+								this.playerStopDelegate.unregisterAll();		
+								lz.Idle.onidle.removeDelegate(
+								                    this.autoStopDelegate);
+								lz.Idle.onidle.removeDelegate(
+								                    this.muteHandlerDelegate);
+								canvas.playingtabid = "";
+								player.vscreenslider.setAttribute("mute",false);
+								/*
+								Debug.write("reset playintabid");	
+								Debug.write("removed delegates:","playerStopDelegate");		
+								Debug.write("removed delegate:","muteHandler");							
+								Debug.write("removed delegate:","stopHandler");
+								*/
+								
+							]]>
+							</method>
+							
+
+				<!-- called by delegate, handle recording and muting.  -->
+				<method name="handleMuting" args="ignore = null"><![CDATA[
+					//Mute or not mute the playing audio
+					//we do this by setting the mute attribute, on the player vslider
+					//the button then sets the vol to zero
+					var mutestartNodes = this.parent.parent.datapath.xpathQuery('speechstart/' + this.parent.roleContainer.role.value);								
+					var muteendNodes = this.parent.parent.datapath.xpathQuery('speechend/' + this.parent.roleContainer.role.value);
+					
+					
+					//var mutestart = this.parent.parent.datapath.xpathQuery('speechstart/' + this.parent.roleContainer.role.value + '/text()');								
+					//var muteend = this.parent.parent.datapath.xpathQuery('speechend/' + this.parent.roleContainer.role.value + '/text()');
+					
+					//if none or one we simply bail
+					if (mutestartNodes == null || muteendNodes ==null){
+						//if null do nothing;
+						Debug.write(this.tabtext + ":found incorrect (zero) number of nodes");
+						return;
+					}else if(mutestartNodes instanceof lz.DataElement && muteendNodes instanceof lz.DataElement){
+						//we have one set of speech within this tab to mute. So lets get to it.
+						var thestartnode = mutestartNodes;
+						var theendnode = muteendNodes;
+						mutestartNodes = new Array();
+						mutestartNodes[0]=thestartnode;
+						muteendNodes = new Array();
+						muteendNodes[0]=theendnode;
+						
+					}else if(mutestartNodes.length != muteendNodes.length){
+						Debug.write(this.tabtext + ": found incorrect number of nodes");
+						Debug.write("mutestart:",mutestartNodes.length);
+						Debug.write("muteend:",muteendNodes.length);
+					}
+					
+					//If none of the above conditions are filled we have an array of nodes, which is what we want.
+					var shouldmute = false;
+					
+					for(var i = 0; i < mutestartNodes.length; i++){
+						//Debug.inspect(mutestartNodes[i]);
+						var mutestart = mutestartNodes[i].childNodes[0];
+						var muteend = muteendNodes[i].childNodes[0];
+
+						this.shouldmute= (parseFloat(this.ms.time) <= parseFloat(muteend) && parseFloat(this.ms.time)  >= parseFloat(mutestart)  && this.ms.playing && !this.ms.paused);
+
+						if (this.shouldmute){
+							break;
+							
+						
+							
+							//We shouldn't record past the mute line, or on playback we 
+							// will hear the non muted audio like a ghost	
+							//I had to put the 0 in, because 
+							//when a stream's pause/play/seek are called, 
+							//ms.time briefly hits 0, and this would stop recording	
+							//**Set a constraint in decl, to player.volbutton.mute//
+							/*								
+							if(!shouldmute && canvas.recms.recording && this.ms.time != 0){
+								canvas.mic.setAttribute("capturing",false);						
+								
+								Debug.write("turned off mic at " + this.ms.time);
+							}
+							*/
+
+						}
+												
+					
+					}//end of for loop	
+					
+					///we set a flag on the canvas for the playerbackcolors to use as constraint
+					//putting a constraint on mic directly would cause instantiation timeing issues.
+					//this way we avoid using a nother delegate
+					player.vscreenslider.setAttribute("mute",this.shouldmute);
+					
+						if (canvas.recording != (this.shouldmute && canvas.recms.recording)){
+							canvas.setAttribute("recording",(this.shouldmute && canvas.recms.recording));
+						}
+					
+					return;
+
+											
+						
+	
+						
+
+					 ]]>
+				</method>
+
+							
+
+						<!-- end of button bar -->
+						</view>	
+						
+						<!-- PlayAll Button  This should really be out of the tabs  .. but instantation order ..-->
+						<poodllbigbutton name="playallbutton"
+								width="100%"
+								height="40"
+								resourcename="playall_button"
+								visible="${canvas.recordable}"
+								enabled="${(!player.vscreen.stream.playing || player.vscreen.stream.paused)  &amp;&amp; (canvas.haveRecording || canvas.readonly)}"
+								text="Play All" >					
+								<attribute name="stopPlayAllDel" value="null" />
+								<handler name="onclick"><![CDATA[								
+									if (this.enabled){
+										canvas.setAttribute("playAll",true);
+										player.vscreen.stream.seek(0);
+										lz.Timer.addTimer( new LzDelegate( canvas, "handleSeekPlay" ), 100 );
+										this.stopPlayAllDel = new LzDelegate(this, "stopPlayAll");
+										this.stopPlayAllDel.register(player.vscreen.stream,"onstop");
+									}else{
+										if(canvas.playAll){
+											canvas.recms.stop();
+											player.vscreen.stream.stop();
+											this.stopPlayAll();
+										}
+									}
+
+									  ]]>
+								</handler>
+								<method name="stopPlayAll" args="ignore=null">
+
+											canvas.setAttribute("playAll", false);
+											player.vscreen.stream.onstop.removeDelegate(this.stopPlayAllDel);
+											//reset first tab. this is necessary to stop the player autorewind occuring
+											//but leaving the user still looking at the last tab. (left and right don't match)
+											canvas.topbar.rightcol.toptabs.bar.selectItemAt(0);
+											Debug.write("cancelling play all, from stopPlayAllDel");
+								</method>
+						</poodllbigbutton>
+						
+						
+						</view>
+					</basetabpane>
+					<!-- replicator -->
+				</basetabs>
+				
+				
+				
+				
+			</view>
+
+		<!--End of topbar   -->
+		</view>
+
+		<!-- General Methods that can be called from anywhere   -->
+		<method name="handlePlaySeek" args="ignore=null" >
+			<![CDATA[	
+				player.vscreen.stream.seek(canvas.offset);
+				Debug.write("sought, after delaying");								
+			]]>
+		</method>
+		<method name="handleSeekPlay" args="ignore=null">
+			<![CDATA[	
+				player.vscreen.stream.play();
+				Debug.write("played, after delaying");							
+			]]>
+		</method>
+
+
+    
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006 Laszlo Systems, Inc. All Rights Reserved.                    *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->
+

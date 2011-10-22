@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="900" height="900">
+<resource name="recicon" src="recordnormal.png" /> 
+<resource name="micicon" src="mikehot.png" /> 
+<simplelayout axis="x" spacing="10" />
+<include href="../talkback/justinav/poodllbigbutton.lzx" />
+
+<goldstyle name="goldish" />
+ <poodllbigbutton text="Play" width="100" height="300" /> 
+ <poodllbigbutton width="150" height="75" text="REC" enabled="1" borderWidth="2" resourcename="recicon" >
+	<handler name="onclick">
+		Debug.write("rec clicked");
+	</handler>
+  </poodllbigbutton>
+  <poodllbigbutton width="150" height="75" text="MIKE" enabled="false" borderWidth="3" resourcename="micicon" >
+	<handler name="onclick">
+		Debug.write("MIKE clicked");
+	</handler>
+  </poodllbigbutton>
+
+
+
+
+</canvas>

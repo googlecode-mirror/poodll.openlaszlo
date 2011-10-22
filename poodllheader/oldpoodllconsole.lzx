@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas debug="true">
+	<include href="lz"/>
+	<include href="headercommunications.lzx" />
+	<include href="../screencast/screenbroadcast.lzx" />
+	<include href="../jumpmaker/jumpmaker.lzx" />
+	<include href="../pairwork/pairlist.lzx" />
+	<!-- general attributes -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  	
+	<attribute name="bcolor"   value="lz.Browser.getInitArg('bcolor')"  />
+	<attribute name="mename"  value="lz.Browser.getInitArg('mename')" />
+	<!-- screencast attributes -->
+	<attribute name="broadcastkey" value="lz.Browser.getInitArg('broadcastkey')" />  
+	<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />  
+	<attribute name="capturedevice" value="lz.Browser.getInitArg('capturedevice')" />   
+	<attribute name="capturesizeindex" value="lz.Browser.getInitArg('capturesizeindex')" /> 	
+	<!-- pairwork attributes -->
+	<attribute name="teacherpairstreamname" value="lz.Browser.getInitArg('teacherpairstreamname')" />
+	<attribute name="pairdataurl" value="lz.Browser.getInitArg('pairdataurl')" />
+	<attribute name="coursedataurl" value="lz.Browser.getInitArg('coursedataurl')" />
+	
+
+	<handler name="oninit" >
+		Debug.write("coursedataurl:" , coursedataurl);
+		Debug.write("courseid:" , courseid);
+		Debug.write("canvas.coursedataurl:" , canvas.coursedataurl);
+		Debug.write("canvas.courseid:" , canvas.courseid);
+		Debug.write("canvas.mename:" , canvas.mename);
+		Debug.write("this.coursedataurl:" , this.coursedataurl);
+		Debug.write("this.courseid:" , this.courseid);
+		Debug.write("this.mename:" , this.mename);
+	</handler>
+
+	<!--class that handles communications with client's headers -->
+	<headercommunications name="headercomm" mename="${canvas.mename}" courseid="${canvas.courseid}" red5url="${canvas.red5url}" />
+
+
+	 <simplelayout axis="y" inset="10" spacing="10"/>
+	 <view name="connectview">
+		<simplelayout axis="x" inset="10" spacing="10"/>
+		 <rtmpstatus rtmpc="${canvas.headercomm.rtmpc}" />	
+		 <button name="reconnect" text="Reconnect">
+			<handler name="onclick">
+				Debug.write("clicked");
+				canvas.headercomm.rtmpc.connect();
+				pairtab.pairs.paircon.connect();
+			</handler>
+		</button>
+	</view>
+	<view name="buttonview">
+		<simplelayout axis="x" inset="10" spacing="10"/>
+		 <button name="reconnect" text="Reconnect">
+			<handler name="onclick">
+				Debug.write("clicked");
+				canvas.headercomm.rtmpc.connect();
+				pairtab.pairs.paircon.connect();
+			</handler>
+		</button>
+	</view>
+
+	<!--We layout the console panel in function tabs -->
+	<basetabs id="toptabs" y="10" bordersize="5" tabclass="tab">
+
+		<!-- The Pairwork Tab -->
+		<basetabpane id="pairtab" text="Pairs" selected="false" bgcolor="#bdbdbd">
+			 <simplelayout axis="y" spacing="10"/>
+
+			<pairlist 
+				name="pairs"	
+				courseid="${canvas.courseid}"
+				red5url="${unescape(canvas.red5url)}" 
+				teacherpairstreamname="${canvas.teacherpairstreamname}" 				
+				coursedataurl="${canvas.coursedataurl}" 
+				headercomm="${canvas.headercomm}"
+				mename="${canvas.mename}"
+
+			/>				
+
+		</basetabpane>
+
+		<!-- The Screencast Tab -->
+		<basetabpane id="broadcasttab" text="Broadcast" selected="false" bgcolor="#bdbdbd">
+			<screenbroadcast 
+				name="sbroadcast"
+				red5url="${unescape(canvas.red5url)}" 
+				broadcastkey="${canvas.broadcastkey}" 
+				capturedevice="${canvas.capturedevice}" 
+				capturesizeindex="${canvas.capturesizeindex}" 
+				headercomm="${canvas.headercomm}"
+				mename="${canvas.mename}"
+				courseid="${canvas.courseid}"
+			/>
+		</basetabpane>
+
+
+		<!-- The Jump to a URL Tab -->
+		<basetabpane id="jumptab" text="Jump" selected="true" bgcolor="#bdbdbd">
+			<jumpmaker headercomm="${canvas.headercomm}" 
+				courseid="${canvas.courseid}"
+				coursedataurl="${canvas.coursedataurl}"
+			/>
+		</basetabpane>	
+
+		
+
+		<!-- The Other Tab (miscellaneous) -->
+		<basetabpane id="interviewtab" text="Other" selected="false" bgcolor="#bdbdbd">
+			<button name="sendInterview" text="Interview" height="${parent.height -10 }">
+				<handler name="onclick">
+					canvas.headercomm.sendInterview();
+				</handler>
+			</button>
+		</basetabpane>	
+	
+	</basetabs>
+
+
+				
+
+
+	
+		
+</canvas>

@@ -1,0 +1,54 @@
+<canvas width="400" height="400">
+
+	<include href="ExtendedText.lzx" />
+
+	<simplelayout axis="y" />
+	
+	<list name="picker">
+		<textlistitem text="Fixed" value="$once{canvas.boxes.fixed}" selected="true" />
+		<textlistitem text="Auto Size" value="$once{canvas.boxes.autoSize}" />
+	</list>
+
+	<button text="Change Selected Text">
+		<attribute name="index" type="number" value="0" />
+		<handler name="onclick">
+			var s = ["one line of text", "two lines\nof text", "blank line\n\nof text"];
+			this.index = (this.index+1)%s.length;
+			picker.value.setAttribute('text', s[this.index]);
+		</handler>
+	</button>
+	<button text="Change H Align">
+		<attribute name="index" type="number" value="0" />
+		<handler name="onclick">
+			var s = ["l", "c", "r"];
+			this.index = (this.index+1)%s.length;
+			picker.value.setAttribute('horizontalAlign', s[this.index]);
+		</handler>
+	</button>
+
+	<button text="Change V Align">
+		<attribute name="index" type="number" value="0" />
+		<handler name="onclick">
+			var s = ["t", "c", "b"];
+			this.index = (this.index+1)%s.length;
+			picker.value.setAttribute('verticalAlign', s[this.index]);
+		</handler>
+	</button>
+
+	<button text="Change V Spacing">
+		<attribute name="index" type="number" value="0" />
+		<handler name="onclick">
+			var s = [0, 5, 10];
+			this.index = (this.index+1)%s.length;
+			picker.value.setAttribute('verticalSpacing', s[this.index]);
+		</handler>
+	</button>
+
+	<view name="boxes">
+		<ExtendedText name="fixed" text="I'm the fixed size text" autoSize="false" width="150" height="150" bgcolor="aqua" />
+		<ExtendedText name="autoSize" text="I'm the auto size text" x="$once{parent.fixed.width}" bgcolor="silver" />
+	</view>
+
+
+
+</canvas>

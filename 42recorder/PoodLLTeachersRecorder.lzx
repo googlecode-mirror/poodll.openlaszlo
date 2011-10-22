@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+ <goldstyle name="defaultstyle" isdefault="true"/>
+ <greenstyle name="specialstyle"/>
+
+	<include href="PoodLLTeachersRecorderLib.lzx"/>
+	
+	<!-- The URL of the Red5 server -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  	
+
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename" value="lz.Browser.getInitArg('filename')" />  	
+
+	<!-- The course id (parent will pass -1 if there is no course id) -->
+	<attribute name="course"  value="lz.Browser.getInitArg('course')" />  	
+	
+	<!-- The id of the control on the enclosing HTMLpage to update with the ilename -->
+	<attribute name="updatecontrol"  value="lz.Browser.getInitArg('updatecontrol')" />
+	
+	
+	<!-- To set a particular camera as default -->
+	<attribute name="prefcam" value="lz.Browser.getInitArg('prefcam')" />
+	<attribute name="prefmic" value="lz.Browser.getInitArg('prefmic')" />
+
+	<!-- Some camera settings-->
+	<attribute name="capturewidth" value="lz.Browser.getInitArg('capturewidth')" />
+	<attribute name="captureheight" value="lz.Browser.getInitArg('captureheight')" />
+	<attribute name="bandwidth" value="lz.Browser.getInitArg('bandwidth')" />
+	<attribute name="picqual" value="lz.Browser.getInitArg('picqual')" />
+	<attribute name="capturefps" value="lz.Browser.getInitArg('capturefps')"  />
+	
+	
+	<poodllteachersrecorder name="recorder" 
+		red5url="${canvas.red5url}" 
+		filename="${canvas.filename}" 
+		course="${canvas.course}" 
+		gshowing="false"
+		updatecontrol="canvas.updatecontrol"
+		prefcam="canvas.prefcam"
+		prefmic="canvas.prefmic"
+		capturewidth="canvas.capturewidth"
+		captureheight="canvas.captureheight"
+		bandwidth="canvas.bandwidth"
+		picqual="canvas.picqual"
+		capturefps="canvas.capturefps"
+		width="${parent.width}" 
+		height="${parent.height}" />
+</canvas>

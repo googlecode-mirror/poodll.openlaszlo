@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas allowfullscreen="true">
+	<include href="../utils/poodllfullscreen.lzx"/>
+	<include href="stopwatchlib.lzx" />
+	
+	<attribute name="fontheight"  value="lz.Browser.getInitArg('fontheight')" /> 
+	<!-- Attributes for slaveview function -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')"/>  	
+	<attribute name="mename"  value="lz.Browser.getInitArg('mename')" /> 
+	<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />  	
+	<attribute name="uniquename" value="lz.Browser.getInitArg('uniquename')" />
+	<attribute name="mode" value="lz.Browser.getInitArg('mode')" />
+	<attribute name="headeridtag" value="'slaveview01'" />
+	
+	 <!-- force fontsize update on screen size toggle -->	
+	  <handler name="onfullscreen" args="result"><![CDATA[
+        if (canvas.fullscreen == true && result == true) {
+            this.thestopwatch.setAttribute("fontheight", this.fontheight);
+        } else if (canvas.fullscreen == false && result == true) {
+            this.thestopwatch.setAttribute("fontheight", this.fontheight);
+        }
+        ]]>
+    </handler>	
+	
+	<stopwatchview  name="thestopwatch"  mode="${canvas.mode}"  red5url="${canvas.red5url}" mename="${canvas.mename}" courseid="${canvas.courseid}" uniquename="${canvas.uniquename}" fontheight="${canvas.fontheight}" width="${parent.width}" height="${parent.height}" />	
+		
+</canvas>

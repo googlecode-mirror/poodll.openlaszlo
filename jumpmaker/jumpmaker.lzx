@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<library>
+	<include href="../messaging/MessagingRtmpConnection.lzx" />
+
+	<class  name="jumpmaker" width="100%" height="100%"  extends="view">
+		   
+		<attribute name="red5url" />   
+		<attribute name="mename" />   
+		<attribute name="courseid" />   
+		<attribute name="coursedataurl" />   
+
+		<!-- our class for communicating with clients -->
+		<attribute name="headercomm" />
+
+
+		<!-- our dataset for the menu items in this course -->
+		 <dataset name="coursemenudata"  type="http" src="${unescape(classroot.coursedataurl + 'datatype=coursemenu&amp;courseid=' + classroot.courseid) }" request="true" >
+			<handler name="ondata">
+				Debug.write("coursemenudata src:",this.src);
+				classroot.textinput.coursemenucombo.completeInstantiation(); 
+			</handler>
+		</dataset>
+
+
+
+		<simplelayout axis="y" spacing="5" />
+
+		<view name="textinput">  
+			<simplelayout axis="x" spacing="5" />
+			<text>URL:</text>
+			<combobox name="coursemenucombo" shownitems="10" width="210" editable="true" initstage="defer">
+				  <textlistitem datapath="local:classroot.coursemenudata:/coursemenudata/listitems/item" text="$path{'@label'}" value="$path{'@url'}" />				  
+			</combobox>			
+		</view>
+		<view name="otherinput">
+			<simplelayout axis="x" spacing="5" />
+			<radiogroup name="targetGroup" height="40" layout="axis:y; inset:0; spacing:1">
+						<radiobutton value="'_self'" text="Same Window" selected="true" />
+						<radiobutton value="'_new'" text="New Window" />
+			</radiogroup>
+			<button  name="jumpButton" text="Send Jump">
+					<handler name="onclick">
+						<![CDATA[
+						var sendLabel = classroot.textinput.coursemenucombo.text;
+						var sendURL = unescape(classroot.textinput.coursemenucombo.value);
+						var target = parent.targetGroup.value;
+						if ((classroot.textinput.coursemenucombo.text).indexOf("http:") == 0){
+							sendURL = classroot.textinput.coursemenucombo.text;
+							target = "_new";
+						}
+						classroot.headercomm.sendJump(sendURL, target);	
+						classroot.results.resultText.setAttribute("text", "SENT " + sendLabel + "<br /> (" + sendURL + ') TO ' + parent.targetGroup.value);
+						classroot.textinput.coursemenucombo.setAttribute("text","");
+						]]>
+					</handler>
+			</button>
+		</view>
+	
+	 
+		<view name="results" width="250">
+			<text name="resultText" multiline="true"/>
+		</view>
+	 
+	 
+	 
+	</class>
+</library>

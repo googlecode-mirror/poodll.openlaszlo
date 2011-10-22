@@ -1,0 +1,43 @@
+<library>
+
+	<class name="myGridRow" extends="basegridrow">
+		<method event="onmouseover" args="evt"><![CDATA[
+			if (typeof this._parentcomponent.onmouseover != "undefined")
+				this._parentcomponent.onmouseover.sendEvent(evt)
+
+			// drag-n-deop an item above/below this row
+			if (typeof this.ownerGrid.__dragdropitem != "undefined")
+			{
+				var sender = this.ownerGrid.__dragdropitem
+				var grid = this.ownerGrid
+				var node = sender.data.cloneNode(true)
+
+				if (this.data != this.data.parentNode.getLastChild())
+				{
+					sender.datapath.deleteNode();
+					grid.data.insertBefore(node, this.data)
+				}
+				else
+				{
+					grid.data.appendChild(node)
+					sender.datapath.deleteNode();
+				}
+
+				this.ownerGrid.__dragdropitem = undefined
+			}
+		]]></method>
+//		<method event="ondblclick" args="evt">
+//			if (typeof this._parentcomponent.ondblclick != "undefined")
+//				this._parentcomponent.ondblclick.sendEvent(evt)
+//		</method>
+		<method event="onmousedown">
+			if (typeof this.ownerGrid.__dragable != "undefined")
+				DragUtil.start(this, null);
+		</method>
+	</class>
+
+	<class name="myGrid" extends="grid" _rowclass="myGridRow" >
+	</class>
+
+
+</library>

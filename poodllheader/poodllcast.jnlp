@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='utf-8'?>
+<jnlp spec='1.0+' codebase='http://statistic:5080/openlaszlo/my-apps/poodllheader/' href='poodllcast.jnlp'> 
+	<information> 
+		<title>Poodll Screencast</title> 
+		<vendor>Justin Hunt</vendor> 
+		<homepage>http://www.poodll.com/</homepage>
+		<description>PoodLL Screencast</description> 
+		<description kind='short'>Screencasting in PoodLL, based on the open source Red5-Screenshare, available at http://code.google.com/p/red5-screenshare/</description> 
+		<offline-allowed/> 
+	</information>
+	<security>
+	    <all-permissions/>
+	</security>	
+	<resources> 
+		<j2se version='1.6+'/> 
+	        <jar href='poodllcast/poodllcast.jar'/> 			
+    	</resources> 
+    <applet-desc main-class='org.redfire.screen.ScreencastApplet' name="poodllcast"  width="280" height="340">
+		<PARAM NAME="host"    VALUE="statistic">
+		<PARAM NAME="app"    VALUE="poodle">
+		<PARAM NAME="port"    VALUE="1935">
+		<PARAM NAME="publishname"  VALUE="screenshare">
+		<PARAM NAME="backcolor"  VALUE="0xAAAAFF">    	
+    </applet-desc> 
+</jnlp> 

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="100%"  height="100%" >
+
+<!-- imports  -->
+<include href="lz"/>
+<include href="newpairclientlib.lzx" />
+<include href="../poodllheader/canvasheadercommunications.lzx" />
+<include href="../scribblepalette/scribblepalette.lzx" />	
+<include href="../scribblepalette/scribblecpanel.lzx" />	
+
+
+<!-- Declare our attributes -->
+<attribute name="mename" value="lz.Browser.getInitArg('mename')" />    
+<attribute name="mefullname" value="lz.Browser.getInitArg('mefullname')" /> 
+<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" /> 
+<attribute name="mepictureurl" value="lz.Browser.getInitArg('mepictureurl')" />
+<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />   
+<attribute name="teacherallstreamname" value="lz.Browser.getInitArg('teacherallstreamname')" />
+<attribute name="chat" value="lz.Browser.getInitArg('chat')" />
+<attribute name="whiteboard" value="lz.Browser.getInitArg('whiteboard')" />
+<attribute name="whiteboardback" value="lz.Browser.getInitArg('whiteboardback')" />
+<attribute name="showvideo" value="lz.Browser.getInitArg('showvideo')" />    
+<attribute name="useroles" value="lz.Browser.getInitArg('useroles')" />    
+
+	<!--object that handle communications with adminconsole  -->
+	<canvasheadercommunications 
+			name="headercomm" 
+			mename="${canvas.mename}" 
+			courseid="${canvas.courseid}" 
+			red5url="${canvas.red5url}" 
+			headeridtag="'header01'" />
+			
+<!--pairfunctions  -->			
+<newpairclient name="pairclient" 
+	mename="${canvas.mename}"
+	mefullname="${canvas.mefullname}"
+	courseid="${canvas.courseid}"
+	mepictureurl="${canvas.mepictureurl}"
+	red5url="${canvas.red5url}"
+	showvideo="${canvas.showvideo}"
+	teacherallstreamname="${canvas.teacherallstreamname}"
+	width="${parent.width}"
+	height="${parent.height}"
+	whiteboard="${parent.whiteboard=='true'}"
+	whiteboardback="${canvas.whiteboardback}"
+	useroles="${canvas.useroles}"
+	chat="${parent.chat=='true'}"
+/>
+	<videoview name="needed4laszlo" visible="false" />
+	
+</canvas>

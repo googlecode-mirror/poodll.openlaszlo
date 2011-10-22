@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+
+
+<canvas width="100%" height="100%" bgcolor="0xEEEEEE">
+
+<include href="../timers/stopwatchlib.lzx" />
+ 
+<stopwatchview align="center" width="85%" height="85%" />
+
+
+</canvas>
+
+

@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<library>
+
+   <include href="base_dialog.lzx"></include>
+
+   <script src="../color_api/colorAPI.js"></script>
+
+   <class name="colorPicker" extends="basedialog" modalResult="mrCancel" width="410" height="280" title="Color Picker">
+   
+      <!-- custom event -->
+      <event name="oncolorselected"></event>
+      
+      <!-- Public Methods                                                    -->
+      <method name="popopen" args="initColor"><![CDATA[
+         //this method overrides the open method from the super class, allowing
+         //an initial color to be specified
+         var colorStr = EZColorAPI.returnBaseStr(initColor, 16);
+         this._setSwatchFromHex(colorStr);
+         this.hexPanel.hexField.setAttribute("text",colorStr);
+         
+         //call the super open method
+         super.open();
+         ]]>
+      </method>
+         
+      <method name="close"><![CDATA[
+         //override the onclose event in order to send an oncolorselected event
+         //when the dialog closes, but only if the modal result is equal to mrOk.
+
+         var colorVal = this.swatchBorder.swatch.bgcolor;
+         var _result = this.modalResult;
+         if ( _result == 'mrOk' ) {
+            if ( this.oncolorselected != null ) this.oncolorselected.sendEvent(colorVal);
+         }else if( _result == 'mrNull' ){
+			if ( this.oncolorselected != null ) this.oncolorselected.sendEvent(null);
+		 }
+         
+         //call the super close method
+         super.close();
+         ]]>
+      </method>
+      
+      <!-- private methods                                                   -->
+      <method name="_setSwatchFromHSL" args="h,s,l"><![CDATA[
+         //convert the HSL color value to HEX
+         var hsl = EZColorAPI.normalizeHSL(h, s, l);
+         var swatchColor = EZColorAPI.hslToHex_normal(hsl.h, hsl.s, hsl.l); 
+         
+         //now convert the color RGB and update the RGB controls
+         var rgb_normal = EZColorAPI.hslToRgb_normal(hsl.h, hsl.s, hsl.l);
+         var rgb = EZColorAPI.rgbFromNormal(rgb_normal.r, rgb_normal.g, rgb_normal.b);
+         this._middle.content.rgbPanel._setColorValues(rgb.r, rgb.g, rgb.b);
+         
+         //display the hex value in the hex field
+         this._middle.content.hexPanel._setColorValue(swatchColor);         
+         
+         //now display the swatch's new color
+         this._middle.content.swatchBorder.swatch.setAttribute('bgcolor', '0x' + swatchColor);
+         ]]>
+      </method>
+      
+      <method name="_setSwatchFromRGB" args="r,g,b"><![CDATA[
+         //convert the RGB color value to HEX
+         var rgb = EZColorAPI.normalizeRGB(r, g, b);
+         var swatchColor = EZColorAPI.rgbToHex_normal(rgb.r, rgb.g, rgb.b);
+         
+         //now convert the color to HSL and update the HSL sliders
+         var hsl_normal = EZColorAPI.rgbToHsl_normal(rgb.r, rgb.g, rgb.b);
+         var hsl = EZColorAPI.hslFromNormal(hsl_normal.h, hsl_normal.s, hsl_normal.l);
+         this._middle.content.hslPanel._setColorValues(hsl.h, hsl.s, hsl.l);
+         
+         //display the hex value in the hex field
+         this._middle.content.hexPanel._setColorValue(swatchColor);
+         
+         //now display the swatch's new color
+         this._middle.content.swatchBorder.swatch.setAttribute('bgcolor', '0x' + swatchColor);
+         ]]>
+      </method>
+      
+      <method name="_setSwatchFromHex" args="h"><![CDATA[
+         //convert the HEX value to RGB values to set the RGB fields
+         var rgb = EZColorAPI.hexToRGB(h);
+         this._middle.content.rgbPanel._setColorValues(rgb.r, rgb.g, rgb.b);
+         
+         //now convert the RGB values to HSL values
+         var rgb_normal = EZColorAPI.normalizeRGB(rgb.r, rgb.g, rgb.b);
+         var hsl_normal = EZColorAPI.rgbToHsl_normal(rgb_normal.r, rgb_normal.g, rgb_normal.b);
+         var hsl = EZColorAPI.hslFromNormal(hsl_normal.h, hsl_normal.s, hsl_normal.l);
+         this._middle.content.hslPanel._setColorValues(hsl.h, hsl.s, hsl.l);
+         
+         //now display the swatch's new color
+         this._middle.content.swatchBorder.swatch.setAttribute('bgcolor', '0x' + h);         
+         ]]>
+      </method>
+      
+      <!-- This panel allows the manipulation of the color selection using
+           HSL values -->
+      <view name="hslPanel" x="10" y="10">
+         <attribute name="updateColor" type="boolean" value="true"></attribute>
+            
+         <method name="_setColorValues" args="h,s,l"><![CDATA[
+            //when HSL color values are passed in, this method sets the 
+            //sliders to display them. When doing this, unset the 
+            //updateColor flag to prevent the sliders being changed from 
+            //affecting the color selection
+            this.setAttribute('updateColor', false);
+            this.hPanel.hSlider.setValue(h);
+            this.sPanel.sSlider.setValue(s);
+            this.lPanel.lSlider.setValue(l);
+            this.setAttribute('updateColor', true);
+            ]]>
+         </method> 
+            
+         <method name="_setSwatchColor"><![CDATA[
+            //make sure its ok to update the color
+            var canUpdate = this.updateColor;
+            if ( canUpdate ) {
+               //get all three values
+               var h = this.hPanel.hSlider.getValue();
+               var s = this.sPanel.sSlider.getValue();
+               var l = this.lPanel.lSlider.getValue();
+                       
+               //set the swatch color
+               classroot._setSwatchFromHSL(h, s, l);               
+            }
+            ]]>
+         </method>
+            
+         <view name="hPanel">
+            <text fontsize="12" fontstyle="bold" text="H:"></text>
+            <slider x="25" y="5" maxvalue="360" name="hSlider">
+               <handler name="onvalue" args="val"><![CDATA[
+                  parent.parent._setSwatchColor();
+                  ]]>
+               </handler>
+            </slider>
+         </view>
+               
+         <view name="sPanel" y="40">
+            <text fontsize="12" fontstyle="bold" text="S:"></text>
+            <slider x="25" y="5" maxvalue="100" name="sSlider">
+               <handler name="onvalue" args="val"><![CDATA[
+                  parent.parent._setSwatchColor();
+                  ]]>
+               </handler>
+            </slider>
+         </view>
+               
+         <view name="lPanel" y="80">
+            <text fontsize="12" fontstyle="bold" text="L:"></text>
+            <slider x="25" y="5" maxvalue="100" name="lSlider">
+               <handler name="onvalue" args="val"><![CDATA[
+                  parent.parent._setSwatchColor();
+                  ]]>
+               </handler>
+            </slider>
+         </view>
+               
+      </view>       
+            
+      <!-- This panel allows for the manipulation and display of the
+           color selection using RGB values. -->
+      <view name="rgbPanel" x="25" y="150">
+              
+         <method name="_setColorValues" args="r,g,b"><![CDATA[
+            //when color values are passed in, this method simply sets
+            //all of the RGB fields to the values passed.
+            this.rPanel.rField.setAttribute("text",r);
+            this.gPanel.gField.setAttribute("text",g);
+            this.bPanel.bField.setAttribute("text",b);
+            ]]>
+         </method>
+               
+         <method name="_setSwatchColor"><![CDATA[
+            //get the RGB values
+            var r = this.rPanel.rField.getValue();
+            var g = this.gPanel.gField.getValue();
+            var b = this.bPanel.bField.getValue();
+                
+            //set the swatch color
+            classroot._setSwatchFromRGB(r, g, b);
+            ]]>
+         </method>
+                
+         <simplelayout axis="x" spacing="15"></simplelayout>
+               
+         <view name="rPanel">
+            <text fontsize="12" fontstyle="bold" text="R:" y="3"></text>
+            <edittext x="20" maxlength="3" pattern="[0-9]*" name="rField" width="35">
+                  
+               <handler name="onblur"><![CDATA[
+                  //make sure the value is between 0 and 255
+                  var val = this.getValue();
+                  if ( val > 255 ) {
+                     this.setAttribute("text",'255');
+                  }
+                  //set the color based on RGB values
+                  parent.parent._setSwatchColor();                         
+                  ]]>
+               </handler>
+                     
+               <handler name="onkeyup" args="key"><![CDATA[
+                  //if the enter key was pressed, process RGB values
+                  if ( key == 13 ) {
+                     //make sure the value is between 0 and 255
+                     var val = this.getValue();
+                     if ( val > 255 ) {
+                        this.setAttribute("text",'255');
+                     }   
+                     //set the color based on RGB values
+                     parent.parent._setSwatchColor();                     
+                  }
+                  ]]>
+               </handler>
+                     
+            </edittext>
+         </view>
+               
+         <view name="gPanel">
+            <text fontsize="12" fontstyle="bold" text="G:" y="3"></text>
+            <edittext x="20" maxlength="3" pattern="[0-9]*" name="gField" width="35">
+
+               <handler name="onblur"><![CDATA[
+                  //make sure the value is between 0 and 255
+                  var val = this.getValue();
+                  if ( val > 255 ) {
+                     this.setAttribute("text",'255');
+                  }
+                  //set the color based on RGB values
+                  parent.parent._setSwatchColor();                         
+                  ]]>
+               </handler>
+                     
+               <handler name="onkeyup" args="key"><![CDATA[
+                  //if the enter key was pressed, process RGB values
+                  if ( key == 13 ) {
+                     //make sure the value is between 0 and 255
+                     var val = this.getValue();
+                     if ( val > 255 ) {
+                        this.setAttribute("text",'255');
+                     }   
+                     //set the color based on RGB values
+                     parent.parent._setSwatchColor();                     
+                  }
+                  ]]>
+               </handler>
+
+            </edittext>
+         </view>
+               
+         <view name="bPanel">
+            <text fontsize="12" fontstyle="bold" text="B:" y="3"></text>
+            <edittext x="20" maxlength="3" pattern="[0-9]*" name="bField" width="35">
+
+               <handler name="onblur"><![CDATA[
+                  //make sure the value is between 0 and 255
+                  var val = this.getValue();
+                  if ( val > 255 ) {
+                     this.setAttribute("text",'255');
+                  }
+                  //set the color based on RGB values
+                  parent.parent._setSwatchColor();                         
+                  ]]>
+               </handler>
+                    
+               <handler name="onkeyup" args="key"><![CDATA[
+                  //if the enter key was pressed, process RGB values
+                  if ( key == 13 ) {
+                     //make sure the value is between 0 and 255
+                     var val = this.getValue();
+                     if ( val > 255 ) {
+                        this.setAttribute("text",'255');
+                     }   
+                     //set the color based on RGB values
+                     parent.parent._setSwatchColor();                     
+                  }
+                  ]]>
+               </handler>
+            
+            </edittext>
+         </view>                              
+               
+      </view>  
+            
+      <!-- This panel is for the manipulation of the selected color via
+           HEX values -->
+      <view name="hexPanel" x="260" y="150">
+            
+         <method name="_setColorValue" args="hex"><![CDATA[
+            //when a color value is passed in, this method simply sets
+            //the Hex field to the value passed.
+            this.hexField.setAttribute("text",hex);
+            ]]>
+         </method>
+               
+         <method name="_setSwatchColor"><![CDATA[
+            //get the Hex value
+            var hex = this.hexField.getValue();
+                  
+            //set the swatch color
+            classroot._setSwatchFromHex(hex);
+            ]]>
+         </method>            
+            
+         <text fontstyle="bold" fontsize="12" text="HEX:" y="3"></text>
+               
+         <edittext maxlength="6" x="40" width="75" name="hexField" pattern="[0-9,A,B,C,D,E,F]*">
+               
+            <handler name="onblur"><![CDATA[
+               //set the color based on the HEX value
+               parent._setSwatchColor();                         
+               ]]>
+            </handler>
+                     
+            <handler name="onkeyup" args="key"><![CDATA[
+               //if the enter key was pressed, process the Hex value
+               if ( key == 13 ) {
+                  //set the color based on RGB values
+                  parent._setSwatchColor();                     
+               }
+               ]]>
+            </handler>               
+               
+         </edittext>
+            
+      </view>
+         
+      <view name="swatchBorder" x="275" y="10" width="100" height="100" bgcolor="black">
+         <view name="swatch" x="1" y="1" width="${parent.width - 2}" height="${parent.height - 2}"></view>
+      </view>
+            
+      <!-- Button Panel -->                                                     
+      <view align="right" layout="axis:x; spacing:10" y="${immediateparent.height - this.height - 10}">
+          
+         <button text="Ok">
+            <handler name="onclick"><![CDATA[
+               //set the modal result and call the close method
+               classroot.setAttribute('modalResult', 'mrOk');
+               classroot.close(); 
+               ]]>
+            </handler>
+         </button>
+		 
+		 <button text="Nullify">
+            <handler name="onclick"><![CDATA[
+               //set the modal result and call the close method
+               classroot.setAttribute('modalResult', 'mrNull');
+               classroot.close(); 
+               ]]>
+            </handler>
+         </button>
+          
+         <button text="Cancel">
+            <handler name="onclick"><![CDATA[
+               //set the modal result and call the close method
+               classroot.setAttribute('modalResult', 'mrCancel');
+               classroot.close();             
+               ]]>
+            </handler>
+         </button>
+      
+         <view width="10"></view> 
+          
+      </view>            
+            
+   </class>
+
+</library>

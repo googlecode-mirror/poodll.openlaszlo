@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas debug="false" width="100%" height="100%" >
+
+<attribute name="mename" value="me" type="string" />    
+<attribute name="themname" value="them" type="string" />    
+
+  <rtmpconnection name="autocon" src="rtmp://192.168.11.215/oflaDemo" autoconnect="false"/>   
+  <mediastream name="mestream" type="rtmp" />
+  <mediastream name="themstream" type="rtmp" />
+   <simplelayout/>
+   <rtmpstatus/>
+   <view name="viewmain" layout="axis:x; inset:10; spacing:10">
+       <videoview id="live" name="viewme" url="viewmyname.myname.getText()" type="rtmp"  >
+           <camera show="true"/>
+		<microphone capturing="true" />
+       </videoview>
+       <videoview id="vp" name="viewpartner" url="viewtheirname.theirname.getText()" type="rtmp" />
+   </view>
+   <button text="connect">
+        <handler name="onclick">
+            autocon.connect();
+        </handler>
+   </button>
+	<view name="viewmyname" >
+		<text fontsize="12" text="My Name:" />
+		<edittext x="120" name="myname" fontsize="12" text="me" width="450" value="${canvas.mename}"/>  
+	</view>
+	<view name="viewtheirname" >
+		<text fontsize="12" text="Their Name:" />
+		<edittext x="120" name="theirname" fontsize="12" text="you" width="450" value="${canvas.themname}" />  
+	</view>
+   <button text="Begin" >
+        <handler name="onclick">
+		
+		mestream.setAttribute("url",canvas.mename);
+		themstream.setAttribute("url",canvas.themname);
+		mestream.broadcast();
+            	themstream.play();
+        </handler>
+    </button>  
+
+
+ 
+</canvas>

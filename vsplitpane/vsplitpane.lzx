@@ -1,0 +1,103 @@
+<library >
+
+
+    <class name="vsplitpane" defaultplacement="nonnull" width="100%" height="100%" pixellock="true" clip="false">
+    
+        <attribute name="lhs_min_height" value="10"/>
+        <attribute name="lhs_max_height" value="${this.height-20}"/>
+        <attribute name="lhs_height_start" value="180"/>
+
+        <attribute name="bordersize" value="1" />
+        <attribute name="bordercolor" value="0x000000" type="color"/>
+        <attribute name="sizer_height" value="5" />
+        
+        <attribute name="lhs_placed" value="false" type="boolean"/>
+        <attribute name="rhs_placed" value="false" type="boolean"/>
+        
+        
+        <view width="100%" height="${parent.bordersize}" bgcolor="${parent.bordercolor}" pixellock="true" />
+        <view width="100%" height="${parent.bordersize}" y="${parent.height-parent.bordersize}" bgcolor="${parent.bordercolor}" pixellock="true" />
+        
+        <view width="${parent.bordersize}" height="100%" bgcolor="${parent.bordercolor}" pixellock="true" />
+        <view width="${parent.bordersize}" height="100%" x="${parent.width-parent.bordersize}" bgcolor="${parent.bordercolor}" pixellock="true" />
+        
+        <view name="split" 
+            x="${parent.bordersize}"
+            y="$once{parent.lhs_height_start}"
+            width="${parent.width-parent.bordersize*2}" 
+            height="${classroot.sizer_height}" bgcolor="0x999999" pixellock="true">
+            
+            <view height="1" width="100%" bgcolor="0x595959" pixellock="true" />
+            <view height="1" y="1" width="100%" bgcolor="0x777777" pixellock="true" />
+            
+            <view height="1" width="100%" y="${parent.height-1}" bgcolor="0x595959" pixellock="true" />
+            <view height="1" width="100%" y="${parent.height-2}" bgcolor="0xffffff" pixellock="true" />
+            
+            <view name="grabber" height="100%" bgcolor="0x595959" width="28" align="center">
+                <view x="4" width="1" height="100%" bgcolor="0x777777"/>
+                <view x="8" width="1" height="100%" bgcolor="0x777777"/>
+                <view x="12" width="1" height="100%" bgcolor="0x777777"/>
+                <view x="16" width="1" height="100%" bgcolor="0x777777"/>
+                <view x="20" width="1" height="100%" bgcolor="0x777777"/>
+                <view x="24" width="1" height="100%" bgcolor="0x777777"/>
+                
+                
+                <handler name="onmousedown">
+                    parent.dragger.apply();
+                </handler>
+                
+                <handler name="onmouseup">
+                    parent.dragger.remove();
+                </handler>
+                
+            </view>
+            <dragstate 
+                    name="dragger" 
+                    drag_axis="y"
+                    drag_min_y="${classroot.lhs_min_height}"  
+                    drag_max_y="${classroot.lhs_max_height}"  
+                    />
+        </view>
+        <view   name="lhs" 
+                x="${parent.bordersize}" 
+                y="${parent.bordersize}" 
+                
+                height="${parent.split.y-parent.bordersize}" 
+                width="${parent.width-parent.bordersize*2}"
+                clip="true">
+            <simplelayout axis="y" />
+        </view>
+        <view name="rhs" 
+            y="${parent.split.y+parent.split.height}" 
+            x="${parent.bordersize}" 
+            height="${parent.height - this.y - parent.bordersize}"
+            width="${parent.width-parent.bordersize*2}"
+            clip="false"
+            >
+            <simplelayout axis="y" />
+        </view>
+        
+        <method name="determinePlacement" args="aSub, placement, args">
+            
+            if(!lhs_placed) { 
+                this.lhs_placed = true;
+                return lhs;
+            } else if(!rhs_placed) {
+                this.rhs_placed = true;
+                //aSub.
+                return rhs;
+            } else {
+                Debug.warn("vsplitpane only support two sub views. Placing extra subviews on the right.");
+                return rhs;
+            }
+        </method>
+        
+    </class>
+
+    
+</library>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006-2007 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                          -->

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas >
+		
+		<include href="lz"/>
+		<include href="../talkback/justinav/poodllaudioplayerclass.lzx"/>
+		
+		<!-- The URL of the Red5 server -->
+		<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />
+		
+		<!-- The type of player -->
+		<attribute name="playertype"  value="lz.Browser.getInitArg('playertype')" />
+		
+		<!-- The video to be played -->
+		<attribute name="mediapath" value="lz.Browser.getInitArg('mediapath')" />
+
+		<!-- The border color -->
+		<attribute name="playerbordercolor" value="0x0000FF" />
+
+		<!-- The border width -->
+		<attribute name="playerborderwidth" value="1" />
+		
+		<!-- The border width -->
+		<attribute name="autoplay" value="$once{lz.Browser.getInitArg('autoplay')=='true'}" />
+		
+		<!-- The background color -->
+		<attribute name="playerbackcolor" value="0x9abce5" />
+		
+		<!-- The font color -->
+		<attribute name="playerfontcolor" value="0x550000" />
+
+		
+
+	<rtmpconnection  name="autocon" src="${canvas.red5url}" autoconnect="true"/>
+	<view name="border" bgcolor="${canvas.playerbordercolor}" width="${parent.width}" height="${parent.height}">
+      <poodllaudioplayer name="rtmpplayer" x="${canvas.playerborderwidth}" y="${canvas.playerborderwidth}" bgcolor="${canvas.playerbackcolor}" fontcolor="${canvas.playerfontcolor}" 
+		rtmp="${canvas.autocon}" type="${canvas.playertype}" url="${canvas.mediapath}" autoplay="${canvas.autoplay}" 
+		width="${parent.width -(2*canvas.playerborderwidth)}" height="${parent.height-(2*canvas.playerborderwidth)}" />
+	</view>
+
+
+		
+
+
+
+    
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006 Laszlo Systems, Inc. All Rights Reserved.                    *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->
+

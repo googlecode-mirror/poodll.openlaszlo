@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas debug="false" width="100%" height="100%" >
+<include href="ExtendedRtmpConnection.lzx" />
+<attribute name="clientId" type="string" />        
+
+  <ExtendedRtmpConnection name="autocon" src="rtmp://192.168.11.215/poodle" autoconnect="true">
+  
+    
+  		<!-- Remote call for inviting -->
+		<ExtendedNetRemoteCall id="callInvokeOnClient" funcname="invokeOnClient">
+			<method name="onStatus" args="info">
+				Debug.write("Status:" + info.code);
+			</method>
+			<method name="onResult" args="info">
+				canvas.viewMain.resultText.setAttribute("text",info);
+			</method>
+		</ExtendedNetRemoteCall>			
+		<method name="init">
+			super.init();
+			<![CDATA[
+				this._nc.clientAction = function(command){
+					parent.clientAction(command);
+				}
+				this._nc.setId = function(id){
+					parent.setId(id);
+				}
+
+			]]>
+			
+		</method>
+		
+	</ExtendedRtmpConnection>   
+   <simplelayout/>
+	<rtmpstatus rtmpc="${autocon}" />
+   <view name="viewMain" layout="axis:x; inset:10; spacing:10">
+       <text name="headerText" text="ADMIN CONSOLE"/>
+       <text name="resultText" text="nothing yet"/>
+   </view>
+   <edittext id="clientTag" text="clientTag" />
+   <edittext id="methodName" text="clientAction" />
+   <edittext id="someArgs" text="someArgs" />
+   <button text="Invoke On Client">
+        <handler name="onclick">
+            callInvokeOnClient.callRemoteFunction([clientTag.text, methodName.text, someArgs.text]);
+        </handler>
+   </button>
+
+	<!-- methods -->
+	<method name="clientAction" args="command">		
+		Debug.write("clientAction:" + command);
+	</method>
+	<method name="setId" args="id">
+		this.clientId=id;
+		Debug.write("setId:" + id);
+
+	</method>
+
+ 
+</canvas>

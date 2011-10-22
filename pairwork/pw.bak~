@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<include href="incubator/boxview.lzx" />
+<class name="streamset">
+	<!-- the array of streams in the set-->
+	<attribute name="_streams" value="null" />
+	
+<!-- the rtmp connection to initialise the streams with
+ must be passed in -->	
+	<attribute name="rtmp" value="null" />
+	
+	
+<!-- the current widget id-->	
+	<attribute name="widgetid" type="number" value="-1" />
+
+<!-- the current widget id-->	
+	<attribute name="stream0userid" value="" />	
+	
+<!-- the calling class uses this method to access streams-->
+<!-- we init streams as they are accessed, for efficiency-->		
+	<method name="getStream" args="streamindex">
+	<![CDATA[
+			if (!(_streams.length > streamindex)){
+			addstream();
+		}
+		return _streams[streamindex];
+		  	]]>
+	</method>
+
+<!-- the calling class uses this method to stop/clear all streams-->
+	<method name="stopStreams">
+<![CDATA[
+    for (var i = 0; i < _streams.length; i++)
+    {
+      _streams[i].stop();
+      _streams[i].setAttribute('url','');
+    }	
+    	]]>
+	</method>
+
+<!-- the calling class uses this method to add a stream to the set-->
+	<method name="addstream">
+	<![CDATA[
+		var newstream = new lz.mediastream(this.parent, 
+    {'type': 'rtmp',
+    'rtmp': rtmp
+  });
+  _streams.push(newstream);
+  Debug.write ("_streams length:",_streams.length);
+      	]]>
+  </method>
+  
+  <!-- Here we init our streams array-->
+  <handler name="oninit">
+		_streams=[];  
+  </handler>
+
+
+
+</class>	
+
+<!-- this class holds an individual user-->
+<class name="pairwidgetelement" extends="view">
+	<attribute name="username" />  
+	<attribute name="showname" />
+	<attribute name="pictureurl" />
+	<attribute name="streamname" />
+	<attribute name="streamshandle" />
+	<attribute name="role" />
+	<attribute name="picturewidth" type="number" value="45" />
+	<attribute name="pictureheight" type="number" value="45" />
+	<attribute name="widgetChangedDelegate" value="$once{new LzDelegate(this, 'widgetChanged')}" />
+	<!-- The datasetindex will be stored  in pos atttribute -->
+<!-- This is important for syncing streams and pairelements -->	
+	<attribute name="pos" type="number"/>
+	
+	
+	<!-- The starts playing this elements streams if we are the current widget -->
+	<!-- the parent.parent stuff will need tweaking IO think -->
+ <method name="widgetChanged" args="ignore = null">
+			    <![CDATA[
+			if (parent.pos == parent.parent.currentwidget)	{
+					var myStream  = streamshandle.getStream(pos); 	
+					mystream.setAttribute("url",this.username);
+					mystream.play();
+					Debug.write("playing:" , this.username);	
+			}
+		
+				]]>
+ </method>	
+ <handler name="oninit">
+	parent.parent.oncurrentwidget.addDelegate( this.widgetChangedDelegate); 
+ </handler>
+		
+				<simplelayout axis="y" spacing="2"  />
+				<text text="${classroot.showname}" width="${classroot.picturewidth + 30}" multiline="true"/>
+				<view width="${classroot.picturewidth}" height="${classroot.pictureheight}" stretches="both" name="picture" resource="${classroot.pictureurl}" />
+		
+	
+</class>
+<class name="pairwidget" defaultplacement="content" bordersize="3" extends="boxview" clickable="true">
+	<goldstyle name="defaultstyle" isdefault="true"/>
+	<attribute name="pos" />
+	<attribute name="teachername" />
+	<attribute name="teacherstreamname" />
+	<attribute name="streams" value="null" />
+	
+   <!-- mediastream, passed in from above -->    
+   <!-- teachertopair is a broadcasting stream -->	
+   <attribute name="teachertopairstream" value="null" />
+	
+	 <!-- turn border red if we are listening in -->  
+	<attribute name="bordercolor" value="${(parent.currentwidget == this.pos) ? '0xFF0000': '0x0000FF' }" />
+	
+
+	<!-- onclick toggle the playing of these streams -->  
+	<handler name="onclick" >
+	<![CDATA[
+		if (parent.currentwidget == pos) {
+		
+			parent.setAttribute('currentwidget',-1);
+			
+			if(this.teachertopairstream.broadcasting){				
+				this.teachertopairstream.stop();
+				Debug.write('teacher to pair stream stopped: ', this.teacherstreamname);
+			}
+			
+		}else{
+			
+			parent.setAttribute('currentwidget',pos);
+		
+			this.teachertopairstream.setAttribute('url',this.teacherstreamname);				
+			this.teachertopairstream.broadcast();
+			Debug.write('teacher to pair stream broadcasting: ', this.teacherstreamname);
+		}
+		]]>
+	
+	</handler>
+ 
+
+	
+			<simplelayout axis="x" spacing="4"  />
+		<!-- the datapath may need to be set like parent.datapath.xpath="" wait and see -->  	
+			<pairwidgetelement datapath="pairelement" pos="$path{'position()'}" username="@username" showname="@showname" pictureurl="@picureurl" streamshandle="${classroot.streams}"/>
+		
+		<!-- for this logic we need to determine the index of each of our pairelement -->	
+			<button name="broadcastButton"  width="${parent.names_pics.width}" height="30"  text="" >
+				<handler name="onclick">
+				<![CDATA[
+						if (classroot.teachertopairstream.broadcasting){
+							classroot.teachertopairstream.stop();
+							classroot.teachertopairstream.setAttribute("url",'');
+							Debug.write("broadcast stopped,yeah");
+							
+						}else{
+						
+							classroot.teachertopairstream.stop();
+							classroot.teachertopairstream.setAttribute("url",classroot.teachername + ':' + classroot.aname + ':' + classroot.bname);
+							teachertopairstream.mic.setAttribute("capturing",true);
+							teachertopairstream.broadcast();
+							Debug.write("teachertopearstream url:",classroot.teachertopairstream.url);	
+							Debug.write("broadcast started,yeah");					
+						}
+							]]>
+				</handler>
+				<view visible="${!classroot.teachertopairstream.broadcasting}" id="micicon" width="24" height="24" x="${(parent.width - 24) / 2}" y="3" resource="icons/24x24/PlainBlue/MicrophoneHot.png" ></view>	
+				<view visible="${classroot.teachertopairstream.broadcasting}" id="stopicon" width="24" height="24"  x="${(parent.width - 24) / 2}" y="3" resource="icons/24x24/CircleBordered/Stop1NormalRed.png" ></view>	
+			</button>	
+
+	</class>
+</library>

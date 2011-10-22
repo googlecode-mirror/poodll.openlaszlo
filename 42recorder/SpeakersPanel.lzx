@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+
+<class name="SpeakersPanel" extends="view">
+
+	<!-- we need to include textlistitem,
+	OpenLaszlo sux, really. -->
+	<list visible="false">
+		<textlistitem/>
+	</list>
+
+	<simplelayout axis="y"/>
+
+	<attribute name="speaking" type="boolean" value="false"/>
+	<attribute name="speakingRequested" type="boolean"/>
+	<attribute name="roomConnection" setter="setRoomConnection"/>
+	<attribute name="clientId" setter="setId"/>
+	<attribute name="role"/>
+	<attribute name="chatClient" setter="setChatClient"/>
+	<attribute name="currentSpeakersName" value="'Currently speaking: nobody'"/>
+	<attribute name="moderatorName" value="'Moderator: nobody'"/>
+
+	<view name="speakingView" width="500">
+		<simplelayout axis="y" spacing="10"/>
+		<text name="title" height="24"><font face="Georgia" size="18"><b>Moderated chat</b></font></text>
+		<text name="speakingText" text="$always{parent.parent.currentSpeakersName}" width="500"/>
+		<text name="moderatorText" text="$always{parent.parent.moderatorName}" width="500"/>
+
+		<button name="handoverButton" onclick="handover()" width="180">
+			Handover
+			<method name="handover">
+				Debug.write("Speaking: " + parent.parent.speaking);
+				if(parent.parent.speaking || parent.parent.role == "invitor"){
+					parent.parent.roomConnection.handover();
+				}
+			</method>
+		</button>
+
+		<button onclick="requestSpeakPermission()" width="180" visible="${parent.parent.role != 'invitor'}">
+			Request speak permission
+			<method name="requestSpeakPermission">
+				if(parent.parent.role != "invitor"){
+					parent.parent.roomConnection.requestSpeakPermission();		
+				}
+			</method>
+		</button>
+	
+		<text>Queue:</text>
+		<list id="speakersList" width="180">
+			<method event="onvalue">
+	 		 <![CDATA[  
+				if(parent.parent.role=="invitor"){
+					Debug.write("***");
+					var preferredSpeaker = this.getValue();
+					Debug.write("******");
+					if(preferredSpeaker != null){
+						parent.parent.roomConnection.prefer(preferredSpeaker);
+					}
+				}
+			 ]]>
+			</method>
+		</list>
+	</view>
+
+	
+	<method name="setRoomConnection" args="rc">
+		this.roomConnection = rc;
+	</method>
+	
+	<method name="setId" args="id">
+		this.clientId=id;
+	</method>
+	
+	<method name="setRole" args="role">
+		this.role=role;
+	</method>
+
+	<method name="mute">
+		this.speaking = false;
+	</method>
+	
+	<method name="unmute">
+		this.speaking = true;
+	</method>
+	
+
+	<method name="connect">
+		var speakers = this.roomConnection.getSpeakers();
+		refreshSpeakersList(speakers);
+	</method>
+
+	<method name="refreshSpeakersList" args="speakers">
+				
+		<![CDATA[
+
+			Debug.write("Refreshing list");
+
+			var numItems = speakersList.getNumItems();
+			for(var i=0; i < numItems; i++){
+				speakersList.removeItemAt(0);
+			}
+			
+			chatClient.setCurrentSpeaker(speakers[0]);
+			var speakerName = speakers[0].split("covcellSeparator")[1];
+			Debug.write("currently speaking: " + speakerName);
+			if(speakerName && speakerName != "NO_SPEAKER"){
+				this.currentSpeakersName = "Currently speaking: " + speakerName;
+			} else {
+				this.currentSpeakersName = "Currently speaking: nobody";
+			}
+			
+			speakingView.speakingText.setText(this.currentSpeakersName);
+			Debug.write("Attr.: " + this.currentSpeakersName);
+
+			for(var i=1; i<speakers.length; i++){
+				Debug.write("Refresh: speaker " + speakers[i]);
+				var params = speakers[i].split("covcellSeparator");
+				speakersList.addItem(params[1], params[0]);
+			}
+		]]>
+	</method>
+	
+	<method name="setModerator" args="name">
+		this.moderatorName = "Moderator: " + name;
+		speakingView.moderatorText.setText(this.moderatorName);
+	</method>
+	
+	<method name="setChatClient" args="cc">
+		this.chatClient = cc;
+	</method>
+
+</class>
+
+</library>

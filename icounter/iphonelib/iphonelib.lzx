@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<include href="incubator/roundrect.lzx" />
+	<include href="../talkback/justinav/poodllbigbutton.lzx"/>
+	<resource name="add_button" src="../talkback/justinav/newicons/32/classic_add_button.png" />
+	<resource name="remove_button" src="../talkback/justinav/newicons/32/classic_remove_button.png" />	
+	<resource name="reset_button" src="../talkback/justinav/newicons/32/classic_reset_button.png" />
+	
+
+	<class name="counterview" extends="view">
+
+	<attribute name="fontheight" /> 	
+	<attribute name="usefontheight" value="${this.fontheight==null || this.fontheight==0 ? this.height * 0.3 : this.fontheight}"/>  
+	<attribute name="initcount"  value="0" type="number" /> 
+	<attribute name="currentcount"  value="0" type="number" /> 
+	<attribute name="usepresets" value="false"  /> 
+	<attribute name="canclick" value="${!(this.initcount != '0' &amp;&amp; this.currentcount == 0)}" />
+
+
+	<method name="doClick">
+		if (initcount != 0){
+				this.setAttribute("currentcount", this.currentcount - 1);
+		}else{
+				this.setAttribute("currentcount", this.currentcount + 1);
+		}		
+	</method>
+	<method name="doUnclick">
+		if (initcount != 0){
+				this.setAttribute("currentcount", this.currentcount + 1);
+		}else{
+				this.setAttribute("currentcount", this.currentcount - 1);
+		}		
+	</method>
+	<method name="doReset">
+				this.setAttribute("currentcount", parseInt(this.initcount));
+	</method>
+	
+	<handler name="oninit">
+		this.doReset();
+	</handler>
+	
+	 <simplelayout axis="y" inset="10" spacing="10"/>
+
+
+	<roundrect align="center" name="displayview" width="${parent.width}" height="${parent.height - parent.buttonsview.height - 30}" 
+				backgroundStartColor="0xEEEEEE"
+				backgroundStopColor="0xDDDDDD"
+				borderColor="#0000FF"
+				borderWidth="5"	
+				clickable="${classroot.canclick}"
+				>
+		<handler name="onclick">
+			classroot.doClick();
+		</handler>
+		
+		 <text align="center" valign="middle" name="countDisplay" fontsize="${classroot.usefontheight}" text="${classroot.currentcount}" fgcolor="${classroot.canclick ? 0x0000FF : 0xFF0000}" />
+
+	</roundrect>
+
+	 <view name="buttonsview" align="center" >
+		<simplelayout axis="x" inset="10" spacing="10"/>	
+		 <poodllbigbutton name="actionButton" 
+			enabled="${classroot.canclick}" 
+			height="40"
+			resourcename="${classroot.initcount == 0 ? 'add_button' : 'remove_button'}"
+			width="${classroot.usepresets ? (parent.parent.displayview.width - 180) * 0.33 : (parent.parent.displayview.width - 10) * 0.33 }"
+			text="Count">			
+			<handler name="onclick">
+				if(this.enabled){
+					classroot.doClick();
+					}
+			</handler>
+		</poodllbigbutton>	
+		<poodllbigbutton name="gobackButton" text="Go Back" 
+			width="${classroot.usepresets ? (parent.parent.displayview.width - 180) * 0.33 : (parent.parent.displayview.width - 10) * 0.33 }"
+			height="40"
+			resourcename="${classroot.initcount == 0 ? 'remove_button' : 'add_button'}"
+			enabled="${classroot.currentcount != classroot.initcount}">
+			<handler name="onclick">
+				if (this.enabled){
+					classroot.doUnclick();
+				}
+			</handler>
+		</poodllbigbutton>		
+		
+		<poodllbigbutton name="resetButton" 
+			width="${classroot.usepresets ? (parent.parent.displayview.width - 180) * 0.33 : (parent.parent.displayview.width - 10) * 0.33 }"
+			height="40"
+			resourcename="reset_button"
+			enabled="${classroot.currentcount != classroot.initcount}"
+			text="RESET">
+			<handler name="onclick">
+				classroot.doReset();
+			</handler>
+		</poodllbigbutton>
+		<combobox name="countcombo" valign="middle" width="150" editable="false" visible="$once{classroot.usepresets}">
+			<textlistitem text="Count Forward" value="0" selected="true"/>	
+			<textlistitem text="backwards from 2" value="2" />		
+			<textlistitem text="backwards from 3" value="3" />
+			<textlistitem text="backwards from 4" value="4" />	
+			<textlistitem text="backwards from 5" value="5" />	
+			<textlistitem text="backwards from 6" value="6" />	
+			<textlistitem text="backwards from 7" value="7" />	
+			<textlistitem text="backwards from 8" value="8" />	
+			<textlistitem text="backwards from 9" value="9" />	
+			<textlistitem text="backwards from 10" value="10"/>	
+			<textlistitem text="backwards from 15" value="15" />
+			<textlistitem text="backwards from 20" value="20" />				
+			<textlistitem text="backwards from 25" value="25" />
+			<textlistitem text="backwards from 30" value="30" />
+			<textlistitem text="backwards from 35" value="35" />
+			<textlistitem text="backwards from 40" value="40" />
+			<textlistitem text="backwards from 45" value="45" />
+			<textlistitem text="backwards from 50" value="50" />
+				
+			<handler name="onselect">
+				if (classroot.usepresets){
+					classroot.setAttribute("initcount", this.value);
+					classroot.doReset();
+				}
+			</handler>
+		</combobox>
+			
+	</view>	
+
+
+	
+		
+</class>
+
+</library>
+

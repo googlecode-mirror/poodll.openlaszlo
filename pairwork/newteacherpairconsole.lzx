@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="100%" height="100%" >
+	<include href="pairwidget.lzx" />	
+	<include href="lz"/>
+	<attribute name="red5url" />   
+	<attribute name="stopDelegate" value="null"/>
+	<attribute name="playDelegate" value="null"/>
+	<attribute name="talkDelegate" value="null"/>
+
+<!-- Sample Dataset of a menu add request="true" type=http to load at runtime -->
+<dataset name="pairsets"  src="pairset.xml" proxied="false" />
+
+
+<!--mediastreams -->
+  <mediastream name="teachertopairstream" type="rtmp">
+	<microphone name="mike" id="mic" > 
+		<handler name="oninit">
+		    this.setAttribute("rate","22");
+			this.setAttribute("gain","50");
+		</handler>
+	</microphone>
+  </mediastream>
+  <mediastream name="astream" type="rtmp" />
+  <mediastream name="bstream" type="rtmp" />
+<!-- The server connection -->
+  <rtmpconnection name="autocon" src="${unescape(red5url)}" autoconnect="true">
+		<handler name="oninit">		
+			/*
+			astream.setAttribute("url",aname);
+			bstream.setAttribute("url",bname);
+			teachertopairstream.setAttribute("url",teacherpairstreamname);
+			Debug.write("astream.url:" + astream['url']);
+			Debug.write("bstream.url:" + bstream['url']);
+			Debug.write("teacherstream.url:" + teachertopairstream['url']);
+			*/
+        </handler>
+  </rtmpconnection>   
+
+  <simplelayout axis="y" spacing="5"/>
+
+   <!-- pairwidget -->  
+   	<pairwidget id="apair" name="apair" datapath="pairsets:/pairsets/pair" 
+				aname="$path{'aname/text()'}" ashowname="$path{'aname/@showname'}"
+				bname="$path{'bname/text()'}" bshowname="$path{'bname/@showname'}"
+				tname="$path{'tname/text()'}" />	
+
+	<button id="addDelegateButton" width="60" height="30" name="addDelegateButton"  text="Add Delegate" >
+		<handler name="onclick" >
+				stopDelegate = new LzDelegate(this, "canvas.stopIntefering");			
+				playDelegate = new LzDelegate(this, "canvas.listenToPair");			
+				talkDelegate = new LzDelegate(this, "canvas.talkToPair");
+				canvas.subviews[1].broadcastButton.onclick.addDelegate(talkDelegate);
+				//canvas.subviews[1].broadcastButton.onclick.removeDelegate(talkDelegate);
+				Debug.write("added delegate");
+		</handler>
+	</button>
+	 <method name="stopIntefering" args="" >	
+	 <![CDATA[
+		if (astream.playing){
+			astream.stop();					
+			bstream.stop();		
+		}
+		if (teachertopairstream.broadcasting){
+			teachertopairstream.stop();																	
+		}
+		
+		Debug.write("broadcasting and playing are stopped");
+		]]>
+	</method>
+	<method name="listenToPair" args="">	
+	 <![CDATA[
+		astream.play();					
+		bstream.play();					
+		Debug.write("a + b playing");
+		]]>		
+	</method>
+	<method name="talkToPair" args="">	
+		 <![CDATA[
+		/*
+			if (astream.playing ==false){
+									astream.play();					
+									bstream.play();										
+								}
+			teachertopairstream.mic.setAttribute("capturing",true);
+			teachertopairstream.broadcast();
+			*/
+			Debug.write("our broadcast started");
+			]]>	
+	</method>
+	
+</canvas>

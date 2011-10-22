@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+<!-- master slave related condiional inclusion (only works as swf) -->
+<switch>
+        <unless property="$dhtml">
+				<include href="../interview/sharedObject.lzx"/>
+				<include href="../messaging/MessagingRtmpConnection.lzx" />
+		</unless>
+</switch>
+
+	<include href="../utils/kmeixnertimer.lzx"/>
+	<include href="incubator/roundrect.lzx" />
+	<include href="../talkback/justinav/poodllbigbutton.lzx"/>
+	
+	
+	<resource name="play_button" src="../talkback/justinav/newicons/32/classic_play_button.png" />
+	<resource name="stop_button" src="../talkback/justinav/newicons/32/classic_stop_button.png" />	
+	<resource name="reset_button" src="../talkback/justinav/newicons/32/classic_reset_button.png" />
+	
+	
+	<class name="stopwatch" extends="loopingtimer">
+
+		<event name="countevent" />
+		<event name="stopevent" />
+
+		<attribute name="inittime" value="0" />
+		<attribute name="progresstime" value="0" />
+		<attribute name="showmilli" value="0" />
+		<attribute name="showsec" type="number" value="0" />
+		<attribute name="showmin" type="number" value="0" />
+		<attribute name="showhour" type="number" value="0" />
+
+		<method name="reactToTimeChange" args="theTime">
+			this.setAttribute('progresstime' ,  theTime);
+			  
+				
+			//set hours
+			var rawtime = (this.progresstime) % (60 * 60 * 1000);
+			var remainder = rawtime;
+			var quotient =  (this.progresstime - remainder) / (60 * 60 * 1000);
+			this.setAttribute('showhour', quotient );
+
+			//set minutes
+			remainder = rawtime % (60 * 1000);
+			quotient = (rawtime - remainder) / (60 * 1000);
+			rawtime = remainder;
+			this.setAttribute('showmin', quotient );
+
+			//set seconds
+			remainder = rawtime % 1000;
+			quotient = (rawtime - remainder) / 1000;
+			rawtime = remainder;
+			this.setAttribute('showsec', quotient );
+
+			//set milliseconds
+			this.setAttribute('showmilli', rawtime );
+		
+			//let anyone listening know about this
+			this.countevent.sendEvent();
+
+	    </method>
+	</class>
+	<class name="stopwatchview" extends="view">
+	
+	<!-- Attributes passed in -->
+	<attribute name="fontheight" />
+	
+
+ 	<!-- classroot level attributes -->
+	<attribute name="usefontheight" value="${this.fontheight==null || this.fontheight==0 ? this.height * 0.3 : this.fontheight}"/>
+	
+	<!-- master slave related stuff -->
+	<!-- ############################################################################################################### -->
+	<attribute name="red5url"/>  	
+	<attribute name="mename"   /> 
+	<attribute name="courseid"  />  	
+	<attribute name="uniquename"  />
+	<attribute name="actionbuttondel" />
+	<attribute name="resetbuttondel" />
+	<attribute name="mode"  />
+	<attribute name="headeridtag" value="'slaveview01'" />
+	<!--  ################################################ -->
+
+
+	<stopwatch name="ltimer"  >
+		<handler name="countevent">
+			classroot.displayview.timeDisplay.format('%02d:%02d:%02d',this.showhour,this.showmin,this.showsec);
+			classroot.displayview.milliDisplay.format('%03d',this.showmilli);
+		</handler>
+		<handler name="oninit">
+			this.resetTimer();
+		</handler>
+		
+	</stopwatch>
+
+
+	 <simplelayout axis="y" spacing="10"/>
+
+
+		<roundrect align="center" name="displayview" width="${parent.width}" height="${parent.height - parent.buttonsview.height - 30}" 
+					backgroundStartColor="0xEEEEEE"
+					backgroundStopColor="0xDDDDDD"
+					borderColor="#0000FF"
+					borderWidth="5"				
+					>
+			 <text align="center" valign="middle" name="timeDisplay" fontsize="${classroot.usefontheight}" fgcolor="${classroot.ltimer.timer_state == 'STOPPED' ? 0xFF0000 : 0x000000}" />
+			 <text y="${parent.timeDisplay.y + parent.timeDisplay.height + 4}" x="${parent.timeDisplay.x + parent.timeDisplay.width - this.width}" 
+				name="milliDisplay" fgcolor="${parent.timeDisplay.fgcolor}" fontsize="${(classroot.usefontheight / 8) * 3}" />
+		</roundrect>
+
+		 <view name="buttonsview" align="center">
+			<simplelayout axis="x" spacing="10"/>
+			<method name="dostart">
+				classroot.ltimer.startTimer();
+			</method>
+			<method name="dopause">
+				classroot.ltimer.pauseTimer();
+			</method>
+			<method name="dounpause">
+				classroot.ltimer.unpauseTimer();
+			</method>
+			<method name="doreset">
+				classroot.ltimer.resetTimer();
+				classroot.ltimer.setAttribute('progresstime',0);
+			</method>
+			
+			 <poodllbigbutton name="actionButton"
+				resourcename="${classroot.ltimer.timer_state == 'READY' ? 'play_button' : classroot.ltimer.timer_state=='PAUSED' ? 'play_button' : 'stop_button'}"
+				width="${(parent.parent.displayview.width * 0.5) - 5 }"
+				height="40"
+				text="${classroot.ltimer.timer_state == 'READY' ? 'START' : classroot.ltimer.timer_state=='PAUSED' ? 'CONT.' : 'STOP'}">
+				<handler name="onclick">
+					switch(classroot.ltimer.timer_state){
+						case 'READY' : 
+							parent.dostart();
+							break;
+						case 'COUNTING' : 
+							parent.dopause();
+							break;
+						case 'PAUSED' : 
+							parent.dounpause()
+							break;
+					}
+				</handler>
+			</poodllbigbutton>
+			<!-- button name="resetButton" text="RESET" fontsize="${classroot.fontheight}">
+				<handler name="onclick">
+					classroot.ltimer.resetTimer();
+					classroot.ltimer.setAttribute('progresstime',0);
+				</handler>
+			</button -->
+			<poodllbigbutton name="resetButton"
+					width="${(parent.parent.displayview.width * 0.5) - 5 }"
+					height="40"
+					resourcename="reset_button"
+					enabled="${classroot.ltimer.timer_state != 'READY'}"
+					text="Reset" >					
+					<handler name="onclick">
+						if (this.enabled){
+							parent.doreset();
+						}
+					</handler>
+		</poodllbigbutton>
+	
+	</view>
+	
+	<!-- master slave related condiional inclusion (only works as swf) -->
+	<!-- ############################################################################################################### -->
+<switch><unless property="$dhtml">
+
+
+			<!--rtmp connection -->
+	<!-- we set altsrc and src to the same value, to force a reconnect if timeouts, seems to happen, -->
+	<MessagingRtmpConnection name="rtmpc" userid="${classroot.mename}" appprofileid="${classroot.headeridtag}" 
+		src="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}"  
+		altsrc="${unescape(classroot.red5url) + '/' + classroot.courseid +  '/' + classroot.headeridtag}" 
+		debug="false" autoconnect="${classroot.mode=='master'}">
+
+		<handler name="onconnect">
+				Debug.write("connecting to SO");
+				this.parent.timeso.connect();
+				Debug.write("connected to SO");
+				if(classroot.mode =='master'){
+					this.parent.refreshtimer.startTimer();
+					Debug.write("started timer");
+				}
+		</handler>			
+	</MessagingRtmpConnection>
+	
+	
+	<!-- The shared object for making it a shared whiteboard	-->
+	<sharedobject name="timeso" rtmpc="${classroot.rtmpc}" uniquename="${classroot.uniquename}" persist="${false}" >
+		<handler name="datachanged" args="field">
+			<![CDATA[
+			Debug.write("updating from so:" );
+			Debug.write("field:", field );
+		//	Debug.write("field:", this.getProperty(field));
+			
+			switch (field){
+				case "timerstop":
+					classroot.buttonsview.dopause();				
+					break;	
+				case "timerstart":
+					classroot.buttonsview.dostart();				
+					break;
+				
+				case "timerpause":
+					classroot.buttonsview.dopause();				
+					break;
+				
+				case "timerunpause":
+					classroot.buttonsview.dounpause();				
+					break;
+				case "timereset":
+					classroot.ltimer.resetTimer();
+					classroot.ltimer.setAttribute('progresstime',0);
+				default:
+					break;
+			
+			
+			}
+			]]>
+				
+		</handler>
+	</sharedobject>
+	<loopingtimer name="refreshtimer" timer_resolution="250">
+		<handler name="timeevent" args="theTime">
+			//return;
+			parent.timeso.setProperty("newtime", classroot.displayview.timeDisplay.text + classroot.displayview.milliDisplay.text);
+			//Debug.write("setprop", classroot.displayview.timeDisplay.text + classroot.displayview.milliDisplay.text);
+		</handler>			
+	</loopingtimer>
+	<!-- This is the base of code to handle stopwatch shared object on basis of admin user events 
+		current not used because uneccessary and doesn't handle late arrivals very well. Justin 20100830
+	
+			<handler name="oninit">
+				this.actionbuttondel = new LzDelegate(this,'handleaction');
+				this.resetbuttondel = new LzDelegate(this,'handlereset');	
+			</handler>
+			<method name="handleaction" args="ignore=null">
+				switch(this.ltimer.timer_state){
+					case 'READY' : 
+						this.buttonsview.dostart();
+						break;
+					case 'COUNTING' : 
+						this.buttonsview.dopause();
+						break;
+					case 'PAUSED' : 
+						this.buttonsview.dounpause()
+						break;
+				}
+				
+			</method>
+			<method name="handlereset" args="ignore=null">
+	
+						this.buttonsview.doreset();
+						
+				}
+				
+			</method>
+	-->
+	
+</unless></switch>
+	<!-- ############################################################################################################### -->
+
+	
+	</class>
+</library>
+

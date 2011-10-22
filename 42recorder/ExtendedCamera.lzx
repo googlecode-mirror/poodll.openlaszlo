@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<library>
+
+	<class name="ExtendedCamera" extends="camera">
+	
+		<method name="getCamera">
+			return this._dev;
+		</method>
+	
+		<method name="_setShow" args="show">
+			super._setShow(show);
+			//if(capturing){
+				// @TODO: magic number
+			//	getMicrophone().setGain("50");
+			//}
+		</method>
+	
+	</class>
+
+</library>

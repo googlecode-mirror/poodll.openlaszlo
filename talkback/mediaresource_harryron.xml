@@ -1,0 +1,70 @@
+<mediaresource>
+	<mediapath>other/harrymeetsron.flv</mediapath>
+	<roleAName>Ron</roleAName>	
+	<roleBName>Harry</roleBName>	
+	<segment recordable="true">
+		<title>One</title>
+		<start>0</start>
+		<end>19</end>
+		<speechstart><A>5</A></speechstart>
+		<speechend><A>17</A></speechend>
+		<script>
+<![CDATA[<b>Train:</b>]]> chu chu chu chu chu chu chu chu chu chu chu chu chu chu chu.		
+		</script>		
+	</segment>
+	<segment recordable="true">
+		<title>Two</title>
+		<start>20</start>
+		<end>28</end>
+		<speechstart><A>20</A><B>26</B></speechstart>
+		<speechend><A>25.5</A><B>27</B></speechend>
+		<script>
+<![CDATA[<b>Ron:</b>]]> Excuse me. Do you mind? 
+Everywhere else is full.
+
+<![CDATA[<b>Harry:</b>]]> Not at all.		
+		</script>		
+	</segment>
+	<segment recordable="true">
+		<title>Three</title>
+		<start>29</start>
+		<end>35</end>
+		<speechstart><A>30</A><B>33.5</B></speechstart>
+		<speechend><A>33.5</A><B>35</B></speechend>		
+		<script>
+<![CDATA[<b>Ron:</b>]]> I'm Ron by the way. Ron Weasley.
+
+<![CDATA[<b>Harry:</b>]]> I'm Harry. Harry Potter.
+</script>
+		
+	</segment>
+	<segment recordable="true">
+		<title>Four</title>
+		<start>36</start>
+		<end>44</end>
+		<speechstart><A>36</A><B>43.2</B></speechstart>
+		<speechend><A>43.2</A><B>44</B></speechend>		
+		<script>
+<![CDATA[<b>Ron:</b>]]> So, so it's true?
+I mean, do you really have 
+.. the .. the ..?
+
+<![CDATA[<b>Harry:</b>]]> The what?
+		</script>		
+	</segment>
+	<segment recordable="true">
+		<title>Five</title>
+		<start>45</start>
+		<end>52</end>
+		<speechstart><A>45.5</A><B>47</B><A>49</A></speechstart>
+		<speechend><A>47</A><B>49</B><A>51</A></speechend>		
+		<script>
+<![CDATA[<b>Ron:</b>]]> Scar?
+
+<![CDATA[<b>Harry:</b>]]> Oh ...
+
+<![CDATA[<b>Ron:</b>]]> Wicked.
+	</script>		
+	</segment>
+</mediaresource>
+

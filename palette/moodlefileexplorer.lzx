@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+	<include href="moodlefileexplorerlib.lzx"/>
+	<attribute name="filedataurl"  value="lz.Browser.getInitArg('filedataurl')" /> 
+	<attribute name="courseid"  value="lz.Browser.getInitArg('courseid')" /> 	
+	<moodlefileexplorer  name="fileexplorer" width="300" filedataurl="${canvas.filedataurl}" courseid="${canvas.courseid}" height="500"  >
+		<handler name="onchoice" args="path">
+			Debug.write("onchoice", path);
+		</handler>
+	</moodlefileexplorer>
+</canvas>

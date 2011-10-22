@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas allowfullscreen="true">
+
+<include href="../utils/poodllfullscreen.lzx"/>
+<include href="countdownlib.lzx"/>
+
+	<attribute name="initseconds"  value="lz.Browser.getInitArg('initseconds')" /> 
+	<attribute name="fontheight"  value="lz.Browser.getInitArg('fontheight')" /> 
+	<attribute name="usepresets"  value="lz.Browser.getInitArg('usepresets')" /> 
+	
+	<!-- Attributes for slaveview function -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')"/>  	
+	<attribute name="mename"  value="lz.Browser.getInitArg('mename')" /> 
+	<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />  	
+	<attribute name="uniquename" value="lz.Browser.getInitArg('uniquename')" />
+	<attribute name="mode" value="lz.Browser.getInitArg('mode')" />
+	<attribute name="headeridtag" value="'slaveview01'" />
+	
+	 <!-- force fontsize update on screen size toggle -->	
+	  <handler name="onfullscreen" args="result"><![CDATA[
+        if (canvas.fullscreen == true && result == true) {
+            this.thecountdown.setAttribute("fontheight", this.fontheight);
+        } else if (canvas.fullscreen == false && result == true) {
+            this.thecountdown.setAttribute("fontheight", this.fontheight);
+        }
+        ]]>
+    </handler>
+	
+	<countdownview name="thecountdown" mode="${canvas.mode}"  red5url="${canvas.red5url}" mename="${canvas.mename}" initseconds="${canvas.initseconds}" courseid="${canvas.courseid}" uniquename="${canvas.uniquename}"  usepresets="${canvas.usepresets=='true'}" fontheight="${canvas.fontheight}" width="${parent.width}" height="${parent.height}" />
+</canvas>

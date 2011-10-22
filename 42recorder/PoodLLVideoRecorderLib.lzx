@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<library>
+
+
+	<include href="VCLibrary.lzx"/>
+	<include href="../talkback/justinav/flashutils.lzx"/>
+	<include href="../talkback/justinav/audiosettings.lzx" />
+	<include href="../talkback/justinav/videosettings.lzx" />
+	<include href="../talkback/justinav/mediadevicesettings.lzx" />
+	<include href="lz" />
+		
+<class name="poodllvideorecorder" extends="view">
+
+<!-- **************** These attributes are set from parent class ******************************* -->
+	<!-- The URL of the Red5 server -->
+	<attribute name="red5url"  />  	
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename"  />	
+	<!-- The id of the control on the enclosing HTMLpage to update with the  filename -->
+	<attribute name="updatecontrol"  />
+	<!-- To set a particular camera or mic as default -->
+	<attribute name="prefcam"  />
+	<attribute name="prefmic" />
+	<!-- UID for ensuring filenames  are unique-->
+	<attribute name="uid"  />
+	<attribute name="assigName"  />
+	<!-- The course id (parent will pass -1 if there is no course id) -->
+	<attribute name="course"  />
+	<!-- Some camera settings-->
+	<attribute name="capturewidth"  />
+	<attribute name="captureheight"  />
+	<attribute name="capturefps"  />
+	<attribute name="bandwidth" />
+	<attribute name="picqual"  />
+	<!-- Overwrite file or not ... depends on server -->
+	<attribute name="overwritefile"  />
+<!-- **************** The above atributes are set from parent class ******************************* -->
+
+	<!-- The save name of our file. Added Justin 2009/06/12 -->
+	<attribute name="savefilename" value="''" />	
+	<attribute name="buttonwidth" value="42" />
+	
+
+	<!-- Justin 2000/06/12-->
+	<!-- Had many problems keeping this logic central and used with constraints-->
+	<!-- This is not elgant but it works. The job is to start from courseid, if we have one-->
+	<handler name="onfilename">
+		<![CDATA[
+			
+			if (this.course!=-1){
+				this.setAttribute("savefilename", this.course + '/' + this.filename);
+			}else{ 
+				this.setAttribute("savefilename", this.filename);
+			}
+		]]>
+	</handler>
+	
+
+	
+	<!-- The server connection -->
+	<rtmpconnection name="rtmpc" src="${unescape(classroot.red5url)}"  debug="false">	
+   
+		    
+		<handler name="oninit" >
+
+			classroot.setAttribute("filename", "moddata/" + classroot.assigName + "/" + classroot.uid + "/" + Math.floor(Math.random()*100001) + ".flv");
+
+		</handler>
+		
+	   		
+	</rtmpconnection>
+
+	<!-- The recording media stream -->
+	<mediastream name="ms" rtmp="${classroot.rtmpc}" type="rtmp" url="${classroot.savefilename}" />
+	<!-- The playing media stream -->
+	 <mediastream name="playstream" rtmp="${classroot.rtmpc}" type="rtmp" url="${classroot.ms.url}"/>	
+
+	<simplelayout axis="y" spacing="5"/>
+	<tabslider name="vview_tslider" width="${parent.width}" height="${parent.height - (classroot.buttonwidth + 8) - 20}" spacing="2" slideduration="300">
+	<!-- tabslider id="vview_tslider" width="400" height="400" spacing="2" slideduration="300" -->
+		<tabelement name="record_tpane" text="Record" selected="true" >
+			<videoview bgcolor="#c0f4ad" name="recordview" width="${parent.width}" 
+					height="${parent.height}" stream="${classroot.ms}">
+				<!-- The camera object -->
+				<!-- poodllcamera name="mycam" prefdevice="${classroot.prefcam}" picturequality="$once{classroot.picqual*0.1}" bandwidth="$once{classroot.bandwidth}" show="true" -->
+				<poodllcamera name="mycam" prefdevice="${classroot.prefcam}" show="true">
+					<handler name="oninit">
+						this.setQuality(classroot.bandwidth,(classroot.picqual / 10));
+						this.setMode(classroot.capturewidth,classroot.captureheight,classroot.capturefps,true);
+						Debug.write("bandwidth: " + classroot.bandwidth);
+						Debug.write("picqual: " + classroot.picqual);
+						Debug.write("capturewidth: " + classroot.capturewidth);
+						Debug.write("captureheight: " + classroot.captureheight);
+						Debug.write("capturefps: " + classroot.capturefps);											
+					</handler>
+				</poodllcamera>									
+				
+				<!-- The microphone object -->
+				<poodllmicrophone name="mymic" prefdevice="${classroot.prefmic}" capturing="true" />
+					
+			</videoview>
+	</tabelement>
+	<tabelement name="playback_tpane" text="Playback">
+		<videoview bgcolor="#c0f4ad" name="playview"  height="${parent.height}" width="${parent.width}" stream="${classroot.playstream}" />
+	</tabelement>
+	<tabelement name="settings_tpane" text="Settings" visible="${classroot.bottombar.settingsbox.value}">
+		<basetabs name="settingstabs" bordersize="5" tabclass="tab">
+			<basetabpane name="audio" text="Audio" bgcolor="#bdbdbd">
+					<audiosettings name="audiosettings" themic="${classroot.vview_tslider.record_tpane.recordview.mymic}" />	
+			</basetabpane>		
+			<basetabpane name="video" text="Video" bgcolor="#bdbdbd">
+				<!-- Start of videosettings-->
+				<videosettings name="videosettings" 
+						thecam="${classroot.vview_tslider.record_tpane.recordview.mycam}" />
+
+			</basetabpane>	
+			<basetabpane text="Device" bgcolor="#bdbdbd">
+				<mediadevicesettings thecam="${classroot.vview_tslider.record_tpane.recordview.mycam}" themic="${classroot.vview_tslider.record_tpane.recordview.mymic}" />
+			</basetabpane>
+		</basetabs>
+	</tabelement>
+	</tabslider> 
+
+	 
+	 <view name="bottombar" bgcolor="#bdbdbd" valign="middle" width="${classroot.vview_tslider.width}" height="${classroot.buttonwidth + 8}">
+      <simplelayout axis="x" spacing="0"  />
+	<rtmpstatus name="statuslight" rtmpc="${classroot.rtmpc}" />		
+	<view name="buttonbar" width="${parent.width-parent.statuslight.width - parent.settingsbox.width}" height="${parent.height}" valign="middle" >	 
+        <simplelayout axis="x" spacing="5" inset="${(classroot.vview_tslider.width- parent.parent.statuslight.width - (classroot.buttonwidth * 3) - (5 * 2)) * 0.5}"  />
+        <button name="recordButton" 
+			x="${(classroot.vview_tslider.width - (this.width * 3) - (5 * 2)) * 0.5}"
+			width="${classroot.buttonwidth}" height="${classroot.buttonwidth}"
+			valign="middle" 
+			enabled="${classroot.playstream.playing == false}" 
+			onclick="record()">
+        	<method name="record">
+				classroot.setAttribute("filename", "moddata/" + classroot.assigName + "/" + classroot.uid + "/" + Math.floor(Math.random()*100001) + ".flv");
+				classroot.ms.setAttribute("url",classroot.savefilename);
+				Debug.write("ms.url:" + classroot.ms.url);
+        		classroot.vview_tslider.record_tpane.recordview.mymic.capturing=true;
+        		classroot.ms.setAttribute("totaltime", 0);
+				classroot.vview_tslider.select(classroot.vview_tslider.record_tpane);
+        		classroot.ms.record();
+				
+				//record the url on the html page	
+				//be careful here, we want moodle to save filename NOT savefilename					
+				//moodle will add the courseid to the filename at runtime.								
+				var somejs='var cbox = document.getElementById(\"' + classroot.updatecontrol + '\"); ';
+				somejs = somejs + 'cbox.checked=\"true\"; ';
+				somejs = somejs + 'cbox.value=\"' + classroot.filename +'\"; ';							
+				lz.Browser.loadJS(somejs);					
+				
+        	</method>
+			<view name="micicon" width="32" height="32" x="5" y="5" opacity="${1 - ((classroot.ms.recording || classroot.playstream.playing ) * 0.8)}" resource="icons/32x32/PlainGreen/RecordNormal.png" ></view>	
+        </button>
+		
+		<button name="playButton" width="${classroot.buttonwidth}" height="${classroot.buttonwidth}" valign="middle" enabled="${!(classroot.playstream.playing  || classroot.ms.recording  || classroot.ms.totaltime == 0)}" onclick="playRecording()">
+			<method name="playRecording" args="">
+				classroot.playstream.setAttribute("url",classroot.savefilename);
+				Debug.write("classroot.playstream.url:" + classroot.playstream.url);
+				classroot.vview_tslider.select(classroot.vview_tslider.playback_tpane);
+				classroot.playstream.play();
+			</method>
+			<view name="speakericon" width="32" height="32" x="5" y="5" opacity="${1 - (parent.enabled ? 0 : 0.8)}" resource="icons/32x32/CircleBlue/Play1Normal.png" ></view>	
+		</button>	
+
+		<button
+			name = "stopButton"
+			width="${classroot.buttonwidth}" 
+			height="${classroot.buttonwidth}"
+			valign="middle"
+			enabled="${classroot.playstream.playing || classroot.ms.recording}"
+            		onclick="stopAll()">
+       		<method name="stopAll" args="">
+				if (classroot.playstream.playing){
+					classroot.playstream.stop();
+					Debug.write("stopped playing");
+				}else if (classroot.ms.recording){
+					classroot.ms.stop();
+					Debug.write("stopped recording");
+				}
+       			
+       			
+       		</method>
+			<view name="stopicon" width="32" height="32"  x="5" y="5" opacity="${0.2 + ((classroot.playstream.playing || classroot.ms.recording) ? 0.8 : 0)}" resource="icons/32x32/CircleBordered/Stop1NormalRed.png" ></view>	
+        </button>		
+		
+	</view>
+		
+	<!-- This works OK but the tabs don't resize properly after showing settings. tried and tried and tried .. -->
+	<checkbox  name="settingsbox" text="settings" value="false">
+		<handler name="onchanged">
+			Debug.write("tab height before:", classroot.vview_tslider.height);
+			Debug.write("tab height before:", classroot.vview_tslider.record_tpane.height);
+			if(this.value){
+					classroot.vview_tslider.select(classroot.vview_tslider.settings_tpane);					
+				}else{
+					classroot.vview_tslider.select(classroot.vview_tslider.record_tpane);
+				}
+			Debug.write("tab height after:", classroot.vview_tslider.height);
+			Debug.write("tab height after:", classroot.vview_tslider.record_tpane.height);
+		</handler>
+	</checkbox>
+    
+	</view>
+  
+
+</class>
+</library>

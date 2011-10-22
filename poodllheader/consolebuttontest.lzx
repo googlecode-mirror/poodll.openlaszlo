@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<canvas >
+
+<include href="consolebutton.lzx"/>
+
+<simplelayout />
+
+
+
+
+	<consoletogglebutton name="pairbutton" toplayer="pairlayer" width="128" height="128"/>
+	<consoletogglebutton name="interviewbutton" toplayer="interviewlayer" width="128" height="128"/>
+	<consoleiconbutton name="togglePairsButton"  iconframe="1" text="Start" width="50" height="50" >
+		<handler name="onclick" >
+			Debug.write("clicksent");
+				this.setAttribute("enabled",!this.enabled);
+		</handler>
+	</consoleiconbutton>
+
+		
+
+</canvas>
+

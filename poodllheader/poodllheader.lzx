@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas >
+	<include href="lz"/>
+	<include href="phpheadercommunications.lzx" />
+	
+	<!-- Sample Dataset of a menu add request="true" type=http to load at runtime -->
+	<!-- dataset name="menuresource"  src="menuresource.xml" proxied="false" -->
+	<attribute name="bcolor"  value="lz.Browser.getInitArg('bcolor')" />
+	<attribute name="mename" value="lz.Browser.getInitArg('mename')"  />
+	<attribute name="bcsturl" value="lz.Browser.getInitArg('bcsturl')"  />	
+	<attribute name="bcstadmin" value="lz.Browser.getInitArg('bcstadmin')"  />	
+	<attribute name="pairsurl" value="lz.Browser.getInitArg('pairsurl')"  />	
+	<attribute name="jumpurl" value="lz.Browser.getInitArg('jumpurl')"  />	
+	<attribute name="interviewurl" value="lz.Browser.getInitArg('interviewurl')"  />	
+	<attribute name="broadcastheight" value="lz.Browser.getInitArg('broadcastheight')"  />	
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  
+	<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />  
+	
+	<!-- client consoles popupdetails -->	
+	<attribute name="clnturl" value="lz.Browser.getInitArg('clnturl')"  />	
+	
+	
+
+	<!--rtmp connections -->
+	<!--class that handles communications with client's headers -->
+	<phpheadercommunications name="headercomm" mename="${canvas.mename}" courseid="${canvas.courseid}" red5url="${canvas.red5url}">
+		<handler name="oninit">
+			this.rtmpc.onpeermessage.addDelegate(new LzDelegate(this, 'handleMessage'));
+		</handler>
+		<method name="handleMessage" args="message">
+			<![CDATA[
+				
+				Debug.write("peermessage:",message);				
+				showText.setAttribute("text", message);
+				
+				var messageKey = message.slice(0,5);
+				var messageBody = message.slice(5);
+				switch(messageKey){
+
+
+			
+					case 'clnt:':
+							//jump to URL, message format = [url]@[target]
+							var urlParts= messageBody.split("@");
+							lz.Browser.loadURL(canvas.clnturl,"_new");
+							break;
+							
+					case 'pair:':
+							//load the pairclient widget into the iframe
+							this.openWidget(canvas.pairsurl, '140px');
+							break;
+							
+					case 'jump:':		
+							//jump to URL, message format = [url]@[target]
+							var urlParts= messageBody.split("@");
+							lz.Browser.loadURL(urlParts[0], urlParts[1]);
+							break;
+							
+					case 'intv:':		
+							//load the interview widget into the iframe
+							this.openWidget(canvas.interviewurl, '200px');
+							break;	
+							
+					case 'shut:':
+							//close the widget iframe
+							this.closeWidget();
+							
+					default:
+							break;
+							
+				}//end of switch
+					
+					
+					
+			]]>
+		</method>
+	</phpheadercommunications>	
+	<simplelayout axis="x" spacing="5" />
+	<rtmpstatus /><text name="showText" text="null" />
+ 
+	
+		
+</canvas>

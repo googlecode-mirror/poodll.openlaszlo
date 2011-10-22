@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<library>
+
+	<class name="MessagingRtmpConnection" extends="rtmpconnection">
+        
+
+		<!-- The id of the logged in user -->
+		<attribute name="userid" type="string" value="" />
+		<!-- The app profile to use
+		The apps do not need to be the same
+		just able to support the same set of messages -->
+		<attribute name="appprofileid"  type="string" value="" />	
+
+		<!---  the Callback object with our methods in it to be called from server-->
+		<CallbackObject name="callbackObject" co_parent="$once{this.parent}"/>	
+
+		
+		<!-- we raise this event to our parent class when we get a message from a peer-->
+		 <event name="onpeermessage"/>
+		<!-- we raise this event to our parent class when we get the result of getPeersCall-->
+		<event name="ongetpeersresult"/>
+		<!-- we raise this event when we have successfully registered-->
+		 <event name="onregistered"/>
+
+
+	     
+	     <!-- a stub for adding logic to the connect function-->
+	    <method name="connect">		
+				super.connect();   		 			
+	    </method> 
+
+    
+	<!-- on connect, register this app to get/send messages-->	
+	<handler name="onconnect">
+		<![CDATA[  			
+		     //justin 20100519 now set in connect method too
+			 //this is just for older widgets and failed connections			 
+			//this.registerThis();
+			this.registerMethods();  
+     			//lz.Timer.addTimer( new LzDelegate( this, "registerMethods" ), 3000 );
+
+		]]>
+	</handler>
+
+	<!--- flash callback used by swf9 to connect - called by setTimeout from mediastream - see LPP-7999
+	  modified justin 20100519 to send the userid up as the connection paramater
+                @keywords private -->
+            <method name="_doconnect" args=""><![CDATA[
+              //this._nc.connect(src,this.connectionparams);
+			  this._nc.connect(src,[this.userid + "@" + this.appprofileid]);
+			//Debug.write("calling connecton rtmp");
+  			//this._nc.connect(src,[this.userid + "@" + this.appprofileid],'alemon');
+            ]]>
+            </method>
+	
+	
+     <!-- a stub for adding logic to the init function-->
+    <method name="init">
+
+			<![CDATA[	
+
+			super.init();		
+
+			]]>			
+	</method>
+    
+
+
+
+     <!-- This is where we call the remote function on the server-->
+    <method name="callRemoteFunction" args="func, obj, params">
+			<![CDATA[	
+        Debug.write("*#* call: func, obj, params",func,obj, typeof (params) , params.length);
+        if (params.length != 0){
+        
+        	Debug.write("params:",params);
+        	Debug.write("arguments:",arguments);
+
+        	if (params.length==1){
+
+	                this._nc.call(func, obj,params[0]);
+		         Debug.write("called:" + func, params[0]);
+	            } else if (params.length==2){
+	                this._nc.call(func, obj,params[0],params[1]);
+	            } else if (params.length==3){
+	                this._nc.call(func, obj,params[0],params[1],params[2]);
+	            } else if (params.length==4 ){
+	                this._nc.call(func, obj,params[0],params[1],params[2],params[3]);
+	        } 
+           
+        } else {	   
+	          Debug.write("this._nc.connected", this._nc.connected);
+	          this._nc.call(func, obj);
+		 Debug.write("called:", func);
+        }
+
+	]]>
+    </method>
+   
+
+     <!-- Not really necessary anymore, I think -->   		
+	<method name="getParameterString" args="parameters">
+	
+		return parameters;
+
+	</method>
+   
+   
+   
+          <!--- 
+        With this function all methods are registered to the NetConnection
+        A server can invoke a method or callback function 
+	if it finds it in the netconnection object (AS2) or in the netconnection object(AS3) client
+	NB it is possible to extend the netconnection object and add functions, but that makes it 
+	hard to extend rtmpconnection and stay upgradeable.
+     -->
+    <method name="registerMethods" args="ignore=null">
+        <![CDATA[
+		//in as3 netconnection is not dynamic so we cannot add methods to it
+		//instead we set the callbackobject to the netconnection client:Justin 20091022
+		if ($as3){
+			if(this._nc == null) {
+				Debug.write("nc is null !!!");
+			}else{
+				Debug.write("nc is OK");
+			}
+			this._nc.client = this.callbackObject;
+			return;
+		}
+		
+		//this next part won't work in AS3, but is how we do it AS2 Justin 20091021
+	        if (this.callbackObject.subnodes!=null){
+		        //Register all methods which are onstanceof ExtendedNetRemoteCall
+		        for (var i=0;i<this.callbackObject.subnodes.length;i++){
+		            //If it is of Type ExtendedNetRemoteCall then register it to the NetConnection
+		            if (this.callbackObject.subnodes[i] instanceof lz.ExtendedNetRemoteCall){
+		                var t = this;
+		                Debug.write("adding ENRC: ",this.callbackObject.subnodes[i].funcname );
+		                Debug.write("adding ENRC callee: ",arguments.callee);
+		                this._nc[this.callbackObject.subnodes[i].funcname] = function( args ){
+		                    return t.remoteCallMethod(arguments.callee,args);
+		                }
+		                Debug.write("added ENRC: ",this.callbackObject.subnodes[i].funcname )
+		            }
+		        }
+        	}
+
+
+		
+		//this function will be called from server directly, ie not a callback function
+			this._nc.receiveMessage = function(message){
+				callbackObject._receiveMessage(message);
+			}
+
+        ]]>
+    </method>
+
+
+    
+    <!-- 
+        Process the RemoteCall to the Right Function
+        -swagner
+     -->
+    <method name="remoteCallMethod" args="callee,args">
+        <![CDATA[
+            for (var eg in this._nc){
+		Debug.write("polling remoteCallMethod: ",eg);
+                if (this._nc[eg]==callee){
+                    if (this.debug) {
+                        //_root.Debug.write.write("DEBUG invoked a function remotely: ",eg,args);
+                    }                
+                    return this.callFunction(eg,args);
+                }
+            }
+        ]]>
+    </method>
+    
+    <!-- 
+        Map the Function to a ExtendedNetRemoteCall
+        -swagner
+     -->
+    <method name="callFunction" args="funcname,args">
+        <![CDATA[
+            for (var i=0;i<this.subnodes.length;i++){
+                if (this.subnodes[i].funcname==funcname){
+                    return this.subnodes[i].onResult(args);
+                }
+            }
+        ]]>
+    </method>		
+    
+   
+   
+	<!-- The following are messaging methods -->
+
+	<!-- The main method called from the parent apps into this class -->
+	<!-- We process the args and send them on -->
+	<method name="sendMessage" args="message">
+		var processedMessage = message;
+		this.callbackObject.callContactPeer.callRemoteFunction(processedMessage);
+
+	</method>
+
+
+	<method name="registerThis" args="">
+		//We should send up our app profile, and userid
+		var args=userid + "@" + appprofileid;
+		Debug.write("args:" + args);
+		this.callbackObject.callRegisterPeer.callRemoteFunction([args]);
+
+	</method>
+
+	<method name="getPeers" args="">
+		var args="";
+		Debug.write("args:" + args);
+		this.callbackObject.callGetPeers.callRemoteFunction(null);
+
+	</method>
+	   
+
+
+	
+</class>
+
+<class name="CallbackObject" >
+
+	<attribute name="co_parent"  />
+
+	<!-- Here we add any non callback functions, ie server invokes on client methods -->
+	<!-- They need to be dynamic methods for the server to see them -->
+	<handler name="oninit" >
+		this.receiveMessage = function(message){
+				this._receiveMessage(message);
+			}
+		
+	</handler>
+
+
+
+
+	<!-- method to be called from server -->
+	<method name="_receiveMessage" args="message">	
+		var processedMessage = message;
+		Debug.write("receivedMessage:" + processedMessage);
+		this.co_parent.onpeermessage.sendEvent(processedMessage);
+	
+	</method>
+
+
+
+   
+	<!-- Remote call stub for server's contactPeer method -->
+	<!-- This could be renamed callSendMessage , to be easy to understand-->
+	<ExtendedNetRemoteCall name="callContactPeer" funcname="contactPeer" rc_parent="${classroot.co_parent}">
+		<method name="onStatus" args="info">
+			Debug.write("contactPeer Status:" + info);
+		</method>
+		<method name="onResult" args="info">
+			Debug.write("contactPeer onResult:" + info);
+		</method>
+	</ExtendedNetRemoteCall>
+
+	<!-- Remote call stub for server's registerPeer method -->
+	<ExtendedNetRemoteCall name="callRegisterPeer" funcname="registerPeer" rc_parent="${classroot.co_parent}">
+		<method name="onStatus" args="info">
+			Debug.write("registerPeer Status:" + info);
+		</method>
+		<method name="onResult" args="info">
+			Debug.write("registerPeer  onResult:" + info);
+			classroot.co_parent.onregistered.sendEvent(info);
+		</method>
+	</ExtendedNetRemoteCall>
+
+		<!-- Remote call stub for server's getPeers method -->
+	<ExtendedNetRemoteCall name="callGetPeers" funcname="getPeers" rc_parent="${classroot.co_parent}">
+		<method name="onStatus" args="info">
+			Debug.write("getPeers Status:" + info);
+		</method>
+		<method name="onResult" args="info">
+			Debug.write("getPeers onResult:" + info);
+			classroot.co_parent.ongetpeersresult.sendEvent(info);
+		</method>
+	</ExtendedNetRemoteCall>
+
+</class>
+	
+	    <!---
+        Net remote call. [TODO: Document netremotecall class.]
+        @START_CODE
+            <netremotecall/>
+        @END_CODE
+    -->
+    <class name="ExtendedNetRemoteCall" >
+
+            <switch>
+                <when property="$as3">
+                    <passthrough>
+                        import flash.net.Responder;
+                    </passthrough>
+		</when>
+	    </switch>
+
+
+        <!--- Name of the remote function. -->
+        <attribute name="funcname" value="$once{null}" type="string" />
+
+	<attribute name="rc_parent" />
+    
+        <attribute name="remotecontext" value="null" />
+    
+        <attribute name="dataobject" value="null" />
+		
+        <!--- Data handling event. -->
+        <!--- Reoved args attribute, because wouldn't compile 4.3. -->
+        <!-- event name="ondata" args="value" -->
+			<event name="ondata"  />
+			
+
+        <!--- Error handling event. -->
+        <event name="onerror"/>
+
+
+        <!--- Call the remote method, passing the array of params. -->
+        <method name="callRemoteFunction" args="params"><![CDATA[
+        	Debug.write("Calling remote function: " + funcname);
+        
+            if (this.funcname == null) {
+                Debug.write("No funcname given");
+                if (this.onerror) {
+                    this.onerror.sendEvent("No funcname given");
+                }
+                return;
+            }
+
+            if (params == null) {
+                params = [];
+
+                var subnodes = this.subnodes;
+                if (subnodes != null) {
+                    var i;
+                    var n = subnodes.length;
+                    for (i = 0; i < n; i++) {
+                        // If getValue method is declared in param, call that
+                        // instead to get value.
+                        var tsi = subnodes[i];
+                        if ((tsi["getValue"] != null) && 
+                            (tsi.getValue["prototype"] != null)) {
+                            params[i] = tsi.getValue();
+                        } else {
+                            params[i] = tsi.value;
+                        }
+                    }
+                }
+
+	//works in swf8 but not 9        
+	//    } else if (params.__proto__ != Array.prototype) {
+
+	//works in swf9 but not 8
+	//    } else if (params.constructor.toString().indexOf("Array") == -1){	
+
+	//so we just make sure we don't pass a dumb paramater Justin 20091023
+	//left the code jsut to be sure in case we need it later
+	   }else if(false){
+                Debug.write(this.name, "error: first argument (params) is not an array");
+     		Debug.write("Params:", params);
+		Debug.write("Params Constructor:", params.constructor.toString());
+		Debug.write("Params to string:", params.toString());
+                return -1;
+            }
+
+            Debug.write("call", this, this.parent.parent, this.parent.parent.status);
+            if (this.parent.parent.status == "connected"){
+
+		//as of AS3 we need an actual Responder robject, and not just a class 
+		//with onResult and onStatus
+		if ($as3){
+			var responder = new Responder(this.onResult, this.onStatus);
+			this.rc_parent.callRemoteFunction(this.funcname, responder, params);
+		}else{
+			this.rc_parent.callRemoteFunction(this.funcname, this, params);
+		}
+
+            }
+
+          ]]>
+        </method>
+
+        
+
+
+
+
+
+        <!--- Handle the result returned from the remote method. -->
+        <method name="onStatus" args="value"><![CDATA[
+            	// Can be overriden.           
+            	Debug.write("netremotecall", this, "onStatus", value);
+			
+ 		// Would be great if it can be used with dataobject,
+           	// but I don't know how to convert Array/primitive to LzDataset/LzDataPointer.
+
+          ]]>
+        </method>
+
+        <!--- Handle the result returned from the remote method. -->
+        <method name="onResult" args="value"><![CDATA[
+           	 // Can be overriden.           
+           	Debug.write("netremotecall", this, "onResult", value);
+ 			
+		// Would be great if it can be used with dataobject,
+            	// but I don't know how to convert Array/primitive to LzDataset/LzDataPointer.
+		/*
+	            if (this.dataobject!=null) {
+	                if ( this.dataobject instanceof LzDataset ) {
+	                    //Debug.write("onResult: ",this,value,dataobject);
+	                    var element = LzDataElement.valueToElement(value);
+	                    this.dataobject.setData(element.childNodes);
+	                } else if ( this.dataobject instanceof LzDataElement ) {
+	                    var element = LzDataElement.valueToElement(value);
+	                    this.dataobject.appendChild( element );
+	                } else {
+	                    Debug.warn("dataobject is not LzDataset or LzDataElement: ",this,this.dataobject,delegate);
+	                }
+	            }
+	            this.ondata.sendEvent(value);
+            */		
+          ]]>
+        </method>
+
+
+    </class>
+
+
+    <!---
+        Net parameter.
+        Element to use inside netremotecall.
+        @todo Document netparam class.
+    -->
+    <class name="netparam" extends="node">
+
+        <!--- The value of the netparam. -->
+        <attribute name="value" value="null"/>
+
+    </class>
+        
+</library>

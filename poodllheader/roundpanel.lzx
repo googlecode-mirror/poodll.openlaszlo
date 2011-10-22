@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<include href="incubator/roundrect.lzx" />
+	
+	<resource name="icon_resource" >
+        <frame src="consoleicons/chalk_board.png"/>
+        <frame src="consoleicons/equalizer.png"/>
+        <frame src="consoleicons/target.png"/>
+        <frame src="consoleicons/headphones.png"/>
+		<frame src="consoleicons/headphones_delete.png"/>
+		<frame src="consoleicons/television.png"/>
+		<frame src="consoleicons/artwork.png"/>
+		<frame src="consoleicons/canvas_holder.png"/>
+		<frame src="consoleicons/cloud_comment.png"/>
+		<frame src="consoleicons/card.png"/>
+		<frame src="consoleicons/games.png"/>
+		<frame src="consoleicons/process.png"/>
+		<frame src="consoleicons/up.png"/>
+		<frame src="consoleicons/music.png"/>
+		<frame src="consoleicons/interview.png"/>
+		<frame src="consoleicons/pairsession.png"/>
+		<frame src="consoleicons/back.png"/>
+		<frame src="consoleicons/rss.png"/>		
+		<frame src="consoleicons/rss_delete.png"/>
+    </resource>
+	
+	<class name="roundpanel" >
+			
+			<!-- background gradient -->
+			<attribute name="backgroundStartColor" value="0x00FF00" />
+			<attribute name="backgroundStopColor" value="0x00FF00" />
+			<attribute name="borderColor" value="0x00FF00" />
+			
+			<!--  Frame of image resource to use-->
+			<attribute name="iconFrame" />
+		
+			<!-- text to show -->
+			<attribute name="showText"  />
+			
+			<!-- online user count  -->
+			<attribute name="userCount"  />
+			
+			<!-- Other attributes  --> 
+			<attribute name="borderSize" value="2" />
+			
+			<roundrect width="${parent.width}" height="${parent.height}" 
+				backgroundStartColor="${classroot.backgroundStartColor}"
+				backgroundStopColor="${classroot.backgroundStopColor}"
+				borderColor="${classroot.borderColor}"
+				/>
+				
+				
+				<view  width="75" height="75" 
+				x="5" y="5"   
+				resource="icon_resource" frame="${classroot.iconFrame}" stretches="both"  />	
+				<text fontsize="26" thickness="100" fgcolor="0xEEEEEE" x="90" y="30" text="${classroot.showText}"  />
+				<text fontsize="18" thickness="100" fgcolor="0xEEEEEE" x="30" y="100" text="Online Users:"  />
+				<text fontsize="18" thickness="100" fgcolor="0x00EEEE" x="175" y="100" text="${classroot.userCount}"  />
+			
+
+	</class>
+	
+</library>

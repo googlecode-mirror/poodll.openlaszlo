@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<!--
+		Instruction
+		===========
+
+		For the item you want to drag, you need to implement the onmousedown event
+
+		e.g. this textlistitem is now drag-able
+
+		<class name="draggabletextitem" extends="textlistitem">
+			<method event="onmousedown">
+				DragUtil.start(this, this.text);
+			</method>
+		</class>
+
+		To receive this drag object, a view should implement the oninit and onmousetrackup method
+
+		e.g. this <list> below will allow you to drop in the above item
+		<list>
+			<textitem datapath="..." text="..." value="..." />
+
+			<method event="oninit">
+				DragUtil.register(this);
+			</method>
+
+			<method event="onmousetrackup"><![CDATA[
+				var sender = DragUtil.getSender()
+				if (sender) {
+					// do something
+				}
+			</method>
+		</list>
+
+		Optionally, you can implement the onmousetrackover and onmousetrackout to provide extra visual effect
+	-->
+<class name="dragutil" extends="view">
+	<attribute name="__x" type="number" value="0" />
+	<attribute name="__y" type="number" value="0" />
+	<attribute name="__sender" value="null" />
+	<attribute name="opacity" value="0.8" />
+	<attribute name="options" value="ignorelayout: true" />
+	<attribute name="trackgroup" value="null" />
+
+
+
+	<method name="getTrackgroup" args="o">
+		<![CDATA[	
+			while (typeof o != "undefined" && o != null && !(o instanceof lz.windowpanel) && !(o instanceof lz.canvas))
+				o = o.parent
+
+			return o.id || "defaulttrackgroup"
+		]]>
+	</method>
+
+
+	<method name="register" args="sender">
+		<![CDATA[	
+			lz.Track.register(sender, this.getTrackgroup(sender));
+			sender.__dragable = true;
+		]]>
+
+	</method>
+
+	<method name="forcemouseup" args="">
+		<![CDATA[	
+			//necessary to call sometimes because deleting views mid mouse clicks
+			//screws up the delegates. Justin 20090715	
+			this.doMouseUp();
+		]]>
+
+	</method>
+
+	<method name="getsender" args="">
+		<![CDATA[	
+			var o = this.__sender
+
+			var x1 = o.getAttributeRelative("x", canvas)
+			var x2 = x1 + o.width
+			var y1 = o.getAttributeRelative("y", canvas)
+			var y2 = y1 + o.height
+			var mx = canvas.getMouse("x");
+			var my = canvas.getMouse("y");
+
+			if (mx < x1 || mx > x2 || my < y1 || my > y2)
+				return this.__sender
+
+			return null
+		]]>
+
+	</method>
+
+	<method name="droplistitem" args="list,sender">
+		<![CDATA[	
+			if (sender)
+			{
+				if (typeof list.onmousetrackout != "undefined")
+					list.onmousetrackout.sendEvent(); // reset the onmousetrackover effect
+
+				var hilitedItem = null;
+				var node = sender.datapath.p.cloneNode(true)
+
+				for (var i = 0; i < list.getNumItems(); i++)
+				{
+					if (list.getItemAt(i).hilited)
+					{
+						hilitedItem = list.getItemAt(i)
+						break;
+					}
+				}
+
+				if (hilitedItem && hilitedItem != sender && hilitedItem.data != list.data.getLastChild())
+				{
+					sender.datapath.deleteNode();
+					list.data.insertBefore(node, hilitedItem.data || list.data.getFirstChild())
+				}
+				else
+				{
+					list.data.appendChild(node)
+					sender.datapath.deleteNode();
+				}
+			}
+
+
+		]]>
+
+	</method>
+
+	<method name="dropgriditem" args="grid,sender">
+		<![CDATA[	
+			if (sender)
+			{
+				//originally this was list, but I think it should be grid
+				//justin 2009/10/20
+				//if (typeof list.onmousetrackout != "undefined") list.onmousetrackout.sendEvent(); // reset the onmousetrackover effect
+				if (typeof grid.onmousetrackout != "undefined") grid.onmousetrackout.sendEvent(); // reset the onmousetrackover effect
+
+				grid.__dragdropitem = sender
+			}
+
+		]]>
+	</method>
+
+	<method name="__getgridrowtext" args="sender">
+		<![CDATA[
+			var txt = ""
+
+			for (var i=0; i<sender.subviews.length; i++)
+				txt += sender.subviews[i].getText() + "     "
+
+			return txt
+
+		]]>
+	</method>
+
+
+
+
+	<!-- view name="DragItem" height="20" visible="false" opacity="0.8" options="ignorelayout" -->
+		<!-- text name="label" width="100%" -->
+		<dragstate name="dragger"/>
+
+		<!-- AS3 import statements -->  
+	       <switch>  
+	         <when property="$as3">  
+	           <passthrough>  
+	                         import flash.display.*;  
+	                         import flash.geom.*;  
+	           </passthrough>  
+	         </when>  
+	       </switch> 
+
+		<!-- methods -->
+		<method name="start" args="sender, label">
+			this.__x = canvas.getMouse("x");
+			this.__y = canvas.getMouse("y");
+			this.__sender = sender;
+			this.trackgroup=this.getTrackgroup(sender);
+			this.bringToFront();
+			//the getAttributeRelative stuff was not necessary when view became a laszlo object, 
+			//but when it was a javascript global thing, it was needed
+			//in a different use case, this may need to be relooked at Justin 20091026
+			//this.setAttribute("x",sender.getAttributeRelative("x", canvas));
+			//this.setAttribute("y",sender.getAttributeRelative("y", canvas));
+			var xOffset = this.__x - sender.getAttributeRelative("x", canvas);
+			var yOffset = this.__y - sender.getAttributeRelative("y", canvas);
+			var xRelative = sender.getAttributeRelative("x", this.immediateparent);
+			var yRelative = sender.getAttributeRelative("y", this.immediateparent);
+//			this.setAttribute("x",sender.getAttributeRelative("x", this.immediateparent));
+//			this.setAttribute("y",sender.getAttributeRelative("y", this.immediateparent));
+			this.setAttribute("x",xOffset + xRelative);
+			//this should be right, but the boxview screws things
+			//this.setAttribute("y",yOffset + yRelative);
+			this.setAttribute("y",yOffset + yRelative - sender.height);
+
+			
+			Debug.write("senderGetRelX", sender.getAttributeRelative("x", canvas));
+			Debug.write("senderGetRelY", sender.getAttributeRelative("y", canvas));
+			Debug.write("senderGetX", sender.x);
+			Debug.write("senderGetY", sender.y);
+			Debug.write("senderWidth", sender.width);
+			Debug.write("senderHeight", sender.height);
+			this.setAttribute("width",sender.width);
+			this.setAttribute("height",sender.height);
+			this.captureAndCopyView(sender,this);
+			this.setAttribute("visible",true);
+			//this.trackgroup = trackgroup;
+			
+			/*
+			// we replaced this with the call to captureandcopyview Justin 20090711
+			// make this drag item look like the original item
+			//this.setAttribute("bgcolor", sender.getAttribute("bgcolor"));
+
+			// NOTE: depends on the sender class to render different look
+			if (label != null){
+				this.label.setAttribute("text"," " + label);
+			}else if (sender instanceof basegridrow){
+				this.label.setAttribute("text"," " + classroot.__getgridrowtext(sender));
+			}
+			
+			*/
+
+			//this.dele1 = new LzDelegate(this, "doMouseUp", sender, "onmouseup");
+			this.quitDelegate = new LzDelegate(this, "doMouseUp");
+			this.quitDelegate.register(sender,"onmouseup");
+			Debug.write("registered quit delegate"); 
+			
+			this.dragger.apply();
+			lz.Track.activate(this.trackgroup);
+		</method>
+		<method name="doMouseUp"  args="a = null">
+			Debug.write("enteredDoMouseUp");
+			this.quitDelegate.unregisterAll();
+			//this.dele1.unregisterAll();
+			this.dragger.remove();
+			this.setAttribute("visible",false);
+			lz.Track.deactivate(this.trackgroup);
+			classroot.__sender = null
+		</method>
+		<method name="captureAndCopyView" args="sourceView, destinationView">					 
+						<![CDATA[
+
+						// sourceView is the view we are going to capture and copy
+						//
+						var sourceView_mc = sourceView.getMCRef();
+
+						// create the BitmapData object
+						//
+						var x = 0;
+						var y = 0;
+						var w = sourceView.width;
+						var h = sourceView.height;
+						var bitmap = new flash.display.BitmapData(w, h, false);
+
+						// draw the source view into the BitmapData object
+						//
+						var matrix = new flash.geom.Matrix();
+						matrix.translate(-x, -y)
+						var colorTransform = new flash.geom.ColorTransform();
+						var rect = new flash.geom.Rectangle(0, 0, w, h);
+						bitmap.draw(sourceView_mc, matrix, colorTransform, "normal", rect);
+
+						// load the bitmap into a destination view
+						var destinationView_mc = destinationView.getMCRef();
+						if ($as3){
+							var displayBitmap = new Bitmap(bitmap);
+							destinationView_mc.addChild(displayBitmap);
+						}else{
+							destinationView_mc.createEmptyMovieClip("bitmap_mc", 1);						
+							destinationView_mc.bitmap_mc.attachBitmap(bitmap, 1);
+						}
+
+						
+						]]>
+	</method> 
+	<!-- view -->
+	
+</class>
+
+</library>
+
+
+

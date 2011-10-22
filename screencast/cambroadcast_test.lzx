@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+
+	<include href="lz" />
+	<include href="cambroadcast.lzx" />	
+
+	<!-- screencast attributes -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  	
+	<attribute name="broadcastkey" value="lz.Browser.getInitArg('broadcastkey')" />  
+	<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />  
+	<attribute name="mename"  value="lz.Browser.getInitArg('mename')" />
+	<!-- To set a particular camera as default -->
+	<attribute name="prefcam" value="lz.Browser.getInitArg('prefcam')" />
+	<attribute name="prefmic" value="lz.Browser.getInitArg('prefmic')" />
+
+	<!-- Some camera settings-->
+	<attribute name="capturewidth" value="lz.Browser.getInitArg('capturewidth')" />
+	<attribute name="captureheight" value="lz.Browser.getInitArg('captureheight')" />
+	<attribute name="bandwidth" value="lz.Browser.getInitArg('bandwidth')" />
+	<attribute name="picqual" value="lz.Browser.getInitArg('picqual')" />
+	<attribute name="capturefps" value="lz.Browser.getInitArg('capturefps')"  />
+	
+
+	<cambroadcast 
+						name="cbroadcast"
+						red5url="${canvas.red5url}" 
+						broadcastkey="${canvas.broadcastkey}" 
+						capturedevice="${canvas.capturedevice}" 
+						capturesizeindex="${canvas.capturesizeindex}" 
+						coursedataurl="${canvas.coursedataurl}"
+						mename="${canvas.mename}"
+						courseid="${canvas.courseid}"
+						width="325"
+				/>
+
+
+</canvas>
+

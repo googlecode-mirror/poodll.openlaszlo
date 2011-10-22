@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<class name="SendView" extends="window">
+	<attribute name="moderated" setter="setModerated" type="boolean" value="false"/>
+	<attribute name="speaking" setter="setSpeaking" type="boolean" value="false"/>
+	<attribute name="role" setter="setRole"/>
+	<attribute name="streaming" type="boolean" value="false"/>
+	<attribute name="cam" type="boolean" value="true"/>
+
+	<!-- setter for the roomconnection -->
+	<method name="setRoomConnection" args="rtmpConnection">
+		sendStream.setConnection(rtmpConnection);
+		updateMuteAudio();
+	</method>
+
+	<method name="setModerated" args="moderated">
+		Debug.write("sendView: moderated = " + moderated);
+		this.moderated = moderated;
+		setSpeaking(!moderated);	
+		updateMuteAudio();
+	</method>
+	
+	<method name="setSpeaking" args="speaking">
+		Debug.write("sendView: speaking = " + speaking);
+		this.speaking = speaking;
+		updateMuteAudio();
+	</method>
+	
+	<method name="setRole" args="role">
+		Debug.write("sendView: role = " + role);	
+		this.role = role;
+		updateMuteAudio();
+	</method>
+			
+	<simplelayout axis="y" spacing="10"/>
+	
+	<ExtendedMediaStream id="sendStream" type="rtmp" muteaudio="$once{moderated}">
+	</ExtendedMediaStream>
+
+	
+	<videoview type="rtmp" stream="sendStream" name="sendVideoView">	
+		<camera show="${parent.parent.cam}" deviceindex="${parent.parent.cam ? 0 : -1}">
+			<method event="oninit">
+				Debug.write("Camera: " + parent.parent.cam);
+			</method>
+		</camera>
+		
+		<ExtendedMicrophone id="theMic">
+			<method event="oninit">
+				getMicrophone().setRate("11");
+				getMicrophone().level = 50;
+				Debug.write("Microphone init, rate: " + getMicrophone().rate);
+				this._sound.setVolume(0);				
+			</method>
+		</ExtendedMicrophone>
+	</videoview>
+	
+	<view name="buttons">
+		<checkbox id="muteCheckbox" text="Mute" align="left">
+			<method event="onvalue" args="v">
+				<![CDATA[
+					parent.parent.updateMuteAudio();
+				]]>
+			</method>
+		</checkbox>
+		<button name="settings" align="right" onclick="settingsDialog.open()">
+			Settings
+		</button>
+	</view>
+		
+	<!-- starts streaming -->
+	<method name="startStream">
+		<![CDATA[
+			this.streaming = true;
+			sendVideoView._setUrl(parent.parent.url);
+			sendVideoView.cam.startDevice();
+			sendStream.broadcast();
+			updateMuteAudio();
+		]]>
+	</method>
+	
+		<!-- updates the mute state of the stream -->
+	<method name="updateMuteAudio">
+		<![CDATA[
+			if(this.streaming){
+				sendStream._setMuteaudio(muteCheckbox.getValue() || (moderated && role == "invitee" && !speaking));
+			}
+		]]>
+	</method>
+	
+	
+	</class>
+	
+	<modaldialog id="settingsDialog" title="Settings">
+		<simplelayout axis="y"/>
+		<text>Gain:</text>
+		<slider name="gainSlider" value="50">
+			<method event="onvalue" args="v">
+				theMic.getMicrophone().setGain(v);
+				Debug.write("Gain: " + v + " " + theMic.getMicrophone().gain);
+			</method>
+		</slider>
+		
+		<text>Silence Level:</text>
+		<slider name="silenceSlider" value="10">
+			<method event="onvalue" args="v">
+				theMic.getMicrophone().setSilenceLevel(v);
+				Debug.write("SilenceLevel:" + v + " " + theMic.getMicrophone().silenceLevel);
+			</method>
+		</slider>
+		
+		<text>Echo suppression:</text>
+		<radiogroup name="echoGroup">
+			<radiobutton value="true" text="On" selected="true"/>
+			<radiobutton value="false" text="Off"/>
+			<method event="onvalue" args="v">
+				Debug.write("EchSuppBefore: " + theMic.getMicrophone().useEchoSuppression);
+				theMic.getMicrophone().setUseEchoSuppression(v);
+				Debug.write("EchSuppAfter: " + v + " " + theMic.getMicrophone().useEchoSuppression);
+			</method>
+		</radiogroup>
+		
+		<text>Rate:</text>
+		<radiogroup name="rateGroup" height="40" layout="class:wrappinglayout; axis:y">
+			<radiobutton value="5" text="5"/>
+			<radiobutton value="8" text="8"/>
+			<radiobutton value="11" text="11" selected="true"/>
+			<radiobutton value="22" text="22"/>
+			<radiobutton value="44" text="44"/>
+			<method event="onvalue" args="v">
+				Debug.write("Rate before: " + theMic.getMicrophone().rate);
+				theMic.getMicrophone().setRate(v);
+				Debug.write("Rate after: " + theMic.getMicrophone().rate);
+			</method>
+		</radiogroup>
+		<button onclick="parent.close()">Close</button>
+	</modaldialog>
+	
+
+</library>

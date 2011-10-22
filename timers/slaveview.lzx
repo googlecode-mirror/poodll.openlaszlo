@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas allowfullscreen="true">
+	<include href="../utils/poodllfullscreen.lzx"/>
+	<include href="slaveviewlib.lzx" />
+	
+	<!-- attributes passed in -->	
+	<attribute name="fontheight" value="lz.Browser.getInitArg('fontheight')" /> 	
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')"/>  	
+	<attribute name="mename"  value="lz.Browser.getInitArg('mename')" /> 
+	<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />  	
+	<attribute name="uniquename" value="lz.Browser.getInitArg('uniquename')" />
+	<attribute name="showmilli"  value="lz.Browser.getInitArg('showmilli')" /> 
+	<attribute name="headeridtag" value="'slaveview01'" />		
+		
+
+	<slaveview name="theslaveview" red5url="${canvas.red5url}" mename="${canvas.mename}" showmilli="${canvas.showmilli=='true'}" courseid="${canvas.courseid}" uniquename="${canvas.uniquename}" fontheight="${canvas.fontheight}" width="${parent.width}" height="${parent.height}" />	
+		
+</canvas>

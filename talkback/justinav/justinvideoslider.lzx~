@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- X_LZ_COPYRIGHT_BEGIN ************************************************
+* Copyright 2007-2008 Laszlo Systems, Inc.  All Rights Reserved.         *
+* Use is subject to license terms.                                       *
+* X_LZ_COPYRIGHT_END ************************************************** -->
+
+
+<library>
+    <include href="./justinvideovolumebutton.lzx"/>
+    <include href="./justinvideotogglebutton.lzx"/>
+
+	<!-- The funky toggle button was too buggy, but I preserved it for the future -->
+	<resource name="old_play_button">
+	        <frame src="newicons/32/pause_button_up.png"/>
+	        <frame src="newicons/32/pause_button_mo.png"/>
+	        <frame src="newicons/32/pause_button_dn.png"/>
+	        <frame src="newicons/32/play_button_up.png"/>
+	        <frame src="newicons/32/play_button_mo.png"/>
+	        <frame src="newicons/32/play_button_dn.png"/>
+	</resource>
+	<resource name="play_button">
+		<frame src="newicons/32/pause_button_up.png"/>
+		<frame src="newicons/32/play_button_up.png"/>
+	</resource>
+
+
+    <resource name="scroll_track"
+        src="resources/scroll_track.swf"
+    />
+
+    <resource name="thumb"
+        src="resources/thumb.png"
+    />
+
+    <class name="timetext" extends="text">
+        <method name="formatTimeHHMMSS" args="t"> 
+            <![CDATA[
+            if (isNaN(t)) {
+                t = 0;
+            }
+
+            var seconds = 
+                Math.floor(t);
+            var ticks =
+                Math.floor(10 * (t - seconds));
+            var minutes = 
+                Math.floor(seconds / 60);
+
+            seconds = seconds % 60;
+
+            var hours = 
+                Math.floor(minutes / 60);
+
+            minutes = minutes % 60;
+
+            return (
+                ((hours < 10) ? ("0" + hours) : hours) + ":" +
+                ((minutes < 10) ? ("0" + minutes) : minutes) + ":" +
+                ((seconds < 10) ? ("0" + seconds) : seconds));
+
+            ]]>
+        </method>
+		<method name="formatTimeMMSS" args="t"> 
+            <![CDATA[
+            if (isNaN(t)) {
+                t = 0;
+            }
+
+            var seconds = 
+                Math.floor(t);
+            var ticks =
+                Math.floor(10 * (t - seconds));
+            var minutes = 
+                Math.floor(seconds / 60);
+
+            seconds = seconds % 60;
+
+            var hours = 
+                Math.floor(minutes / 60);
+
+            minutes = minutes % 60;
+
+            return (
+                ((minutes < 10) ? ("0" + minutes) : minutes) + ":" +
+                ((seconds < 10) ? ("0" + seconds) : seconds));
+
+            ]]>
+        </method>
+    </class>
+
+    <class name="justinvideoslider" >
+	
+		<attribute name="fontcolor" value="0x000000"/>
+		
+		<attribute name="slidercolor" value="0xa0a0a0"/>
+		
+		<attribute name="progresscolor" value="0x00ff00"/>
+
+		<attribute name="bgcolor" value="0x808080"/>
+		
+        <attribute name="ms" value="null"/>
+
+        <attribute name="value" value="${this.tracking ? this.trackvalue : this.sourcevalue}"/>
+
+        <attribute name="time" value="0"/>
+
+        <attribute name="timedisplay" value="${this.tracking ? this.tracktime : this.time}"/>
+
+        <attribute name="totaltime" value="0"/>
+
+        <attribute name="sourcevalue" value="${this.time / (this.totaltime || 1.0)}"/>
+
+        <attribute name="trackvalue" value="0.0"/>
+
+        <attribute name="tracktime" value="${this.trackvalue * this.totaltime}"/>
+
+        <attribute name="tracking" value="false"/>
+
+        <attribute name="trackingDelegate" value="null"/>
+
+        <attribute name="volume" value="${this.volumebutton.volume}"/>
+
+
+        <handler name="ontracking"><![CDATA[
+            if (this.tracking) {
+                if (this.trackingDelegate == null) {
+                    this.trackingDelegate = 
+                        new LzDelegate(this, "handleTracking");
+                }
+                lz.Idle.onidle.addDelegate(
+                    this.trackingDelegate);
+            } else {
+                lz.Idle.onidle.removeDelegate(
+                    this.trackingDelegate);
+            }
+          ]]>
+        </handler>
+
+
+        <method name="handleTracking" args="ignore = null"><![CDATA[
+            var newValue = this.slider.getTrackValue();
+            if (newValue != this.trackvalue) {
+                this.setAttribute("trackvalue", newValue);
+                this.ms.seek(
+                    this.trackvalue * this.totaltime);
+            }
+          ]]>
+        </method>
+		
+		
+
+        <justinvideotogglebutton name="playbutton"
+            x="0"
+            y="0"
+            width="${parent.height}"
+            height="${parent.height}"
+            resource="play_button"
+            stretches="both"
+	    playing="${classroot.ms.playing &amp;&amp; !classroot.ms.paused}"
+            frameTable="$once{
+                [1, 2, 3, 4, 5, 6]}"
+        >
+ 
+
+           
+			 <handler name="onengaged"><![CDATA[
+					
+					//if we should be playing, lets do that
+					if (this.engaged ){
+						//if we have not started , start
+						if (!classroot.ms.playing){
+							classroot.ms.play(); 
+						//if we are paused, resume	
+						}else if(classroot.ms.paused){
+							classroot.ms.setAttribute("paused", false);
+						}
+					//If we should be paused, lets pause	
+					}else  {
+						if (!classroot.ms.paused){
+							classroot.ms.setAttribute("paused", true);
+						 }
+                    }
+			 
+              ]]>
+            </handler>
+
+			
+	<handler name="onmode" reference="classroot.ms"><![CDATA[
+	            	if (classroot.ms.playing) {
+	                        this.setAttribute("paused", false);
+	                }else{
+	                        this.setAttribute("paused", true);
+	                }			
+              		]]>
+            </handler>
+			
+
+        </justinvideotogglebutton>
+
+
+        <view name="slider"
+            x="${parent.playbutton.x + parent.playbutton.width + 1}"
+            y="${(parent.playbutton.height - this.height) * 0.5}"
+            width="${(parent.timefield.x - this.x) - 2}"
+            height="${parent.height  * 0.5}"
+        >
+
+
+            <attribute name="waspaused" value="true"/>
+
+
+            <handler name="onmousedown"><![CDATA[
+                classroot.setAttribute("tracking", true);
+                this.setAttribute("waspaused", classroot.ms.paused);
+                if (!this.waspaused) {
+                    classroot.ms.setAttribute("paused", true); // pause
+                }
+              ]]>
+            </handler>
+
+
+            <handler name="onmouseup"><![CDATA[
+                classroot.setAttribute("tracking", false);
+                if (!this.waspaused &&
+                    classroot.ms.paused) {
+                    classroot.ms.setAttribute("paused", false); // resume
+                } else {
+                    // FIXME: There is still something funny about dragging 
+                    // the slider while the video is paused. 
+                    // Sometimes, it does not update the
+                    // slider position until you un-pause it. 
+                }
+              ]]>
+            </handler>
+
+
+            <method name="getTrackValue"><![CDATA[
+                var thumbwidth = 
+                    this.thumb.width;
+                var x =
+                    (this.getMouse("x") -
+                         (thumbwidth / 2)) /
+                    Math.max(
+                        1, 
+                        this.width - thumbwidth);
+                //Debug.write("getTrackValue", x);
+                return Math.max(
+                    0.0,
+                    Math.min(
+                        1.0,
+                        x));
+              ]]>
+            </method>
+
+
+            <view name="track"
+                width="${parent.width}"
+                height="${parent.height}"
+                resource="scroll_track"
+                stretches="both"
+            />
+
+
+            <view name="progress"
+                width="${classroot.ms.progress * parent.width}"
+                x="0"
+                y="1"
+                height="${parent.height - 3}"
+                opacity="0.75"
+                bgcolor="${classroot.progresscolor}"
+            />
+
+
+            <view name="shadow"
+                x="${parent.thumb.x + parent.thumb.y}"
+                y="1"
+                width="${parent.width - this.x}"
+                height="${parent.height - 3}"
+                bgcolor="0x000000"
+                opacity="0.5"
+                stretches="both"
+            />
+
+
+            <view name="thumb"
+                x="${Math.round((parent.width - this.width) * classroot.value)}"
+                y="0"
+                width="${this.height}"
+                height="${parent.height}"
+                resource="thumb"
+                stretches="both"
+            />
+
+
+        </view>
+
+
+        <view name="timefield"
+          x="${parent.volumebutton.x - this.width}"
+          y="0"
+          width="140"
+          height="${parent.height}"
+        >
+
+
+          <view name="background"
+              x="0"
+              y="0"
+              width="${parent.width}"
+              height="${parent.height}"
+              bgcolor="${classroot.bgcolor}"
+          />
+
+
+          <timetext name="timefieldtext"
+            resize="true"
+            fontsize="11"
+			fontstyle="bold"
+			fgcolor="${classroot.fontcolor}"
+            x="${(parent.width - this.width) / 2}"
+            y="${(parent.height - this.height) / 2}"
+            text="${
+                formatTimeMMSS(classroot.timedisplay) + 
+                ' / ' + 
+                formatTimeMMSS(classroot.totaltime)}"
+          />
+		  
+
+
+        </view>
+
+
+        <videovolumebutton name="volumebutton"
+            x="${parent.width - this.width}"
+            y="0"
+        />
+
+
+    </class>
+
+
+</library>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+<include href="../poodllheader/consolebutton.lzx"/>
+<include href="colorpalette.lzx" />
+<include href="../talkback/justinav/poodllbigbutton.lzx"/>
+<resource name="reset_button" src="../talkback/justinav/newicons/32/classic_reset_button.png" />
+
+<class name="scribblecpanel" width="100%" height="100%" extends="view">
+
+<!--The pair list we will be controlling -->
+<!--if it is not set, things are, ahem,  meaningless -->
+<attribute name="refscribblepalette" />
+<attribute name="rooms" />
+<attribute name="buttonwidth" value="84" />
+<attribute name="buttonheight" value="90" />
+
+<simplelayout axis="y" spacing="5" />
+
+<!--The view containing the buttons -->
+<view name="buttons" width="${parent.width}">
+	
+	<wrappinglayout axis="x" spacing="5" />
+
+	<consoleiconbutton name="clearButton" text="Clear" iconframe="8" width="${classroot.buttonwidth}" height="${classroot.buttonheight}" >
+		<handler name="onclick">		
+			classroot.refscribblepalette.api.reset();
+			//clear wipes out without clearing the buffer
+			//classroot.refscribblepalette.api.clear();
+			
+			//draws canvas from buffer
+			//classroot.refscribblepalette.api.drawFromDS();
+		</handler>
+	</consoleiconbutton>
+	<consoleiconbutton name="reverseButton" text="GoBack" iconframe="17" width="${classroot.buttonwidth}" height="${classroot.buttonheight}" >
+		<handler name="onclick">		
+			classroot.refscribblepalette.api.goback();			
+		</handler>
+	</consoleiconbutton>
+</view>
+
+<!--The colorpalette-->
+<colorpalette name="thecolorpalette" x="${(parent.width - this.width) /2}" >
+	
+	<handler name="onselectedcolor" >
+		classroot.refscribblepalette.api.changecolor(this.selectedcolor);
+	</handler>
+	<handler name="onselectedpen" >
+		classroot.refscribblepalette.api.changepensize(this.selectedpen);
+	</handler>
+
+</colorpalette>
+
+	<combobox name="roomscombo" width="140" 
+			editable="true" 
+			visible="${classroot.rooms !=null}"
+			x="${(parent.width - this.width) /2}"
+			y="${(parent.height - this.height - parent.reconnectButton.height -5)}"
+			options="ignorelayout">>
+		<handler name="oninit">
+			<![CDATA[
+			Debug.write("classroot rooms", classroot.rooms);
+			if(classroot.rooms != null){
+				var items = classroot.rooms.split('|');
+				for (var i=0; i<items.length;i++){
+					this.addItem(items[i],items[i]);
+				}				
+			}
+			]]>
+		</handler>	
+	</combobox>
+<poodllbigbutton name="reconnectButton" 
+				text="reconnect" 
+				height="40"
+				enabled="true"
+				resourcename="reset_button"
+				width="${parent.thecolorpalette.width}" 
+				x="${(parent.width - this.width) /2}"
+				y="${(parent.height - this.height)}"
+				options="ignorelayout">
+			<handler name="onclick">
+				if(this.enabled){
+					if(classroot.rooms==null){
+						classroot.refscribblepalette.api.reconnect();
+					}else{
+						classroot.refscribblepalette.api.connectSO(parent.roomscombo.value);
+					}
+				}
+			</handler>
+</poodllbigbutton>
+
+
+
+
+</class>
+
+</library>

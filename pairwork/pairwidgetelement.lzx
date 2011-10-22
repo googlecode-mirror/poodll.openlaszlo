@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<include href="incubator/boxview.lzx" />
+	<include href="dragutil/DragUtil.lzx" />
+	<include href="ExtendedText.lzx" />
+
+<!-- this class holds an individual user-->
+<class name="pairwidgetelement" extends="view">
+	<attribute name="username" />  
+	<attribute name="showname" />
+	<attribute name="pictureurl" />	
+	<attribute name="streamname" />
+	<attribute name="odd" />
+	<attribute name="rtmpc" />
+	<attribute name="role" />
+	<attribute name="iscurrentwidget" />
+	<attribute name="showvideo" />
+	<attribute name="picturewidth" type="number" value="45" />
+	<attribute name="pictureheight" type="number" value="45" />
+	<attribute name="widgetChangedDelegate" value="$once{new LzDelegate(this, 'widgetChanged')}" />
+	<attribute name="msStopDelegate" value="$once{new LzDelegate( this, 'handleMsStop')}"/>
+
+	<!-- The datasetindex will be stored  in pos atttribute -->
+	<!-- This is important for syncing streams and pairelements -->	
+	<attribute name="pos" type="number"/>
+	
+	<!-- the utility to user for drag and dropping  -->
+	<attribute name="dragUtil" />
+	<attribute name="myStream" value="null"/>
+	<attribute name="myVideoView" value="null"/>	
+	
+	
+	
+	
+	
+	<!-- The starts playing this elements streams if we are the current widget -->
+ <method name="widgetChanged" args="ignore = null">
+			    <![CDATA[	    
+				Debug.write("entered pairelement, widgetchanged:");
+			    
+			//if we are  not the current widget
+			if (!classroot.iscurrentwidget){
+				if (this.myStream!=null){
+					this.myStream.stop();
+					this.myStream=null;
+					this.myVideoView=null;
+				
+				}
+			//if we are the current widget
+			}else{			
+
+				//this is the new code. How best to stop the stream is undecided						
+				Debug.write("making mediastream for:", this.username);				
+				this.myStream = new lz.mediastream(this, 
+					{'type': 'rtmp',
+					'rtmp': this.rtmpc,
+					'url': this.username
+				  });
+				this.myVideoView = new lz.videoview(this,
+				{'type': 'rtmp',
+				'visible': this.showvideo,
+				'width': Math.max(45,this.pictureheight),
+				'height': Math.max(45,this.picturewidth),
+				'bgcolor': '0xCCCCCC',
+				'stream': this.myStream
+			  });
+
+			//this.myVideoView.setAttribute("stream", this.myStream);
+			this.myStream.play();
+			//this.msStopDelegate.register(this.myStream, "onmode");
+			Debug.write("playing:" , this.username);	
+		}
+				]]>
+ </method>	
+ 
+ <!-- this should be called when the mediastream for this video view is stopped (prior to being reassigned) -->
+  <method name="handleMsStop" args="ignore = null">
+		if (this.myStream !=null &amp;&amp; !this.myStream.playing){
+			this.myVideoView.setAttribute("stream",null);
+			msStopDelegate.unregisterAll();
+		}else if(this.myStream ==null){
+			msStopDelegate.unregisterAll();
+		}
+  </method>
+ <handler name="oninit">
+ <![CDATA[
+		this.widgetChangedDelegate.register(this,"oniscurrentwidget");
+		]]>
+ </handler>
+	<handler name="onmousedown">
+		<![CDATA[
+				this.dragUtil.start(this, this.showname);
+						]]>
+	</handler>
+	<handler name="onmouseup">
+		<![CDATA[
+				Debug.write("mousingup ");
+						]]>
+	</handler>
+		
+	<view name="picturebackground" width="${classroot.picturewidth}" height="${classroot.pictureheight}" bgcolor="0xFFFFCC" />
+	<!-- videoview name="myVideoView" type="rtmp" 
+			visible="${classroot.showvideo=='true' &amp;&amp; (classroot.parent.parent.pos == classroot.parent.parent.parent.currentwidget)}" 
+			width="${classroot.picturewidth}" height="${classroot.pictureheight}" -->
+	<view name="picture" visible="${!classroot.showvideo || !classroot.iscurrentwidget}" 
+					width="${classroot.picturewidth}" height="${classroot.pictureheight}" stretches="both" resource="${classroot.pictureurl}" />
+	<view  name="elementname" height="${classroot.pictureheight}" x="${classroot.picturewidth + 2}" width="100"  bgcolor="${classroot.odd ? '0xFFCCFF' : '0x9999FF'}" >				
+		<text y="${(parent.height - this.height) /2}" text="${classroot.showname}" width="${parent.width}"  multiline="true"/>
+	</view>
+		
+	
+</class>
+
+</library>

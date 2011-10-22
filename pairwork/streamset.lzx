@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+
+<class name="streamset">
+	<!-- the array of streams in the set-->
+	<attribute name="_streams" value="null" />
+	<!-- the widget assoc with a stream in the set-->
+	<attribute name="_stream_widget" value="null" />
+	
+<!-- the rtmp connection to initialise the streams with must be passed in -->	
+	<attribute name="rtmp" value="null" />
+
+<!-- we init streams as they are accessed, for efficiency-->		
+<!-- the streamidex is 0 based, but the pos index of views is 1 based -->	
+<!-- the pos index of views is what is passed in, so we subtract 1-->	
+	<method name="getStream" args="streamindex = 0, widgetid=-1">
+<![CDATA[
+		if (!(_streams[streamindex-1])){
+			addstream(streamindex-1);
+		}
+		
+		//record the holding widget of this stream
+		_stream_widget[streamindex-1]=widgetid;
+		
+		//return the stream		
+		return _streams[streamindex-1];
+		    	]]>
+	</method>
+
+<!-- the calling class uses this method to stop/clear all streams-->
+<!-- the current widget flag is to conditionally kill streams that we should no longer play-->
+<!-- set to a negative number to really kill everything-->
+	<method name="stopStreams" args="currentwidget">
+<![CDATA[
+    for (var i = 0; i < _streams.length; i++)
+    {
+    	Debug.write("_stream_widget[i]:",_stream_widget[i]);
+    	Debug.write("currentwidget:",currentwidget);
+    	if (_stream_widget[i] != currentwidget){
+      	_streams[i].stop();
+      	_streams[i].setAttribute('url','');
+      	_stream_widget[i] == -1;
+      }
+    }	
+    	]]>
+  
+	</method>
+
+<!-- the calling class uses this method to add a stream to the set-->
+	<method name="addstream" args="streamindex = 0">
+<![CDATA[  
+		var newstream = new lz.mediastream(this.parent, 
+    {'type': 'rtmp',
+    'rtmp': rtmp
+  });
+  _streams[streamindex]=newstream;
+  
+  //also init our widget tracker
+  _stream_widget[streamindex]=-1;
+  
+  Debug.write ("new stream added:index:", streamindex);
+  Debug.write ("_streams length:",_streams.length);
+    	    	]]>
+  </method>
+  
+  <!-- Here we init our streams array-->
+  <handler name="oninit">
+<![CDATA[ 
+		_streams=[];
+		_stream_widget=[];    
+       	]]>
+  </handler>
+
+
+</class>	
+</library>
+
+

@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006-2009 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<library>
+<class name="videosettings" extends="view">
+		<attribute name="thecam" />   
+		<!-- camera attributes -->
+	<attribute name="camsize" value="1"/>
+	<attribute name="camfps" value="17" />
+	<attribute name="camaspect" value="true" />
+	<attribute name="camquality" value="0" />
+	<attribute name="cambandwidth" value="16384" />
+	
+	<attribute name="suspendupdates" value="true" />
+	
+	<attribute name="usableDelegate" value="null" />
+	<handler name="oninit">
+		if(this.thecam.usable){
+			Debug.write("called from init");
+			this.initvalues();								
+		}else{
+			this.usableDelegate = new LzDelegate(this,"initsettings");
+			usableDelegate.register(this.thecam,"onusable");
+		}
+	</handler>
+	<method name="initsettings"  args="value=null">
+		Debug.write("called from delegate");
+		this.initvalues();	
+		this.usableDelegate.unregisterAll();		
+	</method>
+	<method name="initvalues" args="ignore=null">
+		Debug.write("initing videosettings dialog values");
+		this.setAttribute("suspendupdates",true);
+		var sizeIndex = 0;
+		Debug.write("this.thecam.width",this.thecam.width);
+		switch (this.thecam.width){
+			case '160': sizeIndex=0;
+					  break;
+			case '320': sizeIndex=1;
+					  break;
+			case '640': sizeIndex=2;
+					  break;
+			case '800': sizeIndex=3;
+					  break;
+			case '1024': sizeIndex=4;
+					  break;
+			case '1280': sizeIndex=5;
+					  break;
+			case '1600': sizeIndex=6;
+					  break;
+
+		
+		}
+			
+		this.setAttribute("camsize",sizeIndex);
+		this.videosettings2.shotsize.selectItem(sizeIndex);
+		Debug.write("sizeindex",sizeIndex);
+		
+		this.setAttribute("cambandwidth", this.thecam.bandwidth);
+		this.setAttribute("camfps", this.thecam.fps);
+		this.setAttribute("camquality", this.thecam.picturequality );
+		this.videosettings2.picqual.selectItem(this.camquality);	
+		Debug.write("picqual",this.camquality);		
+				
+		this.setAttribute("suspendupdates",false);
+		this.commandview.updateCameraQuality();	
+
+	</method>
+	
+	<!-- The layout here -->
+	<simplelayout axis="x" spacing="30" />
+
+		
+    	<view name="videosettings1">
+			<simplelayout axis="y" spacing="5" />			  
+			<text>Bandwidth:</text>
+			<slider name="bandwidthSlider" maxvalue="150000" value="${classroot.cambandwidth}" width="100">
+				<handler name="onvalue" args="v">
+					classroot.commandview.updateCameraQuality();					
+				</handler>
+			</slider>						
+		<text>Camera Frames:</text>
+		<slider name="framesSlider" maxvalue="30" value="${classroot.camfps}" width="100">
+			<handler name="onvalue" args="v">
+				classroot.commandview.updateCameraMode();
+			</handler>
+		</slider>
+		
+</view>
+<view name="videosettings2">	
+<simplelayout axis="y"/>	
+		<text>Picture Quality:</text>
+		<combobox name="picqual" width="130" editable="false" >
+				  <textlistitem text="0 (auto)" value="0" />	
+				   <textlistitem text="1" value="0.1"/>				  
+				  <textlistitem text="2" value="0.2"/>
+				  <textlistitem text="3" value="0.3"/>				  
+				  <textlistitem text="4" value="0.4"/>
+				  <textlistitem text="5" value="0.5"/>				  
+				  <textlistitem text="6" value="0.6"/>
+				  <textlistitem text="7" value="0.7"/>				  
+				  <textlistitem text="8" value="0.8"/>
+				  <textlistitem text="9" value="0.9"/>				  
+				  <textlistitem text="10" value="1"/>
+				  <handler name="onselect" args="v">
+					classroot.commandview.updateCameraQuality();
+				  </handler>
+		</combobox>	
+		
+		<text>Image Size:</text>
+		<combobox name="shotsize"  width="130" editable="false" >
+			<textlistitem text="160x120" value="0"/>
+	        <textlistitem text="320x240" value="1"/>
+	        <textlistitem text="640x480" value="2"/>
+			<textlistitem text="800x600" value="3"/>
+	        <textlistitem text="1024x768" value="4"/>
+			<textlistitem text="1280x1024" value="5"/>
+			<textlistitem text="1600x1200" value="6"/>
+			  <handler name="onselect" args="v">
+				classroot.commandview.updateCameraMode();					
+			</handler>
+        	</combobox>
+		<text>Keep Aspect:</text>
+		<radiogroup name="aspectGroup" height="40" layout="axis:x; inset:10; spacing:10">
+			<radiobutton value="true" text="Yes" selected="${classroot.camaspect}"/>
+			<radiobutton value="false" text="No" selected="${classroot.camaspect == false}"/>
+			<handler name="onvalue" args="v">
+				classroot.commandview.updateCameraMode();
+			</handler>
+		</radiogroup>
+		
+	</view>	
+	<view name="commandview">
+		<method name="updateCameraMode">
+						if (classroot.suspendupdates) {
+							Debug.write("updcammode:video updates suspended");
+							return;
+						}
+		
+						var v = classroot.videosettings2.shotsize.value;
+						if (v == 0){
+							classroot.thecam.setMode(160,120,
+									classroot.videosettings1.framesSlider.value,
+									classroot.videosettings2.aspectGroup.value);	
+						}else if (v == 1 ){								
+							classroot.thecam.setMode(320,240,
+										classroot.videosettings1.framesSlider.value,
+										classroot.videosettings2.aspectGroup.value);
+						}else if (v == 2 ){			
+							classroot.thecam.setMode(640,480,
+										classroot.videosettings1.framesSlider.value,
+										classroot.videosettings2.aspectGroup.value);
+						}else if (v == 3){								
+							classroot.thecam.setMode(800,600,
+										classroot.videosettings1.framesSlider.value,
+										classroot.videosettings2.aspectGroup.value);	
+						}else if (v == 4){								
+							classroot.thecam.setMode(1024,768,
+										classroot.videosettings1.framesSlider.value,
+										classroot.videosettings2.aspectGroup.value);	
+						}else if (v == 5){								
+							classroot.thecam.setMode(1280,1024,
+										classroot.videosettings1.framesSlider.value,
+										classroot.videosettings2.aspectGroup.value);
+						}else if (v == 6){								
+							classroot.thecam.setMode(1600,1200,
+										classroot.videosettings1.framesSlider.value,
+										classroot.videosettings2.aspectGroup.value);
+						}
+						Debug.write("width: " + classroot.thecam.width);
+						Debug.write("height: " + classroot.thecam.height);
+						Debug.write("fps: " + classroot.thecam.fps);
+						Debug.write("aspect: " + classroot.thecam.favorsize);
+						Debug.write("quality: " + classroot.thecam.picturequality);
+						Debug.write("bandwidth: " + classroot.thecam.bandwidth);
+			
+			</method>
+			<method name="updateCameraQuality">
+					if (classroot.suspendupdates) {
+							Debug.write("updcamqual:video updates suspended");
+							return;
+						}
+			
+						var q = Number(classroot.videosettings2.picqual.value);
+						var b = classroot.videosettings1.bandwidthSlider.value;
+						classroot.thecam.setQuality(b,q);
+						Debug.write("Bandwidth:" +  classroot.thecam.bandwidth);
+						Debug.write("Pic Quality:" +  classroot.thecam.picturequality);
+			</method>
+			<method name="updateAll">
+				if (classroot.suspendupdates) {
+							Debug.write("updcamall:video updates suspended");
+							return;
+						}
+			
+				classroot.thecam.setAttribute("show", false);
+				updateCameraMode();
+				updateCameraQuality();
+				classroot.thecam.setAttribute("show", true);
+			
+			</method>
+			
+		</view>
+		<method name="updateAll">
+				this.commandview.updateAll();
+		</method>
+</class>
+
+</library>

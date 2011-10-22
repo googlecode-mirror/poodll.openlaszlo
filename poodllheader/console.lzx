@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas debug="true">
+	<include href="lz"/>
+	<include href="headercommunications.lzx" />
+	<include href="../screencast/screenbroadcast.lzx" />
+	<include href="../jumpmaker/jumpmaker.lzx" />
+	<include href="../pairwork/pairlist.lzx" />
+	<!-- general attributes -->
+	<attribute name="red5url" />  	
+	<attribute name="bcolor"  type="string" />
+	<attribute name="mename" type="string"  />
+	<!-- screencast attributes -->
+	<attribute name="broadcastkey" />  
+	<attribute name="courseid" />  
+	<attribute name="capturedevice" />   
+	<attribute name="capturesizeindex" /> 	
+	<!-- pairwork attributes -->
+	<attribute name="teacherpairstreamname" />
+	<attribute name="pairdataurl" />
+	<attribute name="unassigneddataurl" />
+	<attribute name="offlinedataurl" />
+	
+
+	<!--class that handles communications with client's headers -->
+	<headercommunications name="headercomm" mename="${mename}" courseid="${courseid}" red5url="${red5url}"/>
+
+
+	 <simplelayout inset="10" spacing="10"/>
+	
+	<!--We layout the console panel in function tabs -->
+	<basetabs id="toptabs" y="10" bordersize="5" tabclass="tab">
+
+		<!-- The Pairwork Tab -->
+		<basetabpane id="pairtab" text="Pairs" selected="true" bgcolor="#bdbdbd">
+			 <simplelayout axis="y" spacing="10"/>
+<rtmpstatus rtmpc="${canvas.headercomm.rtmpc}" />	
+			<pairlist red5url="${unescape(red5url)}" 
+				pairdataurl="${pairdataurl}" 
+				teacherpairstreamname="${teacherpairstreamname}" 
+				unassigneddataurl="${unassigneddataurl}" 
+				offlinedataurl="${offlinedataurl}" 
+				headercomm="${canvas.headercomm}"
+
+			/>				
+
+		</basetabpane>
+
+
+		<!-- The Jump to a URL Tab -->
+		<basetabpane id="jumptab" text="Jump" selected="false" bgcolor="#bdbdbd">
+			<jumpmaker headercomm="${canvas.headercomm}" />
+		</basetabpane>	
+
+		<!-- The Screencast Tab -->
+		<basetabpane id="broadcasttab" text="Broadcast" selected="false" bgcolor="#bdbdbd">
+			<screenbroadcast red5url="${unescape(red5url)}" 
+				broadcastkey="${broadcastkey}" 
+				capturedevice="${capturedevice}" 
+				capturesizeindex="${capturesizeindex}" 
+				headercomm="${canvas.headercomm}"
+			/>
+		</basetabpane>
+
+		<!-- The Interview Tab (service not yet implemented-->
+		<basetabpane id="interviewtab" text="Interview" selected="false" bgcolor="#bdbdbd">
+			<button name="sendInterview" text="Interview" height="${parent.height -10 }">
+				<handler name="onclick">
+					canvas.headercomm.sendInterview();
+				</handler>
+			</button>
+		</basetabpane>	
+	
+	</basetabs>
+
+				
+
+
+	
+		
+</canvas>

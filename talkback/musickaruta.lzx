@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+		
+		<include href="lz"/>
+		<include href="justinav/justinvideoplayer.lzx"/>
+		<include href="justinav/flashutils.lzx"/>
+		<include href="justinav/justinvideoslider.lzx"/>
+		<include href="justinav/justinvideotogglebutton.lzx"/>
+		<include href="justinav/poodllbigbutton.lzx"/>
+		<include href="karutalib.lzx"/>
+		
+			<!-- Navigation resources -->
+		<resource name="verysimple_play_button" src="justinav/newicons/48/0_play_button.png" />	
+		<resource name="simple_play_button" src="justinav/newicons/48/1_blue_button.png" />
+		<resource name="simple_record_button" src="justinav/newicons/48/2_red_button.png" />
+		<resource name="rec_playback_button" src="justinav/newicons/48/3_green_button.png" />
+		<resource name="playall_button" src="justinav/newicons/32/4_red_button.png" />
+		
+
+		<!-- Attributes to be set by http paramaters  -->
+		<!-- *************************************************************** -->
+		<!-- The URL of the Red5 server -->
+		<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />
+
+		<!-- The dataset to be used -->
+		<attribute name="descriptor" value="lz.Browser.getInitArg('descriptor')" />
+		
+		<!-- The courseid to be used -->
+		<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />
+
+		<!-- The Control on the page to update with the recorded filename-->
+		<attribute name="updatecontrol"  value="lz.Browser.getInitArg('updatecontrol')" />
+		
+		<!-- The basefile path to be used -->
+		<attribute name="basefile"  value="lz.Browser.getInitArg('basefile')" />
+		
+		<!-- The streamtype to be used -->
+		<attribute name="streamtype"  value="lz.Browser.getInitArg('streamtype')" />	
+		
+
+		<!-- *************************************************************** -->
+
+		
+		<attribute name="playerurl" type="string" value=""/>	
+
+		
+		<!-- A flag to indicate if we have ever played before Justin 20100801-->
+		<!-- We should not seek on a stream that is not playing, the ms flags can't be relied on to indicate that-->
+		<attribute name="firstplay" value="true"/>		
+
+
+		<!-- A flag to let the tabs know they should autoplay the recordings in sequence -->
+		<attribute name="playAll" value="false"/>					
+
+
+		<!-- The video to be played -->
+		<!-- attribute name="videopath"  value="lz.Browser.getInitArg('videopath')" -->		
+		<attribute name="playingtabid" type="string" value=""/>		
+
+		<!-- The background color -->
+		<attribute name="playerbackcolor" value="${this.recording ? 0xCC0000 : 0x9abce5}" />
+		<attribute name="controllerbackcolor" value="${this.recording ? 0xCC0000 : 0x8b72ef}" />
+		
+		<!-- The font color -->
+		<attribute name="playerfontcolor" value="0x550000" />	
+
+		
+		<!--Our RTMP connection -->
+		<rtmpconnection name="autocon" src="${canvas.red5url}" autoconnect="true"/>
+
+		
+		
+
+		
+		<!-- The dataset containing info about the media resource -->
+		<!-- The timestamp is to get us over crap browser caching which should not but does occur-->
+		<dataset name="karutaset" type="http" src="${canvas.descriptor + '?timestamp=' + new Date().getTime()}" request="true"/>
+		<!-- This is a datapointer to allow us to get the URL of the media file for the vid player -->
+		<!-- We also use it to determine http/rtmp streaming -->
+		<datapointer name="dpurl" xpath="karutaset:/karutaset" >
+			<handler name="ondata">
+				//the dataset alwaysinits later than the player, which gets reinited causing confusion.
+				//if the streamtype is http it starts to play earlier than
+				//the data has arrived and jams because it does not have the filename
+				//here we stop the stream so that it will start again 
+				//(otherwise it tries to unpause on an empty streamconstantly
+				//rtmp seems unaffected by this.
+				if (canvas.streamtype=='http'){
+					canvas.topbar.middlecol.player.vscreen.stream.stop();					
+				}
+
+				Debug.write("setting url:");
+				if(canvas.streamtype=='rtmp'){
+					canvas.setAttribute("playerurl", canvas.courseid + "/" + this.xpathQuery('mediapath/text()'));
+					Debug.write("setting url:", canvas.courseid + "/" + this.xpathQuery('mediapath/text()'));
+				}else if(canvas.streamtype=='http'){
+					canvas.setAttribute("playerurl", canvas.basefile + "/" +  this.xpathQuery('mediapath/text()'));				
+					Debug.write("setting url:", canvas.basefile  + "/" +  this.xpathQuery('mediapath/text()'));
+				}else if(canvas.streamtype=='yutu'){
+					canvas.setAttribute("playerurl", this.xpathQuery('mediapath/text()'));				
+					Debug.write("setting url:", this.xpathQuery('mediapath/text()'));
+				}
+				
+				//canvas.topbar.rightcol.toptabs.completeInstantiation();
+
+
+								
+			</handler>
+		</datapointer>
+		
+		
+		<!--Horizontal layout -->
+		<simplelayout axis="x" inset="10" spacing="0"/>
+
+		
+		<view name="topbar">
+			<simplelayout axis="x" spacing="0"/>
+	
+
+			<!-- Left Side -->	
+			<view name="middlecol">
+			
+		
+				<simplelayout axis="y" spacing="10"/>
+				<!-- If we are loading via http, we do not know what flash will see as the current directory, so we use absolute paths, 
+				hence poodllresource crafts url depending on protocol -->						
+				<justinvideoplayer  name="player"  bgcolor="${canvas.playerbackcolor}" 
+					fontcolor="${canvas.playerfontcolor}"  rtmp="${canvas.autocon}" type="${canvas.streamtype}" 
+					url="${canvas.playerurl}" showscreen="true" autoplay="false" width="350" height="300" />
+					
+							
+			</view>
+	
+
+			<!-- Right Side -->	
+			<view name="rightcol">
+				<simplelayout axis="y" spacing="5"/>
+				<attribute name="score" value="0" />
+				<text name="thescore" text="${parent.score}" fontsize="24" />
+				<phrasetext name="thephrase" font="Impact" fontsize="12" visible="false" 
+							datapath="karutaset:/karutaset/phrase"
+							fgcolor="${this.active ? '0xFF0000': '0x00FFFF'}"
+							ms="${canvas.topbar.middlecol.player.vscreen.stream}"
+							text="$path{'@text'}" 
+							start="$path{'@start'}" 
+							activestart="$path{'@activestart'}"
+							duration="$path{'@duration'}"
+							activeduration="$path{'@activeduration'}"	>
+					
+	
+				</phrasetext>
+				
+			<!-- right col -->	
+			</view>
+			
+		<!-- topbar -->
+		</view>
+					
+				
+				
+				
+				
+			
+	
+
+    
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006 Laszlo Systems, Inc. All Rights Reserved.                    *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->
+

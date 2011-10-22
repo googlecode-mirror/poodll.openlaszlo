@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas >
+ <!-- goldstyle name="defaultstyle" isdefault="true" -->
+
+	<include href="VCLibrary.lzx"/>
+	<include href="../talkback/justinav/justinvideoscreen.lzx"/>
+	
+	<!-- The size of the buttons et al. -->
+	<attribute name="iconsize" value="128" />
+	
+	<!-- The URL of the Red5 server -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  	
+
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename" value="lz.Browser.getInitArg('filename')" />
+	
+	<!-- The id of the control on the enclosing HTMLpage to update with the  filename -->
+	<attribute name="updatecontrol" value="lz.Browser.getInitArg('updatecontrol')" />
+
+	<!-- UID for ensuring filenames  are unique-->
+	<attribute name="uid" value="lz.Browser.getInitArg('uid')" />
+	<attribute name="assigName" value="lz.Browser.getInitArg('assigName')" />
+
+	<!-- The course id (parent will pass -1 if there is no course id) -->
+	<attribute name="course" value="lz.Browser.getInitArg('course')" />
+	
+	<!-- vidwidth -->
+	<attribute name="vidwidth" value="lz.Browser.getInitArg('vidwidth')" />
+		
+	<!-- vidheight -->
+	<attribute name="vidheight" value="lz.Browser.getInitArg('vidheight')" />
+
+	<!-- url -->
+	<attribute name="url" value="lz.Browser.getInitArg('url')" />
+
+	
+	<!-- autoplay -->
+	<attribute name="autoplay" value="false" />
+
+	
+
+	
+	<!-- A flag to tell us if we should be overwriting files -->
+	<attribute name="overwritefile" value="true"/>
+
+	<!-- The save name of our file. Added Justin 2009/06/12 -->
+	<attribute name="savefilename" value="''" />
+
+	<!-- Justin 2000/06/12-->
+	<!-- Had many problems keeping this logic central and used with constraints-->
+	<!-- This is not elegant but it works. The job is to start from courseid, if we have one-->
+	<handler name="onfilename">
+		<![CDATA[
+			
+			if (this.course!=-1){
+				this.setAttribute("savefilename", this.course + '/' + this.filename);
+			}else{ 
+				this.setAttribute("savefilename", this.filename);
+			}
+			Debug.write("savefilename", this.savefilename);
+		]]>
+	</handler>
+
+
+	
+	<!-- The server connection -->
+	<rtmpconnection name="rtmpc" src="${unescape(canvas.red5url)}"  autoconnect="true" debug="false">	
+
+		<handler name="oninit" >
+			Debug.write("filename:" + canvas.filename);
+			Debug.write("overwritefile:" + canvas.overwritefile);
+			
+			//Justin 2009/06/12 Now tell me this is not a bug.
+			//If we don't do this, the course attribute is not accessible from the same level
+			//as it was defined. It will say "undefined" no matter canvas this or what.			
+			canvas.setAttribute("course", canvas.course );
+			
+			//This is to ensure that the savefilename gets set in onfilename handler
+			//previously took filename input, but canned it in favor of certainty (Justin 2009/06/14)
+			canvas.setAttribute("filename", "moddata/" + canvas.assigName + "/" + canvas.uid + "/" + Math.floor(Math.random()*100001) + ".flv");
+
+		</handler>
+		    
+		
+	   		
+	</rtmpconnection>
+
+	<!-- The media stream -->
+	<mediastream id="ms" name="ms" rtmp="${canvas.rtmpc}" type="rtmp" url="${canvas.savefilename}" />
+	<mediastream id="playstream" name="playstream" rtmp="${canvas.rtmpc}" type="rtmp" url="${canvas.savefilename}"/>
+
+
+	<!-- The microphone object -->
+	<microphone id="mic" capturing="false" stream="${canvas.ms}">
+		<handler name="oninit">
+			//this.setAttribute("gain",50);
+			this.setAttribute("rate",22);
+			Debug.write("on init Mike Rate: " + this.rate);
+			//Debug.write("on init Mike Gain: " + this.gain);
+			// getMicrophone().setRate("22");
+		</handler>
+	</microphone>
+	
+	
+    <simplelayout inset="10" axis="y" spacing="5"/>
+	
+	 <justinvideoscreen name="jvscreen"
+            width="${canvas.vidwidth}"
+            height="${canvas.vidheight}"
+            visible="true"
+            type="rtmp"
+            autoplay="${canvas.autoplay}"
+            url="${canvas.url}"
+            playvolume="5"
+			rtmp="${canvas.rtmpc}"
+        />	
+	 
+	 <view bgcolor="#bdbdbd" valign="middle" width="${parent.width}" height="${recordButton.height + 8}">
+      <simplelayout axis="x" spacing="5" />    
+        <button id="recordButton" 
+			width="${canvas.iconsize + 10}" height="${canvas.iconsize + 10}"
+			valign="middle" 
+			enabled="${playstream.playing == false}" 
+			onclick="record()">
+        	<method name="record">
+				//if the user is overwriting files
+				if (canvas.overwritefile == "false" || canvas.filename==""){
+					Debug.write("Reassigning filename.");
+					canvas.setAttribute("filename", "moddata/" + canvas.assigName + "/" + canvas.uid + "/" + Math.floor(Math.random()*100001) + ".flv");
+				}
+				if (ms.url != canvas.savefilename){
+					Debug.write("Resetting url attribute to:", canvas.savefilename);
+					Debug.write("ms.url:" + ms.url);
+					ms.setAttribute("url",canvas.savefilename);
+				}
+				Debug.write("ms.url:" + ms.url);
+        		mic.capturing=true;
+        		ms.setAttribute("totaltime", 0);
+        		ms.record();
+				
+				//record the url on the html page
+				//be careful here, we want moodle to save filename NOT savefilename					
+				//moodle will add the courseid to the filename at runtime.
+				var somejs='var cbox = document.getElementById(\"' + canvas.updatecontrol + '\"); ';
+				somejs = somejs + 'cbox.checked=\"true\"; ';
+				somejs = somejs + 'cbox.value=\"' + canvas.filename +'\"; ';							
+				lz.Browser.loadJS(somejs);					
+				
+        	</method>
+			<view id="micicon" width="${canvas.iconsize}" height="${canvas.iconsize}" x="5" y="5" opacity="${1 - ((ms.recording || playstream.playing ) * 0.8)}" resource="icons/128x128/PlainGreen/RecordNormal.png" ></view>	
+        </button>
+		
+		<button id = "playButton" 
+			width="${canvas.iconsize + 10}" height="${canvas.iconsize + 10}" 
+			valign="middle" 
+			enabled="${!(playstream.playing  || ms.recording  || canvas.filename == '')}" 
+			onclick="playRecording()">
+			<method name="playRecording" args="">
+				if (playstream.url != canvas.savefilename){
+						playstream.setAttribute("url",canvas.savefilename);
+				}				
+				Debug.write("playstream.url:" + playstream.url);
+				playstream.setAttribute("paused",false);
+				playstream.play();
+			</method>
+			<view id="speakericon" width="${canvas.iconsize}" height="${canvas.iconsize}"  
+				x="5" y="5" opacity="${1 - (playButton.enabled ? 0 : 0.8)}" 
+				resource="icons/128x128/CircleBordered/VolumePressed.png" >
+			</view>	
+		</button>	
+
+		<button
+			id = "stopButton"
+			width="${canvas.iconsize + 10}" height="${canvas.iconsize + 10}"
+			valign="middle"
+			enabled="${playstream.playing || ms.recording}"
+		        onclick="stopAll()">
+
+       		<method name="stopAll" args="">
+				if (playstream.playing){
+					playstream.stop();
+					Debug.write("stopped playing");
+				}else if (ms.recording){
+					ms.stop();
+					Debug.write("stopped recording");
+				}
+       			       			
+       		</method>
+			<view id="stopicon" width="${canvas.iconsize}" height="${canvas.iconsize}"  x="5" y="5" opacity="${0.2 + ((playstream.playing || ms.recording) ? 0.8 : 0)}" resource="icons/128x128/CircleBordered/Stop1NormalRed.png" ></view>	
+        </button>		
+		
+
+    </view>
+	
+	<view id="recordinfo" >
+			<simplelayout axis="y" spacing="2"/>
+			
+			<view id="infobar">
+				<!-- Talktime -->
+				<simplelayout axis="x" spacing="10" />
+				<rtmpstatus rtmpc="${canvas.rtmpc}" />	
+				<!-- Talktime -->
+				<!-- The maths is just to round the number to 1 place, and not throw errors on zero -->
+				<text text="talk time: " /> 
+				<text text="${Math.round(((1 + canvas.ms.totaltime) * 10) / 10)-1}" />
+			</view>
+			
+			<!-- Indicator for microphone level -->
+			<!-- The miclevel loading 1.8is just from trial and error -->			
+			<view width="184" resource="volumemeter.gif" height="12" bgcolor="black">       
+				<!-- To show micvolume always: mic.level * 1.8  -->
+				<view x="${parent.width - this.width}" y="0"  bgcolor="black" width="${parent.width - ( ms.recording ? mic.level * 1.8 : 0)}" height="12"/>
+			</view>			
+	</view>   
+   
+</canvas>

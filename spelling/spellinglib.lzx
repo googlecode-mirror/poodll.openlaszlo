@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+<include href="../talkback/justinav/poodllaudioplayerclass.lzx"/>
+
+  <resource name="buttonstates">
+      <frame src="play.png"/>
+      <frame src="stop.png"/>
+  </resource>
+    <resource name="greentick" src="accept.png" />
+
+<class name="spelling" extends="view">
+
+
+
+	<attribute name="wordset" value="null" />  
+	<attribute name="totalcards" value="true" />  
+	<attribute name="randomize" value="true"/>
+	<attribute name="textwidth" value="500"/>
+	<attribute name="textheight" value="60"/>
+	<attribute name="fontsize" value="40"/>
+	<attribute name="datadir" />
+	<attribute name="score" value="0" />
+	<attribute name="totalq" value="0" />
+	<attribute name="updatecontrol" value="'none'" />
+
+	<!-- if we have an update control, we update it with the score. Use later? -->
+	<handler name="onscore" >
+		if(this.updatecontrol!='none'){
+			var somejs='var acontrol = document.getElementById(\"' + this.updatecontrol + '\"); ';
+				somejs = somejs + 'acontrol.value=\"' + this.score +'\"; ';							
+				lz.Browser.loadJS(somejs);	
+		}
+	</handler>
+	
+	<method name="fetchMediaPath" args="answertext">
+		<![CDATA[
+			var lastslashindex = this.wordset.lastIndexOf("/"); 
+			if (lastslashindex < 0){			
+				lastslashindex = this.wordset.lastIndexOf("\\"); 
+			}
+			var usedir = this.wordset.substring(0,lastslashindex+1);
+			var usefile= answertext.replace(" ","_") + ".flv";
+			Debug.write("fethcmediafile:" +  usedir + usefile);
+			return usedir + usefile;
+			
+			]]>
+	</method>
+	<!--Our RTMP connection -->
+	<rtmpconnection name="autocon" src="${canvas.red5url}" autoconnect="true">
+		<handler name="onconnect">
+			Debug.write("connected to:" + canvas.red5url);
+		</handler>
+	</rtmpconnection>
+		
+ <poodllaudioplayer visible="false" type="${canvas.protocol}" name="audioplayer"  
+						rtmp="${classroot.autocon}"  />
+	
+	<dataset name="words" type="http"  src="${unescape(classroot.wordset)}" request="true">
+		<handler name="ondata">		
+					<![CDATA[
+				var dp=this.getPointer();
+				dp.selectChild();
+				classroot.totalCards=dp.getNodeCount();
+				Debug.write("Node Count:",classroot.totalCards);
+				
+				//If we are randomizing, do the harlem shuffle man
+				//we defer card instantiation till after this step
+				if (classroot.randomize){
+					//this randomize method is better than the normal one(.. return 0.5 - Math.random() .. ), which doesn't ork so well in laszlo
+					dp.p.childNodes.sort(function() {return (Math.random() > 0.5) ? 1  : -1});
+				}
+ 
+				
+				//allow the cards to instantiate
+				//classroot.outerview.deckview.completeInstantiation();
+				]]>
+		</handler>	
+	</dataset>
+<attribute name="wordorder" value="null" />
+<simplelayout axis="y" spacing="0" />
+<!-- Score View -->
+<view name="scoreborder" bgcolor="0x111111" height="${classroot.textheight+10}" width="${parent.width}">
+	<view name="scoreview" bgcolor="0xFFFFFF" x="1" y="1" width="${parent.width-2}" height="${parent.height-2}" >
+		<text fontsize="${classroot.fontsize}" align="center" name="scoretext" text="${'SCORE: ' + classroot.score + '/' + classroot.totalq}" />
+	</view>
+</view>
+
+<!--Word View Border -->
+<view name="wordBorder" bgcolor="0x111111" height="${classroot.height-200}" width="${classroot.width}" >
+
+<!-- Clip view -->
+<view name="outerview" x="1" y="1" height="${parent.height -2 }"  width="${parent.width -2}" clip="true" bgcolor="0xCCCCFF">
+<scrollbar name="sbar" />
+<view id="deckview" name="deckview" y="0" width="${classroot.textwidth + (2 * classroot.textheight) + 50}"  >
+	<attribute name="selectedq" value="0" />
+	<simplelayout axis="y" spacing="10" />
+	<view  name="wordview"  width="${classroot.textwidth + (2 * classroot.textheight) + 15}" height="${classroot.textheight}" >
+		
+		<datapath xpath="local:classroot.words:/stack/word">			
+			  <handler name="onclones">
+				if (!this['doneDel']) {
+				//set up our show delegate
+				  this.doneDel = new LzDelegate(this, 'showFirstCard');
+				  this.doneDel.register(clones[clones.length - 1], 'oninit');
+				  //register total q count
+				  classroot.setAttribute("totalq",clones.length);
+				}
+			  </handler>
+			  <method name="showFirstCard" args="ignore=null">
+				<![CDATA[									
+					Debug.write("showing card");
+					Debug.write("classroot.textwidth",classroot.textwidth); 
+					Debug.write("classroot.textheight",classroot.textheight); 
+					Debug.write("this.parent.width",this.parent.width); 
+					//	Debug.write("this.width",this.width);
+					//Debug.write("this.answerText",this.answerText); 
+					//Debug.write("position:",this.pos); 
+					//this.parent.parent.sbar.setAttribute("scrolltarget",this.parent.parent);
+				
+					
+				]]>
+			  </method>
+			 
+        </datapath>	
+		
+
+		<simplelayout axis="x" spacing="5" />
+		<attribute name="answerText" value="$path{'@answertext'}"/>
+		<attribute name="soundPath" value="$path{'@soundpath'}"/>
+		<attribute name="pos" value="$path{'position()'}"/>
+		<view name="soundcontrol" focusable="true" visible="${parent.hasfocus}" frame="${classroot.audioplayer.ms.playing ? 2 : 1}" resource="buttonstates" width="${parent.enterBorder.height}" height="${parent.enterBorder.height}" stretches="both" >
+			<handler name="onclick">				
+				if (classroot.audioplayer.ms.playing){
+					//why this song and dance is required ..  i mean really  ..
+					classroot.audioplayer.ms.stop();
+				}else{
+					//Debug.write("writing" + canvas.courseid + "/" + parent.soundPath);
+					if(parent.soundPath){
+						if(canvas.protocol =='rtmp'){
+							classroot.audioplayer.setAttribute("url",canvas.courseid + "/" + parent.soundPath);
+						}else{
+							classroot.audioplayer.setAttribute("url",canvas.datadir + parent.soundPath);
+						}
+					}else{						
+						if(canvas.protocol !='rtmp'){
+							var usesound = classroot.fetchMediaPath(this.parent.answerText);
+							classroot.audioplayer.setAttribute("url",usesound);
+						}			
+					}
+					classroot.audioplayer.ms.play();	
+				}
+				lz.Focus.setFocus(this.parent.enterBorder.enterText); 
+			</handler>
+		</view>
+		<view name="spacer" visible="${!parent.soundcontrol.visible}" width="${parent.soundcontrol.width}" height="${parent.soundcontrol.height}" />
+		
+		<view name="enterBorder" bgcolor="0x111111" height="${classroot.textheight+2}"
+				width="${classroot.textwidth+2}" >
+			<inputtext
+				x="1"
+				y="1"
+				name="enterText" 
+				fgcolor="0x000000" 
+				bgcolor="${this.parent.parent.hasfocus ? Number('0xAAFFAA'):Number('0xFFFFFF')}"
+				fontsize="${classroot.fontsize}" 			
+				height="${classroot.textheight}"
+				width="${classroot.textwidth}">	
+				<handler name="onfocus">
+					Debug.write("position:",this.parent.parent.pos); 
+					deckview.setAttribute('selectedq',this.parent.parent.pos);
+				</handler>					
+			</inputtext>
+		</view>
+		<view name="OK" focusable="false" resource="greentick" width="${parent.enterBorder.enterText.height}" height="${parent.enterBorder.enterText.height}" stretches="both" visible="${parent.enterBorder.enterText.text == parent.answerText}" >
+			<handler name="onvisible">
+				<![CDATA[
+				if(this.visible){
+					classroot.setAttribute("score",classroot.score +1);
+				}else{
+					if(classroot.score > 0){
+						classroot.setAttribute("score",classroot.score -1);	
+					}
+				}
+				]]>
+			</handler>
+		</view>
+		<attribute name="hasfocus" value="${this.parent.selectedq == this.pos}" />
+			
+	
+	</view>
+	<!-- deckview -->
+	</view>
+	<!-- outerview -->
+</view>
+<!-- wordview -->
+</view>
+
+</class>
+
+</library>

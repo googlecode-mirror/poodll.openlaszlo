@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+<include href="incubator/boxview.lzx" />
+<!-- include href="../poodllheader/headercommunications.lzx" -->
+
+<class name="settingspalette" width="100%" height="100%" extends="view">
+
+<!-- our class for communicating with clients -->
+<attribute name="headercomm" />
+<attribute name="phpheadercomm" />
+
+
+<!-- wrap settings option sets-->
+<wrappinglayout axis="x" spacing="20" />
+
+<!--class that handles animated transitions -->
+<animations name="widgettransitions" />
+<animations name="cpaneltransitions" />
+
+
+
+<!-- style options -->
+<boxview name="styleview" title="Gui Style" bordersize="1" width="150" height="100">
+	<simplelayout axis="y" spacing="20" inset="10" />
+
+	<combobox name="stylelist"  editable="false" defaultselection="2">
+		  <textlistitem text="whitestyle" />				  
+		  <textlistitem text="greenstyle"  selected="true" />
+		  <textlistitem text="purplestyle"  />
+		  <textlistitem text="silverstyle"  />
+		  <textlistitem text="goldstyle"  />
+		  <textlistitem text="bluestyle"  />
+	</combobox>
+				
+</boxview>
+
+<!-- Connection Info and Options -->
+<boxview name="connectview" title="Connection" bordersize="1" width="250" height="100">
+			<simplelayout axis="y" inset="20" spacing="10"/>
+			<view>
+				<simplelayout axis="x" inset="20" spacing="20"/>
+				 <rtmpstatus rtmpc="${classroot.headercomm.rtmpc}" />	
+				 <button name="reconnect" text="Standalone Reconnect">
+					<handler name="onclick">
+						classroot.headercomm.rtmpc.connect();
+					</handler>
+				</button>
+			</view>
+			<view>
+				<simplelayout axis="x" inset="20" spacing="20"/>
+				 <rtmpstatus rtmpc="${classroot.phpheadercomm.rtmpc}" />	
+				 <button name="reconnect" text="Moodle Reconnect">
+					<handler name="onclick">
+						classroot.phpheadercomm.rtmpc.connect();
+					</handler>
+				</button>
+			</view>
+</boxview>
+
+<!-- Presence Polling  -->
+<boxview name="presenceview" title="Presence Check Interval" bordersize="1" width="160" height="120">
+	<radiogroup x="5" y="5" height="90" width="160" name="interval" layout="class:wrappinglayout; axis:y">
+                		<radiobutton value="5" text="05 sec"/>
+				<radiobutton value="10" text="10 sec"/>
+		                <radiobutton value="20" text="20 sec" selected="true" />
+		                <radiobutton value="30" text="30 sec" />
+				<radiobutton value="40" text="40 sec" />
+				<radiobutton value="50" text="50 sec" />
+				<radiobutton value="60" text="60 sec"  />
+				<radiobutton value="0" text="No Check"/>
+        </radiogroup>
+</boxview>
+
+<!-- widget animation options -->
+<boxview name="widgetanimview" title="Widget Animations" bordersize="1" width="150" height="100">
+	<simplelayout axis="y" spacing="20" inset="10" />
+
+	<combobox name="animlist"  editable="false" defaultselection="2">
+		 
+		 <textlistitem text="Slide Right" value="${classroot.widgettransitions.anmSlideRight}" />				  
+		  <textlistitem text="Slide Left"  value="${classroot.widgettransitions.anmSlideLeft}" selected="true" />
+		  <textlistitem text="Fade In"  value="${classroot.widgettransitions.anmFadeIn}" />
+		  <textlistitem text="Slide Up" value="${classroot.widgettransitions.anmSlideUp}"  />				  
+		 <textlistitem text="Slide Down"  value="${classroot.widgettransitions.anmSlideDown}"  />
+	</combobox>
+				
+</boxview>
+
+<!-- widget animation options -->
+<boxview name="cpanelanimview" title="CPanel Animations" bordersize="1" width="150" height="100">
+	<simplelayout axis="y" spacing="20" inset="10" />
+
+	<combobox name="animlist"  editable="false" defaultselection="1">
+		 <textlistitem text="Slide Up" value="${classroot.cpaneltransitions.anmSlideUp}" selected="true" />				  
+		 <textlistitem text="Slide Down"  value="${classroot.cpaneltransitions.anmSlideDown}"  />
+		 <textlistitem text="Fade In"  value="${classroot.cpaneltransitions.anmFadeIn}"  />
+		 <textlistitem text="Slide Right" value="${classroot.cpaneltransitions.anmSlideRight}" />				  
+		  <textlistitem text="Slide Left"  value="${classroot.cpaneltransitions.anmSlideLeft}" />
+	</combobox>
+				
+</boxview>
+
+<!-- Presence Polling  -->
+<boxview name="offlineview" title="Show Offline Users" bordersize="1" width="160" height="120">
+	<radiogroup x="5" y="5" height="90" width="160" name="showofflineusers" layout="class:wrappinglayout; axis:y">
+        	<radiobutton value="true" text="Show Offline Users" />
+		<radiobutton value="false" text="Hide Offline Users"  selected="true" />
+        </radiogroup>
+</boxview>
+
+<!-- Client Communications Header Type  -->
+<!-- The value here is ref'ed by memberlists and determines to which header those memberlists send directives (jump etc) to  -->
+<boxview name="clienttypeview" title="Client Communications Type" bordersize="1" width="160" height="120">
+	<radiogroup x="5" y="5" height="90" width="160" name="clienttype" layout="class:wrappinglayout; axis:y">
+        <radiobutton value="${classroot.phpheadercomm}" text="Moodle Page" selected="true" />
+		<radiobutton value="${classroot.headercomm}" text="Standalone Client"  />
+        </radiogroup>
+</boxview>
+
+<!-- Show video in pairs  -->
+<boxview name="showvideopairsview" title="Show Pair Videos" bordersize="1" width="160" height="120">
+	<radiogroup x="5" y="5" height="90" width="160" name="showvideos" layout="class:wrappinglayout; axis:y">
+        	<radiobutton value="true" text="Show partner video"  />
+			<radiobutton value="false" text="Hide partner video" selected="true"   />
+        </radiogroup>
+</boxview>
+</class>
+
+</library>

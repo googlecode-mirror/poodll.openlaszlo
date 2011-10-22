@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- X_LZ_COPYRIGHT_BEGIN ************************************************
+* Copyright 2007-2008 Laszlo Systems, Inc.  All Rights Reserved.         *
+* Use is subject to license terms.                                       *
+* X_LZ_COPYRIGHT_END ************************************************** -->
+
+
+<library>
+    <include href="./justinvideoslider.lzx"/>
+
+    <class name="poodllaudioplayer" extends="view">
+	
+	<attribute name="fontcolor" value="0x000000"/>
+	
+	<attribute name="bgcolor" value="0x808080"/>
+	
+	<attribute name="slidercolor" value="0x808080"/>
+	
+	<attribute name="progresscolor" value="0x00ff00"/>
+		
+    <attribute name="type" type="string" value="http"/>
+
+    <attribute name="url" type="string" value=""/>
+		
+	<attribute name="rtmp" value="null" />
+
+    <attribute name="autoplay" value="false"/>
+		
+	<attribute name="maxHeight" value="20"/>
+
+	<attribute name="minWidth" value="200"/> 
+
+	<attribute name="_sound" value="null"/>
+
+	<attribute name="_volumedel" value="null"/>  
+
+    <!---  the "attached" flash NetStream object
+        @keywords private -->
+    <attribute name="_fstream" value="null"/>
+
+	<handler name="oninit">
+		<![CDATA[
+		//in videoview the onplaying propery is used
+		//but here that fires before the flashstream object has been created, 
+		//so here we use that flashstream object as the trigger.
+	        this._volumedel = new LzDelegate( this, "_attachStream", 
+                                        this.ms, "on_flashstream");
+										
+		//standard autoplay just too finicky
+		//we use this here mainly for embedded players that should just play immed.
+		if (this.autoplay && this.url!='' && !this.ms.playing){
+			Debug.write("calling play:"); 
+			this.ms.play();
+		}
+			]]>							
+	</handler>
+
+
+    <method name="_attachStream" args="ignore=null"> <![CDATA[
+
+	if (this._fstream != this.ms._flashstream) {this._fstream = this.ms._flashstream;}
+          Debug.write('attaching stream fstream:',this._fstream);
+          Debug.write('attaching stream ms_flashstream:', this.ms._flashstream);
+
+		  if (this._fstream == null) {
+			Debug.write('fstream is null: bailing');
+			return;	
+		}
+
+        if ($as3) {
+            this._sound = this._fstream.soundTransform;
+        } else {
+			var mcref = this.getMCRef();
+            mcref.attachAudio(this._fstream); // Doing this so we can control volume.
+            this._sound = new Sound(mcref);
+
+        }
+	//set the initial volume to whatever the dial is at now
+        //this._sound.setVolume(this.vslider.volume * 10.0);
+		this._sound.volume = (this.vslider.volume * 10.0);
+		
+		
+
+        ]]>
+    </method>
+
+
+
+
+	<mediastream id="ms" name="ms" rtmp="${classroot.rtmp}" type="${classroot.type}" autoplay="false" url="${classroot.url}" >
+		<handler name="oninit" >
+			Debug.write("type:", type);
+			Debug.write("classroot.type:", classroot.type);
+			Debug.write("url:", url);
+			Debug.write("classroot.url:", classroot.url);
+		</handler>
+	</mediastream>
+					
+        <justinvideoslider name="vslider" 
+			fontcolor="${parent.fontcolor}"
+			bgcolor="${parent.bgcolor}"
+            width="${classroot.width &lt; classroot.minWidth ? classroot.minWidth : classroot.width}"
+            height="${classroot.height &gt; classroot.maxHeight ? classroot.maxHeight : classroot.height}"
+            ms="${classroot.ms}"
+            time="${classroot.ms.time}"
+            totaltime="${classroot.ms.totaltime}"
+			slidercolor="${classroot.slidercolor}"
+			progresscolor="${classroot.progresscolor}"	>
+
+
+		 <handler name="onvolume"> <![CDATA[
+		        Debug.write("_setPlayVolume", this, volume, parent._sound);
+		        if (this.isinited && 
+		            (this.parent['_sound'] != null)) {
+		                Debug.write('volume is now(b4):', this.parent._sound.volume);
+		            if ($as3) {
+		                Debug.write('setting volume to ', volume);
+		                this.parent._sound.volume = volume;
+		                this.parent.ms._flashstream.soundTransform = this.parent._sound;
+		            } else {
+		                Debug.write('setting volume to ', volume);
+		                this.parent._sound.volume= (volume * 10.0);
+		            } 
+		                Debug.write('volume is now(after):', this.parent._sound.volume);
+		        }
+		        ]]>
+		    </handler>
+
+	</justinvideoslider>		
+       
+
+
+
+    </class>
+
+
+</library>

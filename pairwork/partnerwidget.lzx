@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	<include href="incubator/boxview.lzx" />	
+	<include href="lz"/>
+
+
+<!-- this class holds an individual user-->
+<class name="partnerwidget" extends="view">
+	<attribute name="partnerpictureurl" value="null"/>
+	<attribute name="partnerfullname" value="null"/>
+	<attribute name="partnerusername" value="null"/>
+	<!-- attribute name="rtmpc" value="null" -->
+	
+	<!-- Showvideo was initially a boolean or expression, but it kept evaluating as true here as though it was a string "false"  -->
+	<!-- Wasted almost a day on the problem. Don't try passing around booleans or expressions. sorry. Justrin 20100310  -->
+	<attribute name="showvideo" />
+	<attribute name="pos" type="number"/>
+	
+	<!-- attribute name="partnerstream" value="null" -->
+	<mediastream name="partnerstream" type="rtmp" rtmp="${paircon}" url="${classroot.partnerusername}" />
+
+	<!-- Here we create the stream in script. Declaritively leads to big probelms on replication-->
+	<!-- It appears 1st ms gets created before data arrives, screws up, and screws up events. + Later data instantiates attributes haphazardly and ms couldn't handle it -->
+	<method name="initStream">
+		<![CDATA[
+		Debug.write("entered initStream");
+		/* We no longer use this method, favoring declared versions for better stability during
+			replication and reassignment. Justin 20110311
+		
+		Debug.write("making mediastream for:", this.partnerusername);
+		this.partnerstream = new lz.mediastream(this, 
+				{'type': 'rtmp',
+				'rtmp': paircon,
+				'url': this.partnerusername
+			  });
+		
+	
+		this.partnerpicture.partnervview = new lz.videoview(this.partnerpicture,
+				{'type': 'rtmp',
+				'visible': false,
+				'width': Math.max(160,this.partnerpicture.picture.width),
+				'height': Math.max(120,this.partnerpicture.picture.height),
+				'bgcolor': '0xCCCCCC',
+				'stream': this.partnerstream
+			  });	
+		*/
+		]]>
+	</method>
+
+	<!-- When this is called by calling class at inittime we create our ms  and set up constraints on it-->
+	<method name="initpartner">
+		Debug.write("initing:", this.partnerusername);
+		if (this.partnerusername != null){
+			this.partnerpicture.setupStream();
+		}	
+	</method> 
+
+	<!-- Stop the stream, else it keeps playing after destruction!-->
+	<method name="tidyup">
+		<![CDATA[
+	
+			if (this.partnerstream != null){
+				this.partnerstream.stop();
+				//Debug.write("not stopping");
+			}
+			
+		]]>
+	</method>
+	<method name="destroy">
+		<![CDATA[
+		Debug.write("destroying:", this.partnerusername);
+	//	super.destroy();
+		
+		if (this.partnerpicture.partnervview != null){
+						this.partnerpicture.partnervview.destroy();
+			}
+			
+		if (this.partnerstream != null){
+					this.partnerstream.stop();
+					this.partnerstream.destroy();
+		}	
+		
+		super.destroy();
+	
+			
+		]]>
+	</method>
+
+		<!-- the visual elements of the partner widget -->
+		<simplelayout />
+		<view name="partnername" align="center">
+			<text fontsize="11" text="${classroot.partnerfullname}" />
+		</view>
+		<boxview name="partnerpicture" x="27" xoffset="17" 
+			bordersize="1" bordercolor="0xFF9999"  >
+
+			<view name="picture" visible="true" 
+				stretches="both" 
+				width="${Math.max(160,this.parent.picture.width)}"
+				height="${Math.max(120,this.parent.picture.height)}"
+				resource="${unescape(classroot.partnerpictureurl)}" />
+		
+			<!-- attribute name="partnervview" value="null" -->
+			<videoview name="partnervview" type="rtmp" visible="false" 
+				width="${Math.max(160,this.parent.picture.width)}"
+				height="${Math.max(120,this.parent.picture.height)}"
+				bgcolor="0xCCCCCC"
+				stream="${classroot.partnerstream}"
+				/>
+				
+
+			<!-- more than just animation, this is failsafes for when stream does not init well. -->
+			<handler name="onclick">
+				this.animPartner.doStart();
+				if (classroot.partnerstream==null){
+					this.setupStream();
+				}else{
+					this.kickStartStream();
+				}										
+			</handler>
+			
+			<!-- This is the method for setting up streams, finnicky to get this right., oninit upstairs, call this, setup stream set up constraints, play-->
+			<method name="setupStream">
+					Debug.write("partner username setupstream begin", classroot.partnerusername);
+					Debug.write("partner showvideo setupstream begin", classroot.showvideo=='true');					
+					classroot.initStream();
+					this.applyConstraintMethod("updateBorderColor", [classroot.partnerstream, "playing"]);					
+					this.applyConstraintMethod("updateVideoVisibility", [classroot.partnerstream, "playing", classroot, "showvideo"]);
+					if(!classroot.partnerstream.playing){classroot.partnerstream.play();}
+					lz.Timer.addTimer(new LzDelegate( this, "kickStartStream" ),1000);	
+					Debug.write("partner showvideo setupstream end", classroot.showvideo);
+			</method>
+			
+			<!--  In order to make the border respond to constraints on the mediastream we need to apply it manually-->
+			<!--  Since mediastream is not instantiated before the boxview. -->
+			<!-- Medastream replicates poorly, and causes crashes when attributes are set at arbitrary times, or reuse  of url or play command, so we script its creation here.-->
+			<method name="updateBorderColor" args="ignore=null">
+				this.setAttribute("bordercolor", classroot.partnerstream.playing ? '0x9999FF' : '0xFF9999');
+			</method>     
+			
+			<!-- This constraint shows video if partner is broadcasting and we are set to recieve it-->
+			<method name="updateVideoVisibility" args="ignore=null">
+				<![CDATA[
+					var vidvisible = false;
+					Debug.write("updatingVideoViz shpowvideo", classroot.showvideo);
+					Debug.write("updatingVideoViz playing", classroot.partnerstream.playing);
+					Debug.write("updatingVideoViz playing&&showvideo:", classroot.partnerstream.playing && classroot.showvideo=='true');
+					if (classroot.partnerstream.playing){
+							if(classroot.showvideo=='true'){
+								vidvisible=true;
+								Debug.write("setting vidvisible");
+						}
+					}
+					Debug.write("vidvisible:", vidvisible);
+					this.picture.setAttribute("visible", !vidvisible);
+					this.partnervview.setAttribute("visible", vidvisible);
+					Debug.write("this.partnervview.visible:", this.partnervview.visible);
+					Debug.write("this.picture.visible:", this.picture.visible);
+				]]>
+			</method>  
+			
+			<!--  Check first then play stream. Only called if user clicks widget. -->
+			<method name="kickStartStream" args="ignore=null">
+				//doesn't always start immediately, hence this
+				Debug.write("kickstarting");
+				if (classroot.partnerstream.playing != true){ 
+					Debug.write("rtmp is null:",paircon == null);
+					Debug.write("url is:",classroot.partnerstream.url);
+					classroot.partnerstream.play(); 
+				}else{
+					Debug.write("kickstartnotneeded");
+				}
+			</method>
+			
+
+		  <!-- this animation is not necessary, but later on we might use it to indicate a state of the partner -->
+		  <animatorgroup name="animPartner" process="sequential" start="false">
+			  <animator attribute="rotation" to="-360" relative="true" duration="700"  />
+			  <animator attribute="x" to="5 " relative="true" duration="150"  />
+			  <animator attribute="x" to="-10 " relative="true" duration="300"  />
+			  <animator attribute="x" to="5" relative="true" duration="150" />
+	 	  </animatorgroup>		
+		
+
+		</boxview>
+	</class>
+</library>

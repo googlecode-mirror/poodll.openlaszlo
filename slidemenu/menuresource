@@ -1,0 +1,14 @@
+<menuresource>
+      <slide>
+        <pictureurl>http:4.jpg</pictureurl>
+        <jumpurl target=""></jumpurl>
+      </slide>
+	   <slide >
+        <pictureurl>http:moon.jpg</pictureurl>
+       <jumpurl target="">http://www.excite.com</jumpurl>
+      </slide>
+	   <slide >
+        <pictureurl>http:apollo.jpg</pictureurl>
+       <jumpurl target="_blank">http://www.yahoo.co.jp</jumpurl>
+      </slide>
+</menuresource>

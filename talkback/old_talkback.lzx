@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+		
+		<include href="lz"/>
+		<include href="../42recorder/ExtendedMicrophone.lzx"/>
+		<include href="justinav/justinvideoplayer.lzx"/>
+		<include href="justinav/justinvideoslider.lzx"/>
+		<include href="justinav/justinvideotogglebutton.lzx"/>
+		
+		<!-- The URL of the Red5 server -->
+		<attribute name="red5url" />
+	
+		<attribute name="playingtabid" type="string" value=""/>
+		
+		<!-- The video to be played -->
+		<attribute name="videopath" type="string" value="" />
+		
+		<!-- The dataset to be used -->
+		<attribute name="mediadescriptor" type="string" value="" />
+
+		<!-- The Control on the page to update with the recorded filename-->
+		<attribute name="updatecontrol" type="string" value="" />
+
+		<!-- The background color -->
+		<attribute name="playerbackcolor" value="0x9abce5" />
+		
+		<!-- The font color -->
+		<attribute name="playerfontcolor" value="0x550000" />	
+
+
+		<!-- The names of the characters -->
+		<attribute name="roleAName"  value="${dpurl.xpathQuery('roleAName/text()')}" />
+		<attribute name="roleBName"  value="${dpurl.xpathQuery('roleBName/text()')}" />
+
+		<!-- Record File Settings -->
+		<attribute name="fileroot"  type="string" value="abc" />
+		<attribute name="fileprefix"  type="string" value="def" />
+
+		
+		<!--Our RTMP connection -->
+		<rtmpconnection id="autocon" name="autocon" src="${red5url}" autoconnect="true"/>
+
+		<!-- The recording media stream -->
+	
+		<mediastream id="recms" rtmp="${autocon}" type="rtmp" />
+		<!-- The play media stream for the recording-->
+		<mediastream id="playbackms" rtmp="${autocon}" type="rtmp" />
+	
+
+		<!-- The microphone object -->
+ 	 	<ExtendedMicrophone id="mic" capturing="${player.vslider.volumebutton.mute}" stream="${recms}">
+		    	<handler name="oninit">
+		    		getMicrophone().setRate("22");
+				//getMicrophone().setUseEchoSuppression("false");
+		    	</handler>
+		</ExtendedMicrophone>
+
+
+		<!-- The funky toggle button was too buggy, but I preserved it for the future -->
+		<resource name="old_play_button">
+				<frame src="justinav/newicons/32/pause_button_up.png"/>
+				<frame src="justinav/newicons/32/pause_button_mo.png"/>
+				<frame src="justinav/newicons/32/pause_button_dn.png"/>
+				<frame src="justinav/newicons/32/play_button_up.png"/>
+				<frame src="justinav/newicons/32/play_button_mo.png"/>
+				<frame src="justinav/newicons/32/play_button_dn.png"/>
+		</resource>
+		
+		    <resource name="simple_play_button">
+				<frame src="justinav/newicons/32/pause_button_up.png"/>
+				<frame src="justinav/newicons/32/play_button_up.png"/>
+		    </resource>
+		    <resource name="simple_record_button">
+				<frame src="justinav/newicons/32/pause_button_up.png"/>
+				<frame src="justinav/newicons/32/mic_button_up.png"/>
+		    </resource>
+		    <resource name="rec_playback_button">
+				<frame src="justinav/newicons/32/pause_button_up.png"/>
+				<frame src="justinav/newicons/32/playback_button_up.png"/>
+		    </resource>
+		
+		<!-- The dataset containing info about the media resource -->
+		<dataset name="mediaresource" type="http" src="${mediadescriptor}" request="true"/>
+		<!-- This is a datapointer to allow us to get the URL of the media file for the vid player -->
+		<!-- We also use it to determine http/rtmp streaming -->
+		<datapointer id="dpurl" name="dpurl" xpath="mediaresource:/mediaresource" >
+			<handler name="ondata">
+				//we use the ondata event because late init/set to rtmp wont work
+				// but late init/set to http will
+				//from dataset wil always be late init, so we use this roundabout way
+				if (this.xpathQuery('mediapath/@streamtype') == "http"){
+					player.setAttribute("type","http");
+					
+				}
+			</handler>
+		</datapointer>
+		
+		
+		<!--Horizontal layout -->
+		<simplelayout axis="x" inset="10" spacing="0"/>
+
+		
+		<view name="topbar" id="topbar">
+			<simplelayout axis="x" spacing="0"/>
+
+			<!-- Left Side -->	
+			<view name="leftcol" id="leftcol">
+		
+				<simplelayout axis="y" spacing="10"/>
+				<justinvideoplayer  id="player" name="player"  bgcolor="${canvas.playerbackcolor}" fontcolor="${canvas.playerfontcolor}" rtmp="${autocon}" type="rtmp" 
+					url="${dpurl.xpathQuery('mediapath/text()')}" showscreen="true" autoplay="false" width="350" height="300" />
+
+			</view>
+		
+
+			<!-- Right Side -->	
+			<view name="rightcol" id="rightcol" bgcolor="0x9abce5">
+				<simplelayout axis="y" spacing="10"/>
+				<basetabs id="toptabs" y="10" bordersize="5" tabclass="tab" >
+							
+					
+				   <basetabpane text="$path{'title/text()'}" >
+							  <datapath xpath="mediaresource:/mediaresource/segment">
+						          <handler name="onclones">
+						            if (!this['doneDel']) {
+						              this.doneDel = new LzDelegate(this, 'openTabOne')
+						              this.doneDel.register(clones[clones.length - 1], 'oninit')
+						            }
+						          </handler>
+						          <method name="openTabOne" args="ignore = null">
+						            <![CDATA[
+										toptabs.bar.selectItemAt(0);
+										//parent.subviews[0].setAttribute('selected',true);
+										Debug.write("basetabpane:openTabOne:fired");
+										]]>
+						          </method>
+						        </datapath>
+				   
+							<attribute name="selecttabDelegate" value="$once{new LzDelegate(this, 'selectTabHandler')}" />
+							
+							<handler name="oninit" ><![CDATA[
+								//add delegate to select/deselect this tab according to ms pos
+								lz.Idle.onidle.addDelegate( this.selecttabDelegate);
+								
+								 ]]>
+							</handler>
+							<handler name="onselect" reference="this.tab">
+							<![CDATA[							
+								var ms = player.vscreen.ms;
+								var start = this.datapath.xpathQuery('start/text()');
+								//the previous tab also gets fired (why?)
+								//the current tab condition is to ensure we don't double seek
+								if (ms.paused && this.tab.selected) {
+									ms.seek(start);
+									Debug.write("basetabpane:tabselect:seeking:", start);
+								}
+								 ]]>
+							</handler>
+							<view x="${(0 - rightcol.x - toptabs.x - 8 ) + player.vscreen.x}" y="${0 - rightcol.y - toptabs.y -33}" 
+									width="${player.vscreen.width}" stretches="both" height="${player.vscreen.height}" 
+									name="splashview"  visible="true" 
+									resource="$path{'splash/text()'}"
+									/>
+							
+							
+							<method name="selectTabHandler" args="ignore = null"><![CDATA[
+										var ms = player.vscreen.ms;
+										//Select or not select this tab
+										var end = this.datapath.xpathQuery('end/text()');
+										var start = this.datapath.xpathQuery('start/text()');									
+										if (parseFloat(ms.time) <= parseFloat(end) && parseFloat(ms.time)  >= parseFloat(start)  && ms.playing && !ms.paused){
+											
+											//We do this to make sure tabs are only selected when playing from main player
+											//or when we are not playing
+											var selectable = canvas.playingtabid == ""  || canvas.playingtabid== this.text;
+											this.setAttribute("selected",selectable);
+							
+										}
+							 ]]>
+							</method>
+							
+							<!-- the maim holding view for the right col. The splashes need tobe outside this-->
+							<view name="mainrightholder">
+						
+							<simplelayout axis="y" spacing="20"/>
+							<text bgcolor="0xFFFFFF" name="readtext"  width="320" height="195" datapath="script/text()" />
+							<view name="buttonbar" initstage="late">
+								
+								<attribute name="autoStopDelegate" value="$once{new LzDelegate(this, 'handleAutoStop')}" />
+								<attribute name="playerStopDelegate" value="$once{new LzDelegate(this, 'handleClickOnPlayer')}" />
+								<attribute name="muteHandlerDelegate" value="$once{new LzDelegate(this, 'handleMuting')}" />
+								<attribute name="filename"  type="string" value="" />
+								<attribute name="start"   value="${this.parent.parent.datapath.xpathQuery('start/text()')}" />
+								<attribute name="end"  value="${this.parent.parent.datapath.xpathQuery('end/text()')}" />
+								<attribute name="tabtext"  value="${this.parent.parent.text}" />
+								<attribute name="ms" value="${player.vscreen.ms}" />
+								<attribute name="isRecordable" value="${this.parent.parent.datapath.xpathQuery('@recordable') != 'false'}" />
+								<simplelayout axis="x" 
+									inset="40" 
+									spacing="10"/>								
+								
+								<justinvideotogglebutton name="simpleplaybutton"
+									x="0"
+									y="0"
+									width="30"
+									height="30"
+									resource="simple_play_button"
+									stretches="both"
+									playing="${player.vscreen.ms.playing &amp;&amp; !player.vscreen.ms.paused}"
+									frameTable="$once{[1, 2, 3, 4, 5, 6]}">
+
+
+
+									<handler name="onengaged"><![CDATA[							
+		
+								        	if (!this.parent.ms.playing || this.parent.ms.paused){
+											this.parent.doPlay();
+										}else{
+											this.parent.doStop();
+										}
+
+										  ]]>
+									</handler>			
+
+								</justinvideotogglebutton>
+								
+								<justinvideotogglebutton name="simplerecordbutton"
+									x="0"
+									y="0"
+									width="30"
+									height="30"
+									resource="simple_record_button"
+									stretches="both"
+									visible="${parent.isRecordable}"
+									playing="${player.vscreen.ms.playing &amp;&amp; !player.vscreen.ms.paused}"
+									frameTable="$once{[1, 2, 3,4,5,6]}">
+
+									
+												
+									<handler name="onengaged"><![CDATA[								
+
+								        	if (!this.parent.ms.playing || this.parent.ms.paused){
+											this.parent.doMutePlay();
+											this.parent.doRecord();
+										}else{
+											this.parent.doStop();
+										}
+
+										  ]]>
+									</handler>
+
+								</justinvideotogglebutton>
+								<justinvideotogglebutton name="playrecordingbutton"
+									x="0"
+									y="0"
+									width="30"
+									height="30"
+									visible="${parent.isRecordable}"
+									resource="rec_playback_button"
+									stretches="both"
+									playing="${player.vscreen.ms.playing &amp;&amp; !player.vscreen.ms.paused}"
+									frameTable="$once{[1, 2, 3,4,5,6]}">
+									<handler name="onengaged"><![CDATA[								
+		
+								        	if (!this.parent.ms.playing || this.parent.ms.paused){
+											this.parent.doMutePlay();
+											this.parent.doPlayRecording();
+										}else{
+											this.parent.doStop();
+										}
+
+										  ]]>
+									</handler>
+									
+																
+								</justinvideotogglebutton>
+						             
+							 <radiogroup name="role" visible="${parent.isRecordable}" layout="class:simplelayout; axis:x; spacing:5">>
+						                <radiobutton value="'A'" text="${canvas.roleAName}"/>
+						                <radiobutton value="'B'" text="${canvas.roleBName}"/>
+						         </radiogroup>
+							
+
+							<method name="doPlayRecording"><![CDATA[
+								if(playbackms.url != this.filename){
+									playbackms.setAttribute("url",this.filename);
+									}												
+								if (playbackms.paused) {
+									playbackms.setAttribute("paused",false);
+									}
+								playbackms.play();
+																														
+								  ]]>
+							</method>
+
+							<method name="doMutePlay"><![CDATA[
+																						
+								if (this.ms.paused) {
+									this.ms.setAttribute("paused",false);
+									}
+								this.ms.play();
+									
+								this.ms.seek(this.start);											
+								lz.Idle.onidle.addDelegate(this.autoStopDelegate);	
+								lz.Idle.onidle.addDelegate(this.muteHandlerDelegate);				
+								Debug.write("sought",this.start);									
+								
+								 ]]>
+							</method>
+							<method name="doPlay"><![CDATA[										
+								canvas.playingtabid = this.tabtext;
+								if (this.ms.paused) {
+										//for rtmp streams this is important(pause erroneous)
+										//but for http streams it sucks and starts stream from0 etc
+										if (player.type!="http"){
+											this.ms.setAttribute("paused",false);
+										}
+									}
+								
+								this.ms.play();
+								this.ms.seek(this.start);								
+								
+																			
+								lz.Idle.onidle.addDelegate(this.autoStopDelegate);	
+								this.playerStopDelegate.register(player.vslider.playbutton, "onengaged");	
+								this.playerStopDelegate.register(player.vslider.slider, "onmousedown");	
+								//player.vslider.playbutton.onengaged.addDelegate(this.playerStopDelegate);
+								Debug.write("sought",this.start);									
+								
+								 ]]>
+							</method>
+							<method name="doRecord"><![CDATA[
+								//var tabnumber = this.parent.parent.parent.tabindex;
+								var tabnumber = 1;
+								this.filename = canvas.fileroot + "/" + canvas.fileprefix + "_" 
+									+ tabnumber + "_" + Math.floor(Math.random()*100001) + ".flv";
+								//this.filename = assigName + "_" + uid + "_" + Math.floor(Math.random()*100001) + ".flv";
+								recms.setAttribute("url",this.filename);
+								Debug.write("recms.url:" + recms.url);
+
+								//Set a constraint in decl, to player.volbutton.mute					        		
+								//mic.setAttribute("capturing",true);
+
+					        		recms.setAttribute("totaltime", 0);
+					        		recms.record();
+								Debug.write("started recording");
+								 ]]>
+							</method>
+							<method name="doStop"><![CDATA[
+								
+								this.ms.seek(this.start);	
+								this.ms.setAttribute("paused",true);
+								if (recms.recording){
+										recms.stop();
+										Debug.write("stopped recording");
+								}
+								if (playbackms.playing){
+									//trying to see if stopping improves stability
+									playbackms.stop();
+									//playbackms.setAttribute("paused",true)
+								};
+									//remove delgates, reset flags
+									tidyUp();
+									
+								 ]]>
+							</method>
+							<method name="handleAutoStop" args="ignore = null"><![CDATA[
+	
+									
+								if (parseFloat(this.ms.time) >= parseFloat(this.end)){
+									Debug.write("bingo_time::",this.ms.time);								
+									Debug.write("bingo_end::",this.end);
+									doStop();						
+								}
+								 ]]>
+							</method>
+							<method name="handleClickOnPlayer" args="ignore = null"><![CDATA[	
+									tidyUp();												
+								 ]]>
+							</method>
+							<method name="tidyUp"><![CDATA[
+								//After we have stopped streaming remove delegates and reset flags
+								//player.vslider.playbutton.onengaged.removeDelegate(this.playerStopDelegate);
+								this.playerStopDelegate.unregisterAll();		
+								lz.Idle.onidle.removeDelegate(
+								                    this.autoStopDelegate);
+								lz.Idle.onidle.removeDelegate(
+								                    this.muteHandlerDelegate);
+								canvas.playingtabid = "";
+								Debug.write("reset playintabid");	
+								Debug.write("removed delegates:","playerStopDelegate");		
+								Debug.write("removed delegate:","muteHandler");							
+								Debug.write("removed delegate:","stopHandler");
+								
+							]]>
+							</method>
+
+				<!-- called by delegate, handle recording and muting.  -->
+				<method name="handleMuting" args="ignore = null"><![CDATA[
+				
+					//Mute or not mute the playing audio
+					//we do this by setting the mute attribute, on the player volbutton
+					//the button then sets the vol to zero
+					var mutestart = this.parent.parent.datapath.xpathQuery('speechstart/' + this.role.value + '/text()');								
+					var muteend = this.parent.parent.datapath.xpathQuery('speechend/' + this.role.value + '/text()');
+					if (mutestart != null && muteend !=null){
+						var shouldmute= (parseFloat(this.ms.time) <= parseFloat(muteend) && parseFloat(this.ms.time)  >= parseFloat(mutestart)  && this.ms.playing && !this.ms.paused);
+						var volumeButton = player.vslider.volumebutton;
+						if (volumeButton.mute != shouldmute){
+							Debug.write("shouldmute:",shouldmute);									
+							volumeButton.setAttribute("mute",shouldmute);
+							
+							//We shouldn't record past the mute line, or on playback we 
+							// will hear the non muted audio like a ghost	
+							//I had to put the 0 in, because 
+							//when a stream's pause/play/seek are called, 
+							//ms.time briefly hits 0, and this would stop recording	
+							//**Set a constraint in decl, to player.volbutton.mute//
+							/*								
+							if(!shouldmute && recms.recording && this.ms.time != 0){
+								mic.setAttribute("capturing",false);
+								Debug.write("turned off mic at " + this.ms.time);
+							}
+							*/
+
+						}
+						
+						
+					}
+						
+
+					 ]]>
+				</method>
+
+							
+
+						<!-- end of button bar -->
+						</view>	
+						</view>
+					</basetabpane>
+				</basetabs>
+			<!--End of right col   -->
+			</view>
+
+		<!--End of topbar   -->
+		</view>
+
+
+    
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006 Laszlo Systems, Inc. All Rights Reserved.                    *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->
+

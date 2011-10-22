@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+
+	<include href="spellinglib.lzx"/>
+	<attribute name="wordset" value="lz.Browser.getInitArg('wordset')" />
+		<!-- The URL of the Red5 server -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" /> 
+		<!-- The play protocol to use rtmp or http -->
+	<attribute name="protocol" value="lz.Browser.getInitArg('protocol')" />
+	<!-- courseid -->
+	<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" /> 
+	<!-- data dir url-->
+	<attribute name="datadir" value="lz.Browser.getInitArg('datadir')" />
+	<!-- update control -->
+	<attribute name="updatecontrol" value="lz.Browser.getInitArg('updatecontrol')" />
+	
+	<!-- Sizing Attributes -->
+	<attribute name="textwidth" value="Number(lz.Browser.getInitArg('textwidth'))" />
+	<attribute name="textheight" value="Number(lz.Browser.getInitArg('textheight'))" />
+	<attribute name="fsize" value="Number(lz.Browser.getInitArg('fsize'))" />
+ 	
+	
+	<spelling align="center" fontsize="${canvas.fsize}" updatecontrol="${canvas.updatecontrol ? canvas.updatecontrol : 'none'}" textheight="${canvas.textheight}" textwidth="${canvas.textwidth}" wordset="${unescape(canvas.wordset)}" datadir="${unescape(canvas.datadir)}" height="${canvas.height}" width="${canvas.width}" randomize="false"   />
+</canvas>

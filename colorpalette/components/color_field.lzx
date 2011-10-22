@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<library>
+
+   <resource name="color_box_end" src="images/box_end.swf"></resource>
+   <resource name="color_box_middle" src="images/box_middle.swf"></resource>
+    
+   <resource name="color_button">
+      <!-- first frame MUST be the mouseup state of the button -->  
+      <frame src="images/color_up.swf"></frame>
+      <!-- second frame MUST be the mouseover state of the button -->
+      <frame src="images/color_over.swf"></frame>
+      <!-- third frame MUST be the mousedown state of the button -->
+      <frame src="images/color_down.swf"></frame> 
+      <!-- Ghost -->
+      <frame src="images/color_ghost.swf"></frame>   
+   </resource>
+   
+   <include href="color_picker.lzx"></include>
+
+
+   
+   <class name="colorfield" extends="view">
+      <!-- the width of the field. By default, the height is 22              -->
+      <attribute name="width" value="150"></attribute>
+      <attribute name="height" value="22"></attribute>
+      <attribute name="minimode" value="false" />
+      <!-- contains the current color                                        -->
+      <attribute name="colorval" type="color" value="0x000000" setter="this.setCol(colorval)"></attribute>
+      
+      <!-- contains the current hex value for the current color              -->
+      <attribute name="hex" type="string" value=""></attribute>
+
+      <!-- reference to the colorPicker when loaded, null otherwise          -->
+      <attribute name="colorPickerRef" value="null"></attribute>
+      
+      <!-- delegates for listening to events from the color picker dialog    -->
+      <attribute name="closeDel" value="null"></attribute>
+      <attribute name="colorSelectedDel" value="null"></attribute>
+
+      <!-- Events                                                            -->
+      <event name="oncolorval"></event>
+      
+      <!-- Event Handlers                                                    -->
+      <handler name="ondestroy"><![CDATA[
+         //make sure all of the delegates are freed up
+         this._freeDelegates();
+         
+         //make sure the colorPickerRef is cleaned up
+         this._freeColorPicker();
+         ]]>
+      </handler>
+   
+      <!-- Public Methods                                                    -->
+	  
+	  <method name="returnBaseStr" args="num,base"><![CDATA[
+      //This function accepts a number and desired base value, and then returns a 
+      //string containing the converted value
+
+         var h = "0123456789ABCDEF";
+	 
+         var n1 = Math.floor(num / base);
+         var n2 = num - n1 * base;
+	 
+         if (n1 >= base) {
+            return this.returnBaseStr(n1, base) + h.charAt(n2);
+         } else {
+            return h.charAt(n1) + h.charAt(n2);
+         }
+  
+      ]]>
+   </method>
+	  
+      <method name="setCol" args="val"><![CDATA[
+         //store the color value
+         this.colorval = val;
+         
+         //determine what the Hex string for this color is and store it
+		 if(val==null){
+			this.colorval =0;
+			this.setAttribute('hex', null); 
+				//Debug.write("set to null");			
+		 }else{
+			 var hexStr = returnBaseStr(val, 16);
+			 this.setAttribute('hex', '0x' + hexStr);   
+			//Debug.write("set hex to:", this.hex);	
+		 }
+         
+         //send out the oncolorval event
+         if ( this.oncolorval != null ) this.oncolorval.sendEvent(val); 
+        ]]>
+      </method>
+      
+      <method name="getCol" args="val"><![CDATA[
+         return this.colorval;
+         ]]>
+      </method>
+      
+      <method name="launchColorPicker"><![CDATA[
+         //this method will create an instance of a color picker dialog at the
+         //canvas level, set some delegates to listen to it and then call its
+         //open method
+         
+         //make sure there isn't anything already in the colorPickerRef variable
+         this._freeColorPicker();
+        
+         //create an instance of the color Picker and store it
+         this.colorPickerRef = new lz.colorPicker(canvas);
+         
+         //initialize the delegates
+         this._freeDelegates();
+         
+         if ( this.colorPickerRef != null ) {
+			
+            //create a delegate to listen for the onclose event and call the _colorPickerClosed method
+            this.closeDel = new lz.Delegate(this, '_colorPickerClosed', this.colorPickerRef, 'onclose');
+         
+            //create a delegate to listen for the oncolorselected event and call the _colorSelected method
+            this.colorSelectedDel = new lz.Delegate(this, '_colorSelected', this.colorPickerRef, 'oncolorselected');
+         
+            //open the color picker with the current color value
+            var currentColor = this.colorval;
+            this.colorPickerRef.popopen(currentColor);         
+         }
+         ]]>
+      </method>
+      
+      <!-- private methods                                                   -->
+      <method name="_freeDelegates"><![CDATA[
+         if ( this.closeDel != null ) {
+            this.closeDel.unregisterAll();
+            this.closeDel = null;            
+         }
+         
+         if ( this.colorSelectedDel != null ) {
+            this.colorSelectedDel.unregisterAll();
+            this.colorSelectedDel = null;
+         }         
+         ]]>
+      </method>
+      
+      <method name="_freeColorPicker"><![CDATA[
+         //if the colorPickerRef variable isn't null, clean it up
+         if ( this.colorPickerRef != null ) {
+			// Debug.write("typeof:", typeof this.colorPickerRef);
+            if ( typeof this.colorPickerRef=='object' ) {
+               this.colorPickerRef.destroy();
+               this.colorPickerRef = null;
+            } else {
+               this.colorPickerRef = null;
+            }
+         }      
+         ]]>
+      </method>
+      
+      <method name="_colorPickerClosed" args="modalResult"><![CDATA[
+         //free all of the color picker delegates
+         this._freeDelegates();
+         
+         //free the color picker dialog
+         this._freeColorPicker();
+         ]]>
+      </method>
+      
+      <method name="_colorSelected" args="val"><![CDATA[
+         //set the color
+         this.setAttribute('colorval', val);
+         ]]>
+      </method>
+   
+      <resizelayout axis="x"></resizelayout>
+      
+      <view resource="color_box_end"></view>
+      
+      <view name="content" options="releasetolayout">
+         
+         <view width="100%" resource="color_box_middle" stretches="width"></view>
+         
+         <view name="swatchBorder" width="20" height="15" x="4" y="4" bgcolor="black">
+            <view name="swatch" bgcolor="${classroot.colorval}" width="${parent.width - 2}" height="${parent.height - 2}" x="1" y="1">
+				 <handler name="onclick"><![CDATA[
+					classroot.launchColorPicker();
+					]]>
+				 </handler>
+			</view>
+         </view>
+         
+         <text name="colorLabel" visible="${!classroot.minimode}"  x="35" y="2" width="100%" text="${classroot.hex}" fontsize="12" selectable="true"></text>   
+      
+      </view>
+      
+      <basebutton  resource="color_button" name="colorButton" visible="${!classroot.minimode}">
+      
+         <handler name="onclick"><![CDATA[
+            classroot.launchColorPicker();
+            ]]>
+         </handler>
+      
+      </basebutton>   
+   
+   </class>
+
+</library>

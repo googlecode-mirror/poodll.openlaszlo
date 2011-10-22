@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	
+	<class name="RoomConnection" extends="ExtendedRtmpConnection" autoconnect = "false">
+	
+		<attribute name="client" setter="setClient"/>
+		<attribute name="clientName" setter="setClientName"/>
+		<attribute name="clientId" setter="setClientId"/>
+		
+		
+		<method name="init">
+			
+			super.init();
+		
+			<![CDATA[
+				
+				this._nc.roomJoin = function(clientName){				
+					client.handleRoomJoin(clientName)					
+				}
+				
+				this._nc.newStream = function(streamName, newClientName, Id){
+				
+					Debug.write("RoomConnection new stream with streamName: " + streamName + " clientName " + newClientName + " clientID " + Id);
+				
+					if(!(clientName == newClientName)){
+						client.handleNewStream(streamName, newClientName, Id);
+					}
+				}
+				
+				this._nc.streamClosed = function(uri, name){
+                
+                	Debug.write("Closing stream at " + uri);
+                
+                	client.handleStreamClosed(uri, name);
+                
+                }
+                
+
+		     ]]>
+		</method>
+
+		<method name="getContainer">
+			return this.container;
+		</method>
+		
+		<method name="setClient" args="client">
+			this.client=client;
+		</method>
+		
+		<method name="setClientName" args="clientName">
+			Debug.write("RoomConnection clientName: " + clientName);
+			this.clientName = clientName;
+		</method>
+		
+		<method name="setClientId" args="clientId">
+		
+			this.clientId = clientId;
+		
+		</method>
+		
+		<ExtendedNetRemoteCall id="callInitRoomSession" funcname="initRoomSession">
+			
+	
+			<method name="onStatus" args="info">
+			
+				Debug.write("Status:" + info.code);
+			
+			</method>
+		
+		
+		</ExtendedNetRemoteCall>
+		
+		<!-- Gets the invitor. Returns clientID and name of the invitor -->
+		<ExtendedNetRemoteCall id="callGetInvitor" funcname="getInvitor">
+			<method name="onStatus" args="info">
+			
+				Debug.write("Status:" + info.code);
+			
+			</method>
+			<method name="onResult" args="value">
+				Debug.write("streams:" + value);
+			
+				<![CDATA[
+					if(value.length == 2){
+						client.setInvitor(value[0], value[1]);
+					} else {
+						Debug.write("getInvitor result unexpected array length: " + value.length);
+					}
+				]]>
+			</method>
+
+		</ExtendedNetRemoteCall>
+		
+		<method name="getInvitor">
+
+			callGetInvitor.callRemoteFunction([]);
+		
+		</method>
+		
+		<method event="onconnect">
+		
+			Debug.write("Calling init room session with id: " + this.clientId);
+
+			callInitRoomSession.callRemoteFunction([this.clientId]);
+
+			client.roomConnected();
+
+		</method>
+		
+		
+	</class>
+
+
+</library>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="100%" debug="true" height="100%" >
+
+<!-- Since we are crashing browsers, if you pass in your red5 server url as a parameter, you can save typing after each crash --> 
+<attribute name="red5param" value="lz.Browser.getInitArg('red5')" />
+
+<!-- Setup Connectivity -->  
+<!--rtmp connection and broadcast stream and mike-->
+<rtmpconnection id="mecon" name="mecon" src="${canvas.inputs.red5url.text}" autoconnect="false" />
+<mediastream name="mestream" type="rtmp" rtmp="${canvas.mecon}" />
+<microphone name="themic" capturing="true" />
+
+
+<!--  UI -->  
+<simplelayout axis="y" />
+<rtmpstatus />
+<view name="inputs">
+	<simplelayout axis="x" spacing="5" />
+	<text>Red5 Url:</text>
+	<edittext name="red5url" width="200" bgcolor="0xCCCCCC" text="${canvas.red5param}"/>
+	<button name="connectbutton" text="connect">
+		<handler name="onclick" >
+				canvas.mecon.connect();
+		</handler>
+	</button>
+
+	<!--Select the user you will broadcast as -->
+	<combobox name="selectedrole" shownitems="10" width="160" editable="false" >
+				<textlistitem text="jimbob" />
+				<textlistitem text="johnboy" />
+				<textlistitem text="jason" />
+				<textlistitem text="maryellen" />
+				<textlistitem text="bob" />
+	</combobox>
+
+	<!--Start the broadcast -->
+	<button name="broadcastbutton" text="broadcast">
+		<handler name="onclick" >
+			canvas.mestream.setAttribute("url",parent.selectedrole.value);
+			canvas.mestream.setAttribute("mic",canvas.themic);
+			canvas.mestream.broadcast();
+			Debug.write("started broadcasting:", canvas.mestream.url);
+		</handler>
+	</button>
+
+	<!--Display broadcast status -->
+	<view name="indicatorview">	
+		<text name="broadcasting" visible="${canvas.mestream.broadcasting}" text="${canvas.mestream.url + ': is broadcasting'}"/>	
+	</view>	
+</view>
+
+
+
+	
+	<!--Listen streams  -->
+	<vbox name="listenstreamsview">
+			<view>
+				<text>jimbob</text>
+				<simplelayout axis="x" spacing="5" />
+				<button name="playButton" text="listen" visible="${!parent.parent.jimbobstream.playing}" onclick="parent.parent.jimbobstream.play()"/>
+				<button name="stopButton" text="stop" visible="${parent.parent.jimbobstream.playing}" onclick="parent.parent.jimbobstream.stop()"/>
+			</view>
+			<!-- 
+			<view>
+				<text>johnboy</text>
+				<simplelayout axis="x" spacing="5" />
+				<button name="playButton" text="listen" visible="${!parent.parent.johnboystream.playing}" onclick="parent.parent.johnboystream.play()"/>
+				<button name="stopButton" text="stop" visible="${parent.parent.johnboystream.playing}" onclick="parent.parent.johnboystream.stop()"/>
+			</view>
+			<view>
+				<text>jason</text>
+				<simplelayout axis="x" spacing="5" />
+				<button name="playButton" text="listen" visible="${!parent.parent.jasonstream.playing}" onclick="parent.parent.jasonstream.play()"/>
+				<button name="stopButton" text="stop" visible="${parent.parent.jasonstream.playing}" onclick="parent.parent.jasonstream.stop()"/>
+			</view>
+			<view>
+				<text>maryellen</text>
+				<simplelayout axis="x" spacing="5" />
+				<button name="playButton" text="listen" visible="${!parent.parent.maryellenstream.playing}" onclick="parent.parent.maryellenstream.play()"/>
+				<button name="stopButton" text="stop" visible="${parent.parent.maryellenstream.playing}" onclick="parent.parent.maryellenstream.stop()"/>
+			</view>
+			<view>
+				<text>ben</text>
+				<simplelayout axis="x" spacing="5" />
+				<button name="playButton" text="listen" visible="${!parent.parent.benstream.playing}" onclick="parent.parent.benstream.play()"/>
+				<button name="stopButton" text="stop" visible="${parent.parent.benstream.playing}" onclick="parent.parent.benstream.stop()"/>
+			</view>
+			-->
+
+			<mediastream name="jimbobstream" type="rtmp" rtmp="${mecon}" url="jimbob" />
+			<!--
+			<mediastream name="johnboystream" type="rtmp" rtmp="${mecon}" url="johnboy" />
+			<mediastream name="jasonstream" type="rtmp" rtmp="${mecon}" url="jason" />
+			<mediastream name="maryellenstream" type="rtmp" rtmp="${mecon}" url="maryellen" />
+			<mediastream name="benstream" type="rtmp" rtmp="${mecon}" url="ben" />
+			-->
+		</vbox>
+ 
+
+</canvas>

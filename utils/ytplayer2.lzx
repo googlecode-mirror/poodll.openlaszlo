@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+<switch>	
+	<when property="$as3">
+		<passthrough>
+		     import flash.system.Security;
+		</passthrough>
+	</when>
+</switch>
+<handler name="oninit">
+	Security.allowDomain('http://www.youtube.com');
+</handler>
+<simplelayout axis="y" spacing="10" />
+<view name="chromeless" width="500" height="300" oninit="this.setSource('http://www.youtube.com/apiplayer?version=3')" />
+<view name="embedded" width="500" height="300" />
+
+<button text="load">
+	<handler name="onclick">
+		Debug.write("clicked load");
+		parent.embedded.setSource('http://www.youtube.com/v/bI7O1asi0Gg?version=3','none');
+		parent.embedded.play(true);
+		Debug.write("leaving load");
+		//parent.embedded.setSource('http://www.dogsandhounds.com/v/bI7O1asi0Gg?version=3');
+	</handler>
+</button>
+
+
+<button text="play">
+	<handler name="onclick">
+		Debug.write("clicked play");
+		parent.embedded.getMCRef().player.playVideo();
+		Debug.write("halfway");
+		parent.chromeless.getMCRef().player.playVideo();
+		Debug.write("exiting play");
+	</handler>
+</button>
+
+</canvas>
+
+

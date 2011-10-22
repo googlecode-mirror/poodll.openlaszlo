@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- Library, containing all the includes that are necessary for the video chat -->
+<library>
+
+
+	<include href="ExtendedMediaStream.lzx"/>
+	<include href="ExtendedMicrophone.lzx"/>
+	<include href="ExtendedCamera.lzx"/>
+
+		<!-- include href="InputField.lzx" -->		
+		<!-- include href="SpeakersPanel.lzx" -->
+		<!-- include href="ModeratedRoomConnection.lzx" -->
+		<!-- include href="RoomConnection.lzx" -->
+		<!-- include href="SendView.lzx" -->
+		<!-- include href="ChatClient.lzx" -->
+
+</library>

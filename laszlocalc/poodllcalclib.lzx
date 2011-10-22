@@ -1,0 +1,80 @@
+
+
+<library>
+  <!-- art assets -->
+  <resource name="calc_body" src="./resources/body.png"/>
+  
+  <!-- includes -->
+  <include href="poodllcalccomponents.lzx" />
+  <!-- global variables and functions -->
+  <script><![CDATA[
+  
+        // utility function that finds an item in an array
+        //
+        function isInArray(x, theArray) {
+            var isThere = false;
+            for (var i=0; i<theArray.length; i++) {
+                if (theArray[i] == x) {
+                    isThere = true;
+                }
+            }
+            return isThere;
+        }
+  
+  ]]></script>
+
+<class name="poodllcalc" extends="view" >
+
+  
+  <view name="calculator" resource="calc_body" x="20" y="20">
+    <!-- display -->
+    <calcDisplay name="display"/>
+      <!-- 5 rows of buttons -->
+      <view name="buttons" x="19" y="88">
+        <simplelayout axis="y" spacing="7"/>
+        
+        <!-- row 1 -->
+        <view name="row1" width="100%">
+          <calcButton buttLabel="C" resource="button_red"/>
+          <calcButton buttLabel="/" align="right" labelX="13"/>
+        </view>
+        
+        <!-- row 2 -->
+        <view name="row2">
+          <simplelayout axis="x" spacing="7"/>
+          <calcButton buttLabel="7"/>
+          <calcButton buttLabel="8"/>
+          <calcButton buttLabel="9"/>
+          <calcButton buttLabel="*" labelX="13"/>
+        </view>
+        
+        <!-- row 3 -->
+        <view name="row3">
+          <simplelayout axis="x" spacing="7"/>
+          <calcButton buttLabel="4"/>
+          <calcButton buttLabel="5"/>
+          <calcButton buttLabel="6"/>
+          <calcButton buttLabel="-" labelX="15"/>
+        </view>
+        
+        <!-- row 4 -->
+        <view name="row4">
+          <simplelayout axis="x" spacing="7"/>
+          <calcButton buttLabel="1"/>
+          <calcButton buttLabel="2"/>
+          <calcButton buttLabel="3"/>
+          <calcButton buttLabel="+"/>
+        </view>
+        
+        <!-- row 5 -->
+        <view name="row5">
+          <simplelayout axis="x" spacing="7"/>
+          <calcButton buttLabel="0"/>
+          <calcButton buttLabel="+/-" labelX="1"/>
+          <calcButton buttLabel="." labelX="16"/>
+          <calcButton buttLabel="=" resource="button_grn" labelX="12"/>
+        </view>
+      </view>
+  </view>
+</class>
+</library>

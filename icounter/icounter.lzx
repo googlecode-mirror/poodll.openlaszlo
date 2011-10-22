@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+
+
+<canvas width="100%" height="100%" bgcolor="0xEEEEEE">
+
+
+<include href="../talkback/justinav/poodllbigbutton.lzx"/>
+<resource name="add_button" src="../talkback/justinav/newicons/32/classic_add_button.png" />
+
+<view  align="center" valign="middle" id="main" width="99%" height="99%" bgcolor="0xDDDDDD">	
+	 
+<attribute name="picsourceCAMERA" value="1" />
+<attribute name="picsourceLIBRARY" value="0" />
+ 
+<method name="getPicture" args="sourcetype">
+	this.output.setAttribute("text","options");
+     var options = { quality: 10 };
+     this.output.setAttribute("text","sourcetype");
+     if (sourcetype != undefined) {
+          options["sourceType"] = sourcetype;
+     }
+     this.output.setAttribute("text","getpicture");
+     // if no sourceType specified, the default is CAMERA 
+     navigator.camera.getPicture(callback.getPictureSuccess, null, options);
+     this.output.setAttribute("text","called get picture");
+</method>
+
+ 
+
+	
+	<simplelayout axis="y" spacing="10"/>
+	
+	<poodllbigbutton text="takepicture" height="40"
+			resourcename="'add_button" width="100%" >
+		
+		<handler name="onclick">
+			//parent.phonegapGetPicture();
+			//camera.getPicture();
+			main.getPicture(main.picsourceLIBRARY);
+			
+		</handler>
+	</poodllbigbutton>
+	<poodllbigbutton text="changeme" height="40"
+			resourcename="'add_button" width="100%" >
+		<handler name="onclick">
+			switch(this.text){
+				case "changeme" : this.setAttribute("text","changeyou");
+						break;
+				case "changeyou" : this.setAttribute("text","changeme");
+						break;						
+				
+			}
+		</handler>
+	</poodllbigbutton>
+
+	<poodllbigbutton text="Get my position" onclick="navigator.geolocation.getCurrentPosition(callback.geoCallbackSuccess, callback.geoCallbackFailure)" height="40"
+			resourcename="'add_button" width="100%" />
+	
+	<text name="output" width="100%" height="60" bgcolor="0xCCCCCC" />
+	
+	
+ </view>
+ 
+ <node id="callback">
+        	<method name="geoCallbackSuccess" args="position">
+        		navigator.notification.alert("Lat: " + position.coords.latitude + " / Long: " + + position.coords.longitude);
+        	</method>
+        	<method name="geoCallbackFailure" args="">
+        		navigator.notification.alert("Geoposition could not be loaded");
+        	</method>
+        	<method name="getPictureSuccess" args="imagedata">
+        		alert("getpic success");
+         	</method>
+         </node>
+
+</canvas>
+
+

@@ -1,0 +1,129 @@
+<!-- 
+  Implements a simple calculator 
+  Written by Aaron Abelard / Bitmechanics.com
+-->
+<class name="calculator" extends="view" width="185" height="200" bgcolor="#CCCCCC">
+
+	<view id="mycalc" width="${immediateparent.width-25}" y="10" x="10">
+		<simplelayout axis="y" spacing="10"/>
+
+		<attribute name="lastTotal" value="0"/>
+		<attribute name="currentTotal" value="0"/>
+		<attribute name="currentAction" value="false"/>
+		<attribute name="hasDecimal" value="false"/>
+		<attribute name="didCompute" value="false"/>
+			
+		<view name="inputbox" width="${mycalc.width}">
+			<edittext name="display" width="${mycalc.width-25}" 
+				x="${(mycalc.width/2)-(this.width/2)}" text="${mycalc.currentTotal}"/> 
+		</view>
+	
+		<view name="keyrow1" width="170" x="${(mycalc.width/2)-(this.width/2)}">
+			<simplelayout axis="x" spacing="5"/>
+			<button text=" 7 " width="30" height="30" onclick="mycalc.handleNumber(7);"/>
+			<button text=" 8 " width="30" height="30" onclick="mycalc.handleNumber(8);"/>
+			<button text=" 9 " width="30" height="30" onclick="mycalc.handleNumber(9);"/>
+			<button text=" / " width="30" height="30" onclick="mycalc.handleAction('divide');"/>
+			<button text="1/x" width="30" height="30" onclick="mycalc.handleAction('oneover');"/>
+		</view>
+		<view name="keyrow2" width="170" x="${(mycalc.width/2)-(this.width/2)}">
+			<simplelayout axis="x" spacing="5"/>
+			<button text=" 4 " width="30" height="30" onclick="mycalc.handleNumber(4);"/>
+			<button text=" 5 " width="30" height="30" onclick="mycalc.handleNumber(5);"/>
+			<button text=" 6 " width="30" height="30" onclick="mycalc.handleNumber(6);"/>
+			<button text=" * " width="30" height="30" onclick="mycalc.handleAction('multiply');"/>
+			<button text=" % " width="30" height="30" onclick="mycalc.handleAction('modulus');"/>
+		</view>
+		<view name="keyrow3" width="170" x="${(mycalc.width/2)-(this.width/2)}">
+			<simplelayout axis="x" spacing="5"/>
+			<button text=" 1 " width="30" height="30" onclick="mycalc.handleNumber(1);"/>
+			<button text=" 2 " width="30" height="30" onclick="mycalc.handleNumber(2);"/>
+			<button text=" 3 " width="30" height="30" onclick="mycalc.handleNumber(3);"/>
+			<button text=" - " width="30" height="30" onclick="mycalc.handleAction('subtract');"/>
+			<!-- button text=" 1/x " width="30" height="30" onclick="mycalc.handleAction('oneover');"/ -->
+			<button text=" C " width="30" height="30" onclick="mycalc.handleAction('clear');"/>
+		</view>
+		<view name="keyrow4" width="170" x="${(mycalc.width/2)-(this.width/2)}">
+			<simplelayout axis="x" spacing="5"/>
+			<button text=" 0 " width="30" height="30" onclick="mycalc.handleNumber(0);"/>
+			<button text=" +/- " width="30" height="30" onclick="mycalc.handleAction('sign');"/>
+			<button text=" . " width="30" height="30" onclick="mycalc.handleAction('decimal');"/>
+			<button text=" + " width="30" height="30" onclick="mycalc.handleAction('add');"/>
+			<button text=" = " width="30" height="30" onclick="mycalc.handleAction('equal');"/>
+		</view>
+	
+		<method name="updateDisplay">
+			mycalc.inputbox.display.setAttribute('text', mycalc.currentTotal ); 
+			mycalc.inputbox.display.updateText();
+		</method>
+
+		<method name="handleNumber" args="num">
+			if( !mycalc.currentTotal || mycalc.didCompute ) {
+				mycalc.currentTotal = num;
+			} else {
+				mycalc.currentTotal = mycalc.currentTotal + "" + num;
+			}
+			mycalc.didCompute = false;
+			updateDisplay();
+			Debug.write('handleNumber', num);
+		</method>
+
+		<method name="handleAction" args="action">
+			switch( action ) {
+				case "clear":
+					Debug.write('clear');
+					mycalc.lastTotal = "0";
+					mycalc.currentTotal = "0";
+					mycalc.hasDecimal = false;
+					mycalc.currentAction = false;
+					break;
+				case "decimal":
+					Debug.write('got decimal');
+					if( !mycalc.hasDecimal ) {
+						mycalc.currentTotal += ".";
+					}
+					mycalc.hasDecimal = true;
+					break;
+				case "sign":
+					Debug.write('sign');
+					mycalc.currentTotal = mycalc.currentTotal * -1;
+					break;
+				case "equal":
+					Debug.write('equation: ',mycalc.currentAction);
+					switch( mycalc.currentAction ) {
+						case "add":
+							mycalc.currentTotal = parseFloat( mycalc.lastTotal ) + parseFloat( mycalc.currentTotal );
+							break;
+						case "subtract":
+							mycalc.currentTotal = parseFloat( mycalc.lastTotal ) - parseFloat( mycalc.currentTotal );
+							break;
+						case "divide":
+							mycalc.currentTotal = parseFloat( mycalc.lastTotal ) / parseFloat( mycalc.currentTotal );	
+							break;
+						case "multiply":
+							mycalc.currentTotal = parseFloat( mycalc.lastTotal ) * parseFloat( mycalc.currentTotal );	
+							break;
+						case "modulus":
+							mycalc.currentTotal = parseFloat( mycalc.lastTotal ) % parseFloat( mycalc.currentTotal );	
+							break;
+					}
+					myCalc.didCompute = true;
+					myCalc.currentAction = false;
+					break;
+				case "oneover":
+					Debug.write('One over X');
+					mycalc.currentTotal = 1 / parseFloat( mycalc.currentTotal );
+					break;
+				default:
+					Debug.write('Default handler: ',action);
+					mycalc.lastTotal = mycalc.currentTotal;
+					mycalc.hasDecimal = false;
+					mycalc.currentTotal = "0";
+					mycalc.currentAction = action;
+					break;
+			}
+			updateDisplay();
+		</method>
+
+	</view>
+</class>

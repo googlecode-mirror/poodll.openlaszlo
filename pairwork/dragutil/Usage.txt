@@ -1,0 +1,9 @@
+				<myGrid id="..." datapath="..." oninit="DragUtil.register(this)">
+					//
+					// your columns...
+					//
+					//
+					<method event="onmousetrackup">
+						DragUtil.dropGridItem(this, DragUtil.getSender())
+					</method>
+				</myGrid>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006-2009 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<library>
+<class name="audiosettings" extends="view">
+
+	<!-- Reference to the PoodLL Microphone -->
+	<attribute name="themic" />   
+	
+	
+		
+	<attribute name="suspendupdates" value="true" />	
+	<attribute name="usableDelegate" value="null" />
+	<handler name="oninit">
+		if(this.themic.usable){
+			Debug.write("called from init");
+			this.initvalues();								
+		}else{
+			this.usableDelegate = new LzDelegate(this,"initsettings");
+			usableDelegate.register(this.themic,"onusable");
+		}
+	</handler>
+	<method name="initsettings"  args="value=null">
+		Debug.write("called from delegate");
+		this.initvalues();	
+		this.usableDelegate.unregisterAll();
+		
+	</method>
+	<method name="initvalues" args="ignore=null">
+		Debug.write("initing audiosettings dialog values");
+		this.setAttribute("suspendupdates",true);
+
+		this.audiosettings1.gainview.gainSlider.setAttribute("value", this.themic.gain);
+		this.audiosettings1.silenceview.silenceSlider.setAttribute("value", this.themic.silencelevel);
+		this.audiosettings2.rateview.rateGroup.setAttribute("value", this.themic.rate);
+		this.audiosettings2.echoview.echoGroup.setAttribute("value", this.themic.echosuppression);
+		this.audiosettings2.loopbackview.loopbackGroup.setAttribute("value", this.themic.loopback);
+				
+				
+		this.setAttribute("suspendupdates",false);
+	</method>
+
+	 	<simplelayout axis="x" spacing="30" />
+
+		<view name="audiosettings1"  >
+			<simplelayout axis="y" spacing="5" />
+			<view name="gainview">
+				<simplelayout axis="y" spacing="5"/>
+				<text>Audio Gain:</text>
+				<slider name="gainSlider" value="50" width="100">
+					<handler name="onvalue" args="v">
+						//classroot.themic.getMicrophone().setGain(v);
+						if (v) {
+							classroot.themic.setAttribute("gain",v);
+							Debug.write("Gain: " +  classroot.themic.gain);
+						}
+					</handler>
+				</slider>
+			</view>
+			<view name="silenceview">
+				<simplelayout axis="y" spacing="5"/>
+				<text>Silence Level:</text>
+				<slider name="silenceSlider" value="10" width="100">
+					<handler name="onvalue" args="v">
+							if (v) {
+								classroot.themic.setAttribute("silencelevel",v);
+								Debug.write("SilenceLevel:"  + classroot.themic.silencelevel);
+							}
+					</handler>
+				</slider>
+			</view>
+		</view>
+
+		<view name="audiosettings2" >
+			<simplelayout axis="y" spacing="5"/>
+			<view name="echoview">
+					<simplelayout axis="y"/>
+					<text>Echo suppression:</text>
+					<radiogroup name="echoGroup" defaultselection="${classroot.themic.echosuppression ? 0 :1 }" layout="class:simplelayout; axis:x; spacing:10">
+						<radiobutton value="true" text="On" />
+						<radiobutton value="false" text="Off"/>
+						<handler name="onvalue" args="v">
+							Debug.write("EchSuppression Before: " + classroot.themic.echosuppression);
+							classroot.themic.setAttribute("echosuppression",v);
+							Debug.write("EchoSuppression After: " + classroot.themic.echosuppression);
+						</handler>
+					</radiogroup>
+			</view>
+			
+			<view name="loopbackview">
+					<simplelayout axis="y"/>
+					<text>Loopback(mic->phones):</text>
+					<radiogroup name="loopbackGroup" defaultselection="${classroot.themic.loopback ? 0 :1 }" layout="class:simplelayout; axis:x; spacing:10">
+						<radiobutton value="true" text="On" />
+						<radiobutton value="false" text="Off" />
+						<handler name="onvalue" args="v">
+							Debug.write("Loopback Before: " + classroot.themic.loopback);
+							classroot.themic.setAttribute("loopback",v);
+							Debug.write("EchoSuppression After: " + classroot.themic.loopback);
+						</handler>
+					</radiogroup>
+			</view>
+			
+			<view name="rateview">
+					<simplelayout axis="y"/>	
+					<text>Audio Rate:</text>
+					<radiogroup name="rateGroup" height="40" defaultselection="${classroot.themic.rate==5 ? 0 : (classroot.themic.rate==8 ? 1 : (classroot.themic.rate==11 ? 2 : (classroot.themic.rate==22 ? 3 : 4)))}" layout="class:wrappinglayout; axis:y">
+						<radiobutton value="5" text="5"/>
+						<radiobutton value="8" text="8"/>
+						<radiobutton value="11" text="11"/>
+						<radiobutton value="22" text="22" />
+						<radiobutton value="44" text="44"/>
+						<handler name="onvalue" args="v">
+						Debug.write("v before: " + v);
+							Debug.write("Rate before: " + classroot.themic.rate);
+							Debug.write("dev Rate before: " + classroot.themic.getmic().rate);
+							classroot.themic.setAttribute("rate",v);
+							Debug.write("Rate after: " + classroot.themic.rate);
+							Debug.write("dev Rate after: " + classroot.themic.getmic().rate);
+						</handler>
+					</radiogroup>
+			</view>
+		</view>
+
+</class>
+
+</library>

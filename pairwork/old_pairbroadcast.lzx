@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas debug="false" width="100%" height="100%" >
+
+<attribute name="mename" />    
+<attribute name="themname" /> 
+<attribute name="themfullname" /> 
+<attribute name="thempictureurl" /> 
+<attribute name="red5url" />   
+
+<!-- The server connection -->
+  <rtmpconnection name="autocon" src="${unescape(red5url)}" autoconnect="true"/>   
+  <mediastream name="mestream" type="rtmp">
+	<microphone name="mic" capturing="true"/>   
+  </mediastream>
+  <mediastream name="themstream" type="rtmp" />
+   <simplelayout/>
+   <rtmpstatus/>  
+	<view name="viewmyname" >
+		<text fontsize="12" text="My Name:" />
+		<edittext x="120" name="myname" fontsize="12" text="${mename}" width="450" />  
+	</view>
+	<view name="viewtheirname" >
+		<text fontsize="12" text="Their Name:" />
+		<edittext x="120" name="theirname" fontsize="12" text="${themname}" width="450"  />  
+	</view>
+   <button text="Begin" >
+        <handler name="onclick">		
+			mestream.setAttribute("url",mename);
+			themstream.setAttribute("url",themname);
+			Debug.write("mestream.url:" + mestream['url']);
+			Debug.write("themstream.url:" + themstream['url']);
+			mestream.broadcast();
+	        themstream.play();
+        </handler>
+    </button>
+	<button text="Stop" >
+        <handler name="onclick">		
+			mestream.setAttribute("url",mename);
+			themstream.setAttribute("url",themname);
+			mestream.stop();
+	        themstream.stop();
+        </handler>
+    </button> 	
+
+
+ 
+</canvas>

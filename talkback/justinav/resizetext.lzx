@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas debug="true" >
+    
+  <class name="mytextclass" extends="text" >
+
+
+
+   
+	<handler name="onfontsize" >
+		Debug.write("setting font size");
+
+      </handler>
+  </class>
+  
+  <view>
+    <simplelayout axis="y" spacing="10" />
+    
+    <button text="Let it 'grow'" onclick="txt.grow.doStart()" />
+    <button text="Let it 'shrink'" onclick="txt.shrink.doStart()" />
+    
+    <mytextclass id="txt" fontsize="8" text="Hello World!" >
+      <animator name="grow" attribute="fontsize" to="26" duration="1000" start="false" motion="easeboth" />
+      <animator name="shrink" attribute="fontsize" to="8" duration="1000" start="false" motion="easeboth" />
+      
+      
+    </mytextclass> 
+  </view>
+  
+</canvas>

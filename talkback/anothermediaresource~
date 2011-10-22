@@ -1,0 +1,34 @@
+
+<mediaresource>
+	  <mediapath>audio_success_01/conversation.mp3</mediapath>
+      <segment>
+	    <splash>http:./splash1.jpg</splash>
+		<mutestart>14</mutestart>
+        <muteend>15</muteend>
+        <start>12</start>
+        <end>16</end>
+		<speech>Is this seat taken?</speech>
+		<title>1. Hello</title>
+      </segment>
+	  <segment>
+		<splash>http:./splash2.jpg</splash>
+        <start>16.2</start>
+        <end>19.5</end>
+		<speech>Where are you going?</speech>
+		<title>2. Vancouver</title>
+      </segment>
+	  <segment>
+		<splash>http:./splash3.jpg</splash>
+        <start>20</start>
+        <end>24.8</end>
+		<speech>Really? Vancouver is beautiful.</speech>
+		<title>3. It's beautiful.</title>
+      </segment>
+	  <segment>
+		<splash>http:./splash4.jpg</splash>
+        <start>25</start>
+        <end>30</end>
+		<speech>Your hometown? It's mine, too.</speech>
+		<title>4. Me too.</title>
+      </segment>
+</mediaresource>

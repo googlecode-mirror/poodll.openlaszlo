@@ -1,0 +1,78 @@
+﻿ <stack frontfgcolor="0xDDDDDD" frontbgcolor="0x0000FF" backfgcolor="0x000000" backbgcolor="0xDDDDDD">
+	<card>
+		<front fontsize="24" type="text"><img src="me.jpg" /> Hometown</front>
+		<back fontsize="24" type="text">ホームtown</back>                
+	</card>
+	<card>
+        <front fontsize="24" innerheight="0.8" type="text"><![CDATA[<img src="me.jpg" />]]></front>
+        <back fontsize="24" type="text">計算機</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">scientist</front>
+        <back fontsize="24" type="text">科学者</back>		
+    </card>
+	<card>
+        <front fontsize="24" type="text">favorite</front>
+        <back fontsize="24" type="text">一番好きな</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">striped</front>
+        <back fontsize="24" type="text">縞々</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">musician</front>
+        <back fontsize="24"  type="text">音楽家</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">apologize</front>
+        <back fontsize="24" type="text">あやまる</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">Blouse</front>
+        <back fontsize="24" type="text">ブラウス</back>                
+     </card>
+	<card>
+        <front fontsize="24" type="text">flowered</front>
+        <back fontsize="24" type="text">花をつけた</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">forgive</front>
+        <back fontsize="24" type="text">許す</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">convenient</front>
+        <back fontsize="24" type="text">便利</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">metal</front>
+        <back fontsize="24" type="text">金属</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">language</front>
+        <back fontsize="24" type="text">言葉</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">volunteer</front>
+        <back fontsize="24" type="text">ボランティア</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">plaid</front>
+        <back fontsize="24" type="text">格子柄</back>                
+    </card>
+		<card>
+        <front fontsize="24" type="text">department store</front>
+        <back fontsize="24" type="text">デパート</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">stationery</front>
+        <back fontsize="24" type="text">文房具</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">meditate</front>
+        <back fontsize="24" type="text">沈思黙考する</back>                
+    </card>
+	<card>
+        <front fontsize="24" type="text">boss</front>
+        <back fontsize="24" type="text">社長のような雇い主</back>                
+    </card>
+ </stack>

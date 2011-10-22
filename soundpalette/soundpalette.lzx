@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+<class name="soundpalette" width="100%" height="100%" extends="view">
+
+<dataset name="sounds">
+	<sounds>
+		<sound name="Beep" filename="sounds/censoredbeep.mp3" />
+		<sound name="Bell" filename="sounds/churchbell.mp3" />
+		<sound name="Applause" filename="sounds/applausesmall.mp3" />
+		<sound name="Smash" filename="sounds/breakwindow.mp3" />
+		<sound name="Buzz" filename="sounds/buzzthru.mp3" />
+		<sound name="Laugh" filename="sounds/cannedlaugh2.mp3" />
+		<sound name="Doorbell" filename="sounds/doorbell.mp3" />
+		<sound name="Crazy" filename="sounds/clowncomedy.mp3" />
+		<sound name="Fanfare" filename="sounds/fanfare3.mp3" />
+		<sound name="Horn" filename="sounds/foghorn.mp3" />
+		<sound name="Whee" filename="sounds/grow.mp3" />
+		<sound name="Eeehw" filename="sounds/shrink.mp3" />
+		<sound name="Yes" filename="sounds/pinbellwin.mp3" />
+		<sound name="Gun" filename="sounds/singlegunshot.mp3" />
+		<sound name="Drum" filename="sounds/snaredrumroll.mp3" />
+		<sound name="Sax" filename="sounds/saxophone.mp3" />
+		<sound name="Lion" filename="sounds/lion.mp3" />
+		<sound name="Rooster" filename="sounds/rooster.mp3" />
+		<sound name="Sheep" filename="sounds/sheep.mp3" />
+		<sound name="Duck" filename="sounds/duckquack.mp3" />
+		<sound name="Elephant" filename="sounds/elephant.mp3" />
+		<sound name="Cat" filename="sounds/catmeow.mp3" />		
+	</sounds>
+</dataset>
+
+<view name="buttonview" width="${parent.width}" >
+	<wrappinglayout axis="x" spacing="20" />
+	<!-- button datapath="local:classroot.sounds:/sounds/sound"  text="$path{'@name'}" onclick="this.play()" resource="$path{'@filename'}" -->		
+	<button datapath="local:classroot.sounds:/sounds/sound" width="70" height="50" text="$path{'@name'}"  >
+		<attribute name="soundpath" value="$path{'@filename'}" />
+		<handler name="onclick" >	
+			this.setSource(this.soundpath);
+		</handler>
+	</button>
+</view>
+
+</class>
+
+</library>

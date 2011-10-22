@@ -1,0 +1,22 @@
+<canvas>
+	<rtmpconnection id="autocon" name="autocon" src="rtmp://192.168.11.215/poodle" autoconnect="true" />
+	<simplelayout axis="x" spacing="10" />
+	<view>
+	<simplelayout axis="y" spacing="10" />
+	<text>http</text>
+    <videoplayer name="htmlplayer" bgcolor="0x9abce5" type="http" url="chickensouprice.flv" autoplay="false" width="300" height="200" />
+    </view>
+	<view>
+	<simplelayout axis="y" spacing="10" />
+	<text>rtmp</text>
+	<videoplayer name="rtmpplayer"  bgcolor="0x9abce5" fontcolor="0x550000" rtmp="${canvas.autocon}" type="rtmp" url="other/ymcaoriginal.flv" showscreen="true" autoplay="false" width="300 " height="200 " />
+	</view>
+
+    
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006 Laszlo Systems, Inc. All Rights Reserved.                    *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->
+

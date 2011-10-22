@@ -1,0 +1,6 @@
+<videos>
+<video videoname="Guy Cat" playertype="rtmp" url="5/guycat.flv"/>
+<video videoname="Bridgestone" playertype="rtmp" url="5/tvcommercials/bridgestone.flv"/>
+<video videoname="Vim" playertype="rtmp" url="5/vim.flv"/>
+<video videoname="Martin Luther" playertype="rtmp" url="5/martinluther.flv"/>
+</videos>

@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+    <include href="visualslider.lzx" />	
+	<include href="lz"/>
+	
+	<!-- Sample Dataset of a menu add request="true" type=http to load at runtime -->
+	<!-- dataset name="menuresource"  src="menuresource.xml" proxied="false" -->
+	<attribute name="bcolor"  value="lz.Browser.getInitArg('bcolor')" /> 
+	<attribute name="slidewidth" value="lz.Browser.getInitArg('slidewidth')" /> 
+	<attribute name="slideheight" value="lz.Browser.getInitArg('slideheight')" /> 
+	<attribute name="mename" value="lz.Browser.getInitArg('mename')" /> 
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" /> 
+	<!--Admin user flag -->
+	<attribute name="am" value="lz.Browser.getInitArg('am')" /> 
+	
+
+    <view width="${canvas.width}" height="${canvas.height}" bgcolor="${canvas.bcolor}" stretches="both" />
+	<!-- view width="200" height="150" bgcolor="${bcolor}" stretches="both" -->
+    <visualslider width="${canvas.width}" height="${canvas.height}" name="slider1" opacity="1" circular="true" timerms="0">
+		<!-- visualsliderview  datapath="menuresource:/menuresource/slide"  bordersize="0" paddingsize="0" originalwidth="${slidewidth - (this.paddingsize * 2) - (this.bordersize *2)}" originalheight="${slideheight- (this.paddingsize * 2) - (this.bordersize *2)}"  shadow="false" -->
+		<visualsliderview  bordersize="0" paddingsize="0" originalwidth="${canvas.slidewidth - (this.paddingsize * 2) - (this.bordersize *2)}" originalheight="${canvas.slideheight- (this.paddingsize * 2) - (this.bordersize *2)}"  shadow="false">
+            
+			  <!-- view name="menupic" width="${parent.width}" resource="$path{'pictureurl/text()'}" height="${parent.height}"  stretches="both" -->
+			 <view name="menupic" width="${parent.width}" resource="logo.png" height="${parent.height}"  stretches="both" />
+
+			<handler name="onclick">						
+					if (parent.currentslide != this.slidenumber){
+						parent.slideTo(this.slidenumber);
+					}else{
+					
+						//var url = this.datapath.xpathQuery('jumpurl/text()');
+						//if(url.length > 0){
+							//var target = this.datapath.xpathQuery('jumpurl/@target');
+							var url = '/';
+							var target = '';
+							Debug.write('url',url);
+							Debug.write('target',target);
+							lz.Browser.loadURL(url,target);
+						//}						
+					}
+			</handler>
+        </visualsliderview>         
+	   <visualsliderview contentbgcolor="0xFFFFFF" paddingsize="5" originalwidth="${canvas.slidewidth - (this.bordersize * 2)}" originalheight="${canvas.slideheight - (this.bordersize * 2)}" shadow="false">
+            <simplelayout axis="y" spacing="${parent.factor*10}" />
+			<view resource="diclogo.gif" width="${parent.width*0.8}" height="${parent.width*0.2}" stretches="both">
+				<handler name="onclick">
+					parent.movetofront();
+				</handler>
+			</view>
+			<view name="dictform"  >
+				<handler name="onclick">
+					parent.movetofront();
+				</handler>
+				<simplelayout axis="x" spacing="${parent.parent.factor * 10}" />	
+				<edittext id="dictText" width="${parent.parent.factor * 106}" 
+					height="${parent.parent.factor * 24}">
+
+					<handler name="onclick">
+						parent.parent.movetofront();
+					</handler>
+
+					</edittext>	
+				 <button
+					id = "goButton"
+					width="${parent.parent.factor * 30}" 
+					height="${parent.parent.factor * 24}" 
+					valign="middle" 
+					text="${parent.parent.factor==1 ? '>>':''}"	
+					fontsize="${parent.parent.factor * 8}"	>
+						<handler name="onclick">
+							if (canvas.slider1.currentslide == parent.parent.slidenumber){								
+								//var word = escape(dictText.text);
+								//this seems to work for utf-8
+								var word = encodeURIComponent(dictText.text); 
+								if (word.length > 0){
+									var dtype =1;
+									//determine if our unicode string is jap or eng, by presence of % in pos 1.
+									if (word.charAt(0) == "%") {
+											dtype=3;
+										}
+									var url = "http://dic.yahoo.co.jp/dsearch?enc=UTF-8&amp;stype=1&amp;dtype=" + dtype + "&amp;p=" + word; 
+									Debug.write("url:",url);
+									lz.Browser.loadURL(url,"_new");
+								}
+							}else{
+								parent.parent.movetofront();
+							}
+						</handler>
+					</button>
+			</view>
+			<handler name="onclick">
+				this.movetofront();
+			</handler>
+			<method name="movetofront">
+				if (parent.currentslide != this.slidenumber){
+						parent.slideTo(this.slidenumber);
+				}			
+			</method>
+        </visualsliderview>   
+		
+		<visualsliderview contentbgcolor="0xFFFFFF" paddingsize="5" originalwidth="${canvas.slidewidth  - (this.bordersize * 2)}" originalheight="${canvas.slideheight - (this.bordersize * 2)}" shadow="false">
+            <simplelayout axis="y" spacing="${parent.factor*10}" />
+			<view resource="thai2english.gif" width="${parent.width*0.8}" height="${parent.width*0.2}" stretches="both">
+				<handler name="onclick">
+					parent.movetofront();
+				</handler>
+			</view>
+			<view name="dictform"  >
+				<handler name="onclick">
+					parent.movetofront();
+				</handler>
+				<simplelayout axis="x" spacing="${parent.parent.factor * 10}" />	
+				<edittext id="thaidictText" width="${parent.parent.factor * 106}" 
+					height="${parent.parent.factor * 24}">
+
+					<handler name="onclick">
+						parent.parent.movetofront();
+					</handler>
+
+					</edittext>	
+				 <button
+					id = "thaigoButton"
+					width="${parent.parent.factor * 30}" 
+					height="${parent.parent.factor * 24}" 
+					valign="middle" 
+					text="${parent.parent.factor==1 ? '>>':''}"	
+					fontsize="${parent.parent.factor * 8}"	>
+						<handler name="onclick">
+							if (canvas.slider1.currentslide == parent.parent.slidenumber){								
+								//var word = escape(thaidictText.text);
+								//this seems to work for utf-8
+								var word = encodeURIComponent(thaidictText.text); 
+								if (word.length > 0){
+									var dtype =1;
+									//determine if our unicode string is jap or eng, by presence of % in pos 1.
+									if (word.charAt(0) == "%") {
+											dtype=3;
+										}
+
+									var url = "http://www.thai2english.com/search.aspx?q=" + word; 
+									Debug.write("url:",url);
+									lz.Browser.loadURL(url,"_new");
+								}
+							}else{
+								parent.parent.movetofront();
+							}
+						</handler>
+					</button>
+			</view>
+			<handler name="onclick">
+				this.movetofront();
+			</handler>
+			<method name="movetofront">
+				if (parent.currentslide != this.slidenumber){
+						parent.slideTo(this.slidenumber);
+				}			
+			</method>
+        </visualsliderview>   
+		<!-- visualsliderview contentbgcolor="0xFFFFFF" paddingsize="0" originalwidth="${canvas.slidewidth- (this.paddingsize * 2) - (this.bordersize * 2)}" originalheight="${canvas.slideheight- (this.paddingsize * 2) - (this.bordersize * 2)}" shadow="false" -->
+		<visualsliderview contentbgcolor="0xFFFFFF" paddingsize="5" originalwidth="${canvas.slidewidth - (this.bordersize * 2)}" originalheight="${canvas.slideheight - (this.bordersize * 2)}" shadow="false">
+            <simplelayout axis="y" spacing="${parent.factor*10}" />
+			<view resource="siamkanelogo.jpg" width="${parent.width*0.8}" height="${parent.width*0.2}" stretches="both">
+				<handler name="onclick">
+					parent.movetofront();
+				</handler>
+			</view>
+			<view name="dictform"  >
+				<handler name="onclick">
+					parent.movetofront();
+				</handler>
+				<simplelayout axis="x" spacing="${parent.parent.factor * 10}" />	
+				<edittext id="siamkaneDictText" width="${parent.parent.factor * 106}" 
+					height="${parent.parent.factor * 24}">
+
+					<handler name="onclick">
+						parent.parent.movetofront();
+					</handler>
+
+					</edittext>	
+				 <button
+					id = "siamkaneGoButton"
+					width="${parent.parent.factor * 30}" 
+					height="${parent.parent.factor * 24}" 
+					valign="middle" 
+					text="${parent.parent.factor==1 ? '>>':''}"	
+					fontsize="${parent.parent.factor * 8}"	>
+						<handler name="onclick">
+							if (canvas.slider1.currentslide == parent.parent.slidenumber){								
+								//var word = escape(thaidictText.text);
+								//this seems to work for utf-8
+								var word = encodeURIComponent(siamkaneDictText.text); 
+								if (word.length > 0){
+									var dtype =1;
+									//determine if our unicode string is jap or eng, by presence of % in pos 1.
+									if (word.charAt(0) == "%") {
+											dtype=3;
+										}
+									var url = "http://dic.siamkane.com/dict.php?keyword=" + word; 
+									Debug.write("url:",url);
+									lz.Browser.loadURL(url,"_new");
+								}
+							}else{
+								parent.parent.movetofront();
+							}
+						</handler>
+					</button>
+			</view>
+			<handler name="onclick">
+				this.movetofront();
+			</handler>
+			<method name="movetofront">
+				if (parent.currentslide != this.slidenumber){
+						parent.slideTo(this.slidenumber);
+				}			
+			</method>
+        </visualsliderview>
+		
+	<visualsliderview  bordersize="0" paddingsize="0" originalwidth="${canvas.slidewidth - (this.paddingsize * 2) - (this.bordersize *2)}" originalheight="${canvas.slideheight- (this.paddingsize * 2) - (this.bordersize *2)}"  shadow="false">
+            
+			  <!-- view name="menupic" width="${parent.width}" resource="$path{'pictureurl/text()'}" height="${parent.height}"  stretches="both" -->
+			 <view name="menupic" width="${parent.width}" resource="profile.png" height="${parent.height}"  stretches="both" />
+
+			<handler name="onclick">						
+					if (parent.currentslide != this.slidenumber){
+						parent.slideTo(this.slidenumber);
+					}else{
+					
+						//var url = this.datapath.xpathQuery('jumpurl/text()');
+						//if(url.length > 0){
+							//var target = this.datapath.xpathQuery('jumpurl/@target');
+							var url = '/user/view.php';
+							var target = '';
+							Debug.write('url',url);
+							Debug.write('target',target);
+							lz.Browser.loadURL(url,target);
+						//}
+						
+					}
+			</handler>
+        </visualsliderview>
+		
+    </visualslider>
+</canvas>

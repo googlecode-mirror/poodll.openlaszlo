@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+<include href="incubator/boxview.lzx" />
+<include href="../poodllheader/clientheadercommunications.lzx"/>
+
+<class name="clientsettingspalette" width="100%" height="100%" extends="view">
+
+<!-- our class for communicating with clients -->
+<attribute name="headercomm" />
+
+
+<!-- wrap settings option sets-->
+<wrappinglayout axis="x" spacing="20" />
+
+<!--class that handles animated transitions -->
+<animations name="widgettransitions" />
+<animations name="cpaneltransitions" />
+
+
+
+<!-- style options -->
+<boxview name="styleview" title="Gui Style" bordersize="1" width="150" height="100">
+	<simplelayout axis="y" spacing="20" inset="10" />
+
+	<combobox name="stylelist"  editable="false" defaultselection="2">
+		  <textlistitem text="whitestyle" />				  
+		  <textlistitem text="greenstyle"  selected="true" />
+		  <textlistitem text="purplestyle"  />
+		  <textlistitem text="silverstyle"  />
+		  <textlistitem text="goldstyle"  />
+		  <textlistitem text="bluestyle"  />
+	</combobox>
+				
+</boxview>
+
+<!-- Connection Info and Options -->
+<boxview name="connectview" title="Connection" bordersize="1" width="150" height="100">
+			<simplelayout axis="x" inset="20" spacing="20"/>
+			 <rtmpstatus rtmpc="${classroot.headercomm.rtmpc}" />	
+			 <button name="reconnect" text="Reconnect">
+				<handler name="onclick">
+					classroot.headercomm.rtmpc.connect();
+				</handler>
+			</button>
+</boxview>
+
+
+<!-- widget animation options -->
+<boxview name="widgetanimview" title="Widget Animations" bordersize="1" width="150" height="100">
+	<simplelayout axis="y" spacing="20" inset="10" />
+
+	<combobox name="animlist"  editable="false" defaultselection="2">
+		 
+		 <textlistitem text="Slide Right" value="${classroot.widgettransitions.anmSlideRight}" />				  
+		  <textlistitem text="Slide Left"  value="${classroot.widgettransitions.anmSlideLeft}" selected="true" />
+		  <textlistitem text="Fade In"  value="${classroot.widgettransitions.anmFadeIn}" />
+		  <textlistitem text="Slide Up" value="${classroot.widgettransitions.anmSlideUp}"  />				  
+		 <textlistitem text="Slide Down"  value="${classroot.widgettransitions.anmSlideDown}"  />
+	</combobox>
+				
+</boxview>
+
+<!-- widget animation options -->
+<boxview name="cpanelanimview" title="CPanel Animations" bordersize="1" width="150" height="100">
+	<simplelayout axis="y" spacing="20" inset="10" />
+
+	<combobox name="animlist"  editable="false" defaultselection="1">
+		 <textlistitem text="Slide Up" value="${classroot.cpaneltransitions.anmSlideUp}" selected="true" />				  
+		 <textlistitem text="Slide Down"  value="${classroot.cpaneltransitions.anmSlideDown}"  />
+		 <textlistitem text="Fade In"  value="${classroot.cpaneltransitions.anmFadeIn}"  />
+		 <textlistitem text="Slide Right" value="${classroot.cpaneltransitions.anmSlideRight}" />				  
+		  <textlistitem text="Slide Left"  value="${classroot.cpaneltransitions.anmSlideLeft}" />
+	</combobox>
+				
+</boxview>
+
+
+</class>
+
+</library>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+<class name="feedback" extends="view">
+		<view name="feedbackcontent">
+			<text name="feedback" multiline="true" selectable="true" width="300" height="500" clip="true" />
+		</view>
+		<vscrollbar name="thescroll"/>
+	
+	<method name="addBlueRow" args="label,content">
+		<![CDATA[
+		with(this.feedbackcontent.feedback){
+			addText("<br /><font color='#0000FF'>" + label + "</font>  " + content);
+		}
+		]]>
+	</method>
+	<method name="addGreenRow" args="label,content">
+		<![CDATA[
+		with(this.feedbackcontent.feedback){
+			addText("<br /><font color='#00FF00'>" + label + "</font>  " + content);
+		}
+		]]>
+	</method>
+	<method name="addErrorRow" args="label,content">
+		<![CDATA[
+		with(this.feedbackcontent.feedback){
+			addText("<br /><font color='#FF0000'>" + label + "</font>  " + content);
+		}
+		]]>
+	</method>
+	
+</class>
+
+</library>
+

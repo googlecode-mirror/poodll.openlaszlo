@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+
+<simplelayout axis="x" spacing="10" />
+<view>
+<drawview width="500" height="500" clip="true">
+    <handler name="oncontext">
+			this.lineTo(100, 100);
+            this.lineTo(100, 400);
+            this.lineTo(400, 400);
+			this.lineTo(400, 100);
+           this.closePath();
+            this.clipPath();
+    </handler>
+    <view name="thatIWantClipped" width="500" height="500" stretches="both" resource="meonleft.jpg"/>
+</drawview>
+
+</view>
+<view>
+<drawview width="500" height="500" clip="true">
+    <handler name="oncontext">
+            this.lineTo(100, 400);
+            this.lineTo(400, 400);
+			this.lineTo(400, 100);
+           this.closePath();
+            this.clipPath();
+    </handler>
+    <view name="thatIWantClipped" width="500" height="500" stretches="both" resource="meonleft.jpg"/>
+</drawview>
+
+</view>
+
+	
+</canvas>
