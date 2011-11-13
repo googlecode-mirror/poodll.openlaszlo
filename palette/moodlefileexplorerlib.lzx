@@ -71,6 +71,9 @@
 		</handler>
 		<handler name="oninit">	
 			Debug.write("url:" + this.src);
+			//set cookies
+			//Debug.write("cookie:" + document.cookie);
+			//this.setHeader(document.cookie);
 		</handler>
 	</dataset>
 	
@@ -218,6 +221,43 @@
 
 	
 		
+</class>
+<class name="poodllmodal" extends="modaldialog">
+	<attribute name="themessage" value="''"/>
+	<attribute name="showinput" value="false"/>
+	<attribute name="callbackDel" />
+    <text text="${parent.themessage}" width="${parent.width-20}" height="${parent.showinput  ? 30 : parent.height - 100}" multiline="true"/>
+    <inputtext name="itext" visible="${parent.showinput}" align="center" width="${parent.width-20}" bgcolor="0xCCFFFF"/>
+    <view align="right" layout="axis:x; spacing:20">
+      <button text="Cancel">
+      	<handler name="onclick">	
+      		classroot.callbackDel.unregisterAll();
+      		this.parent.parent.close();
+      	</handler>
+      </button>
+      <button  isdefault="true" text="OK">
+      	<handler name="onclick">
+      		if (classroot.showinput){
+      			//Debug.write("showing");
+      			//Debug.write(classroot.itext.text);
+      			classroot.callbackDel.execute(classroot.itext.text);
+      		}else{
+      			this.parent.parent.callbackDel.execute("");
+      		}
+      		
+      		this.parent.parent.close();
+      		
+      	</handler>
+      </button>
+    </view>
+    <method name="openmodal" args="callbackmethod,themessage,thefilename=''" >
+    	this.callbackDel =  new LzDelegate(this.parent.actionarea, callbackmethod);
+    	this.itext.setAttribute("text",thefilename);
+    	this.setAttribute("themessage",themessage);
+    	this.open();
+    
+    </method>
+    <simplelayout spacing="5"/>
 </class>
 
 </library>

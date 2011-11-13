@@ -20,6 +20,8 @@
 		var fpath=this.filedataurl + '?datatype=instancedirlist&paramone=&paramtwo=content&courseid=' + this.courseid + '&moduleid=' + this.moduleid;
 		this.setAttribute("modfilepath",fpath);
 		Debug.write(fpath);
+		//Get out initial mod list and trigger the instance side data fill
+		this.actionarea.getmoddata();
 		]]>
 	</handler>
 	
@@ -37,9 +39,22 @@
 	
 	<view name="actionarea"  height="30" align="center">
 		<simplelayout axis="x" spacing="5" />
-		<button name="copyFileButton" text="CopyFile" onclick="parent.copyFile()"/>
-		<button name="delButton" text="Del" onclick="parent.del()"/>
-		<button name="makedirButton" text="MD" onclick="parent.makedir('afolder')"/>
+		<button name="copyFileButton" text="CopyFile" onclick="parent.copyfileover()"/>
+		<button name="delButton" text="Delete" onclick="parent.del()"/>
+		<button name="makedirButton" text="Make Dir" onclick="parent.makedir()"/>
+		<button name="copyFileAsButton" text="Copy File As" onclick="parent.copyasfile()"/>
+		<button name="renameButton" text="Rename" onclick="parent.rename()"/>
+		<button name="clipboardButton" text="URL to Clipboard" onclick="parent.copyclipboard()"/>
+		<button name="downloadButton" text="Download(file)" onclick="parent.download()"/>
+		<button name="zipdownloadButton" text="Download(Zip)" onclick="parent.zipdownload()"/>
+		<button name="uploadButton" text="Upload" onclick="parent.upload()"/>
+		<button name="copyToBriefcaseButton" text="Copy To Briefcase" onclick="parent.copybriefcase()"/>
+		<button name="pasteFromBriefcaseButton" text="Paste From Briefcase" onclick="parent.pastbriefcase()"/>
+		<button name="syncFileButton" text="Sync File" onclick="parent.syncfile()"/>
+		<button name="doGetModData" text="Mod Data" onclick="parent.getmoddata()"/>
+		
+		
+		<!-- generate a random id to id a request -->
 		<method name="fetchReqId">
 			<![CDATA[
 				var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
@@ -52,7 +67,58 @@
 				return randomstring;
 			]]>
 		</method>
-		<method name="copyFile">
+		
+		<!-- return a  field(or concat feilds)  from selected instance row -->
+		<method name="getSelectedField" args="field" >
+			<![CDATA[
+			var pointerArray= modexplorer.splitpane.filetreecontainer.filetree.getSelection();
+			var returnNames = "";
+			if(pointerArray && pointerArray.length > 0){
+				for (var x=0;x < pointerArray.length; x++){
+					returnNames += pointerArray[x].p.getAttr(field) + " "; 
+				}
+				return returnNames;
+			}else{
+				return false;
+			}
+			]]>
+		</method>
+		
+		<!-- count selected file(s) -->
+		<method name="getSelectedCount"  >
+			<![CDATA[
+			var pointerArray= modexplorer.splitpane.filetreecontainer.filetree.getSelection();
+			if(pointerArray && pointerArray.length > 0){
+				return pointerArray.length;
+			}else{
+				return 0;
+			}
+			
+			]]>
+		</method>
+		<!-- copy selected file(s) or directory from repo to mod-->
+		<method name="download">
+		<![CDATA[
+			if(getSelectedCount()!=1){return;}
+			
+			var requestid = this.fetchReqId();
+			var pointerArray= modexplorer.splitpane.filetreecontainer.filetree.getSelection();
+			var mime= pointerArray[0].p.getAttr('type');
+			var filehash= pointerArray[0].p.getAttr('hash');
+			var filename= pointerArray[0].p.getAttr('name');
+			Debug.write("configured ok");
+			canvas.eService.doInstanceDownload(requestid,mime,filename,filehash);
+			
+			/*
+			//old method ... still good
+			var url = getSelectedField("url");
+			lz.Browser.loadURL(url);
+			*/
+		]]>
+		</method>
+		
+		<!-- copy selected file(s) or directory from repo to mod-->
+		<method name="copyfileover">
 		<![CDATA[
 			with (repoexplorer.splitpane.filetreecontainer.filetree){
 				//get a handle on selected files
@@ -72,20 +138,64 @@
 					Debug.write("reqid:", requestid);
 					//we differentiate between copying files and copying directories 
 					if(pointerArray[x].p.getAttr('isleaf')){
-						canvas.eService.doCopyFile(requestid,modexplorer.selecteddir ,'content',canvas.repopath + '/' + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'));
+						canvas.eService.doCopyFile(requestid,modexplorer.selecteddir ,areaList.value,canvas.repopath + '/' + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'));
 					}else{
-						canvas.eService.doCopyDir(requestid,modexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'),'content',canvas.repopath + '/' + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'));
+						canvas.eService.doCopyDir(requestid,modexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'),areaList.value,canvas.repopath + '/' + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'));
 
 					}
 				}
 			
 			}
-			
 			]]>
 		</method>
-
+		
+		<!-- Get Mod Data -->
+		<method name="getmoddata">
+			canvas.eService.doGetModData(this.fetchReqId());
+		</method>
+		
+		<!-- upload files -->
+		<method name="upload">
+			var newname = getSelectedField("name");
+			if(!newname){return;}
+		</method>
+		
+		<!-- copy files to briefcase -->
+		<method name="copybriefcase">
+			var newname = getSelectedField("name");
+			if(!newname){return;}
+		</method>
+		
+		<!-- paste files from briefcase -->
+		<method name="pastebriefcase">
+			var newname = getSelectedField("name");
+			if(!newname){return;}
+		</method>
+		
+		<!-- zip and download selected files-->
+		<method name="zipdownload">
+			var newname = getSelectedField("name");
+			if(!newname){return;}
+		</method>
+		
+		<!-- sync selected file across system-->
+		<method name="syncfile">
+			var newname = getSelectedField("name");
+			if(!newname){return;}
+		</method>
+		
+		<!-- delete selected file(s) / directory -->
 		<method name="del">
+			var newname = getSelectedField("name");
+			if(!newname){return;}
+			canvas.mydialog.setAttribute("showinput",false);
+			canvas.mydialog.openmodal("dodel", "really delete " +  newname + "?");
+		</method>
+		
+		<method name="dodel" args="ignore=null">
 			<![CDATA[
+			
+			//Debug.write("entered dodel");
 			with (modexplorer.splitpane.filetreecontainer.filetree){
 				//get a handle on selected files
 				var pointerArray= getSelection();
@@ -109,10 +219,107 @@
 		
 			]]>
 		</method>
-			<method name="makedir" args="newdir">
+		
+		<!-- copy to clipboard url of selected file -->
+		<method name="copyclipboard">
+			if(getSelectedCount()!=1){return;}
+			var url = getSelectedField("url");
+			lz.Browser.setClipboard(url);
+		</method>
+		
+		<!-- rename   selected file -->
+		<method name="rename">
+		<![CDATA[
+			if(getSelectedCount()!=1){return;}
+			var newname = getSelectedField("name");
+
+			canvas.mydialog.setAttribute("showinput",true);
+			canvas.mydialog.openmodal("dorename", "Enter the new name of the file.", newname);
+		]]>
+		</method>
+		
+		<method name="dorename" args="newfilename">
 			<![CDATA[
+			
+			//Debug.write("entered dorename");
+			with (modexplorer.splitpane.filetreecontainer.filetree){
+				//get a handle on selected files
+				var pointerArray= getSelection();
+				
 				//can out if no selection
-				if(modexplorer.selecteddir){
+				if(!pointerArray || !(pointerArray.length = 1)){return;}
+				
+				//set up a transaction count. simply so that we can refresh after all
+				canvas.eService.registerTransactions(pointerArray.length);
+				
+				//do the actions
+				for (var x=0;x < pointerArray.length; x++){
+					//Debug.write("hash "+ pointerArray[x].p.getAttr('hash'));
+					var requestid = this.fetchReqId();
+					canvas.eService.registerAction(requestid,"rename " + pointerArray[x].p.getAttr('name')  );
+					canvas.eService.doRenameFile(requestid,modexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'),areaList.value,newfilename);
+					
+				}
+			
+			}
+		
+			]]>
+		</method>
+		
+		<!-- copy selected file  with new name in same directory-->
+		<method name="copyasfile">
+			<![CDATA[
+			if(getSelectedCount()!=1){return;}
+			var newname = getSelectedField("name");
+
+			
+			canvas.mydialog.setAttribute("showinput",true);
+			canvas.mydialog.openmodal("docopyasfile", "Enter the new name of the file to be copied.", "copy_" + newname);
+			]]>
+		</method>
+		
+		<method name="docopyasfile" args="newfilename">
+			<![CDATA[
+			
+			Debug.write("entered docopy as");
+			with (modexplorer.splitpane.filetreecontainer.filetree){
+				
+				//get a handle on selected files
+				var pointerArray= getSelection();
+				
+			
+				//can out if no selection
+				if(!pointerArray || !(pointerArray.length = 1)){return;}
+				
+				//set up a transaction count. simply so that we can refresh after all
+				canvas.eService.registerTransactions(pointerArray.length);
+			
+				//do the actions
+				for (var x=0;x < pointerArray.length; x++){
+					//Debug.write("hash "+ pointerArray[x].p.getAttr('hash'));
+					var requestid = this.fetchReqId();
+					canvas.eService.registerAction(requestid,"rename " + pointerArray[x].p.getAttr('name')  );
+					
+					canvas.eService.doCopyAsFile(requestid,modexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'),areaList.value,newfilename);
+					
+				}
+			
+			}
+		
+			]]>
+		</method>
+		
+		<!-- make a new directory in current directory -->
+			<method name="makedir">
+				canvas.mydialog.setAttribute("showinput",true);
+				canvas.mydialog.openmodal("domakedir", "Enter the name of the new directory.", "new_directory");
+			</method>
+			<method name="domakedir" args="newdir">
+			<![CDATA[
+				//Debug.write("newdir: " + newdir);
+			
+				//we used to can out if no selection, re instate if causes problems.
+				//if(modexplorer.selecteddir){ ...//}
 	
 					
 					//set up a transaction count. simply so that we can refresh after all
@@ -123,16 +330,52 @@
 						Debug.write("makedir: " + newpath);
 						var requestid = this.fetchReqId();
 						canvas.eService.registerAction(requestid,"makedir " + newpath);
-						canvas.eService.doMakeDir(requestid,'content',newpath);
+						canvas.eService.doMakeDir(requestid,areaList.value,newpath);
 				
-				}
+				
 		
 		
 			]]>
 		</method>
 	 </view> 
+	 
 	 <feedback name="feedbak" width="${parent.width}" height="20%" bgcolor="0xEEEEEE" clip="true" />
-	<view name="explorers" width="${parent.width}" height="60%">
+	 <view name="selectboxes" align="right">
+	 <simplelayout axis="x" spacing="10" />
+	<datacombobox  id="sectionList" width="200" selectfirst="true" shownitems="10"  itemdatapath="eService:moddata:/course/section" textdatapath="@sectionname" valuedatapath="@sectionid">
+		<handler name="onselect">
+			
+			modList.setAttribute("itemdatapath", this.itemdatapath + "/module[@sectionid=" + this.value + "]");
+			modList.refresh();
+		</handler>
+	</datacombobox>
+	<datacombobox  id="modList" width="200" shownitems="10"  selectfirst="true" itemdatapath="eService:moddata:/course/module" textdatapath="@modname" valuedatapath="@modid">
+		<method name="refresh">
+			this._teardowncblist();
+			this._setupcblist(false);
+			//this._text.setAttribute("text", this.defaulttext);
+			//defaulttext="Choose One..."
+		</method>
+		<handler name="onselect">
+			canvas.setAttribute("moduleid",this.value);
+			
+		</handler>
+	
+	</datacombobox>
+	<combobox id="areaList" width="200"  editable="false">
+				<textlistitem text="intro" value="'intro'"/>
+              <textlistitem text="content" value="'content'"/>              
+              <textlistitem text="description" value="'description'"/>
+              <textlistitem text="attachment" value="'attachment'"/>
+              <textlistitem text="submissions" value="'submissions'"/>
+              <textlistitem text="blogs" value="'blogs'"/>
+              <textlistitem text="userfiles" value="'userfiles'"/>
+              <textlistitem text="legacy" value="'legacy'"/>
+    </combobox>
+    <button name="refillButton" onclick="modexplorer.controlbox.doRefr()" text="Fetch Data" />
+    
+	</view>
+	<view name="explorers" width="${parent.width}" height="40%">
 		<simplelayout axis="x" spacing="10" />
 		<!-- hsplitpane name="splitpane" bordersize="1"  width="${canvas.width}" bordercolor="#ff0000" -->
 		<moodlefileexplorer id="repoexplorer" name="repoexplorer" width="50%" filedataurl="${canvas.filedataurl + '?datatype=repodirlist&amp;paramone=' + canvas.repopath }" courseid="${canvas.courseid}" height="500"  >
@@ -141,7 +384,7 @@
 			</handler>
 		</moodlefileexplorer>	
 		<moodlefileexplorer id="modexplorer" name="modexplorer" width="50%" 
-					filedataurl="${canvas.filedataurl + '?datatype=instancedirlist&amp;paramone=&amp;paramtwo=content&amp;courseid=' + canvas.courseid + '&amp;moduleid=' + canvas.moduleid}" 
+					filedataurl="${canvas.filedataurl + '?datatype=instancedirlist&amp;paramone=&amp;paramtwo=' + areaList.value + '&amp;courseid=' + canvas.courseid + '&amp;moduleid=' + modList.value}" 
 					courseid="${canvas.courseid}" height="500"  >
 			<handler name="onchoice" args="path">
 				Debug.write("onchoice", path);
@@ -154,6 +397,10 @@
 		</moodlefileexplorer>
 		<!-- hsplitpane -->
 	</view><!-- end of explorers view -->
+	
+<poodllmodal name="mydialog" width="300" height="200" />
+ 
+
 
 	
 </canvas>

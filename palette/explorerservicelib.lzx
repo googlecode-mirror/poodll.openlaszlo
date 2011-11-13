@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <library>
-	
-
 	<class name="explorerservice" extends="view">
 	
 	<!-- we raise these events when we receive an asynch result-->
@@ -53,6 +51,22 @@
 			]]>
 		</handler>
 	</dataset>
+	
+		
+	<!-- The dataset containing info about the filesystem -->
+	<!-- The timestamp is to get us over crap browser caching which should not but does occur-->
+	<!-- dataset name="filedata" type="http" src="${classroot.filedataurl + '&amp;timestamp=' + new Date().getTime()}" request="true" -->
+	<dataset name="moddata" type="http" src="${classroot.filedataurl}" request="true" >
+		<handler name="ondata">	
+		<![CDATA[	
+			Debug.write("gotdata");
+			
+			]]>
+		</handler>
+		<handler name="oninit">	
+			Debug.write("url:" + this.src);
+		</handler>
+	</dataset>
 
 	<!-- we use this datapointer for notification of a request en -->
 	<datapointer name="dp" xpath="local:dataservice:/" />
@@ -86,6 +100,15 @@
 		sendData(requestid,"instancedeletefile", hash);
 	</method>
 	
+	<method name="doInstanceDownload" args="requestid,mimetype,filename, hash">
+	<![CDATA[
+		Debug.write(requestid+ " instancedownload " + hash + " " + mimetype + " " + filename);
+		sendToUrl(requestid,"instancedownload", hash,mimetype,filename );
+		//var url = this.filedataurl + "?datatype=instancedownload&action=instancedownload&hash=" + hash + "&paramone=" + mimetype + "&paramtwo=" + filename + "paramthree=&requestid=" + requestid;
+		//lz.Browser.loadURL(url);
+		]]>
+	</method>
+	
 	<method name="doMakeDir" args="requestid,filearea,newpath">
 		sendData(requestid,"instancecreatedir", 'nohash',filearea, newpath);
 	</method>
@@ -98,11 +121,37 @@
 		sendData(requestid,"instancecopydir",'nohash' ,filearea,repopath, newpath);
 	</method>
 	
+	<method name="doRenameFile" args="requestid,oldpath,filearea, newfilename">
+		sendData(requestid,"instancerenamefile",'nohash' ,filearea,oldpath, newfilename);
+	</method>
+	
+	<method name="doCopyAsFile" args="requestid,oldpath,filearea, newfilename">
+		sendData(requestid,"instancecopyasfile",'nohash' ,filearea,oldpath, newfilename);
+	</method>
+	
+	<method name="doGetModData" args="requestid">
+		   var p=new LzParam(); 
+	  p.addValue("datatype","getmoddata", true);                                 
+      p.addValue("action","getmoddata", true);
+      p.addValue("hash", "nohash", true);
+	  p.addValue("paramone", "", true);
+	  p.addValue("paramtwo", "", true);
+	  p.addValue("paramthree", "", true);
+	  p.addValue("requestid", requestid, true);
+	  p.addValue("courseid", canvas.courseid , true);
+	  p.addValue("moduleid", canvas.moduleid , true);
+      this.moddata.setQueryString(p);                                 
+      this.moddata.doRequest(); 
+	</method>
+	
 	<method name="sendData" args="requestid,action,hash,arg1=null,arg2=null,arg3=null">
+			<![CDATA[
 		Debug.write("sendingdata");
 		
-	 //notify feedback class we are starting
-	 this.onActionStart.sendEvent(this.actions[requestid]);
+	 //notify feedback class we are starting, if we registered this action before calling
+	if(this.actions && this.actions[requestid]){
+	 	this.onActionStart.sendEvent(this.actions[requestid]);
+	 }
 	 
       var p=new LzParam(); 
 	  p.addValue("datatype",action, true);                                 
@@ -119,7 +168,39 @@
 	  
 	  //set up the asynch callback listener
 		//var datadelegate = new LzDelegate(this, 'updatePath');
-		//datadelegate.register(classroot, 'on' + action);                                       
+		//datadelegate.register(classroot, 'on' + action);   
+		]]>
+    </method>
+    
+    <method name="sendToUrl" args="requestid,action,hash,arg1=null,arg2=null,arg3=null">
+			<![CDATA[
+		Debug.write("sendingdata");
+		
+	 //notify feedback class we are starting, if we registered this action before calling
+	if(this.actions && this.actions[requestid]){
+	 	this.onActionStart.sendEvent(this.actions[requestid]);
+	 }
+	 
+	 //add all our params
+      var p=new LzParam(); 
+	  p.addValue("datatype",action, true);                                 
+      p.addValue("action",action, true);
+      p.addValue("hash", hash, true);
+	  p.addValue("paramone", arg1, true);
+	  p.addValue("paramtwo", arg2, true);
+	  p.addValue("paramthree", (arg3==null ? '':arg3), true);
+	  p.addValue("requestid", requestid, true);
+	  p.addValue("courseid", canvas.courseid , true);
+	  p.addValue("moduleid", canvas.moduleid , true);
+	
+		//create url from params
+	  var params =  p.serialize("=","&");
+	  var url = this.filedataurl + '?' + params;
+	  
+	  //load up in browser
+	  lz.Browser.loadURL(url);
+       
+		]]>
     </method>
 	
 	<method name="popup">
