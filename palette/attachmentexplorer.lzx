@@ -6,10 +6,11 @@
 	<include href="incubator/hsplitpane.lzx" />
 	
 	<attribute name="filedataurl"  value="lz.Browser.getInitArg('filedataurl')" />
-	<attribute name="repopath"  value="'/repository/audiofiles'" />  
+	<attribute name="repopath"  value="''" />  
 	<attribute name="modfilepath"  value="''" />
 	<attribute name="courseid"  value="lz.Browser.getInitArg('courseid')" /> 
 	<attribute name="moduleid"  value="lz.Browser.getInitArg('moduleid')" /> 
+	<attribute name="itemid"  value="lz.Browser.getInitArg('itemid') ? lz.Browser.getInitArg('itemid')  : 0" /> 
 	
 	<!-- layout vertically -->
 	<simplelayout axis="y" spacing="10" />
@@ -17,11 +18,12 @@
 	
 	<handler name="oninit">
 		<![CDATA[
-		var fpath=this.filedataurl + '?datatype=instancedirlist&paramone=&paramtwo=content&courseid=' + this.courseid + '&moduleid=' + this.moduleid;
+		var fpath=this.filedataurl + '?datatype=instancedirlist&paramone=&paramtwo=content&courseid=' + this.courseid + '&moduleid=' + this.moduleid + '&itemid=' + this.itemid;
 		this.setAttribute("modfilepath",fpath);
 		Debug.write(fpath);
-		//Get out initial mod list and trigger the instance side data fill
+		//Get out initial mod and repo data lists and trigger the data fill of their list boxes and file systems
 		this.actionarea.getmoddata();
+		this.actionarea.getrepodata();
 		]]>
 	</handler>
 	
@@ -52,6 +54,7 @@
 		<button name="pasteFromBriefcaseButton" text="Paste From Briefcase" onclick="parent.pastbriefcase()"/>
 		<button name="syncFileButton" text="Sync File" onclick="parent.syncfile()"/>
 		<button name="doGetModData" text="Mod Data" onclick="parent.getmoddata()"/>
+		<button name="doGetRepoData" text="Repo Data" onclick="parent.getrepodata()"/>
 		
 		
 		<!-- generate a random id to id a request -->
@@ -132,15 +135,15 @@
 				
 				//do the actions
 				for (var x=0;x < pointerArray.length; x++){
-					Debug.write(canvas.repopath + '/' + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name') );
+					Debug.write('/repository/' + repoList.value + '/' + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name') );
 					var requestid = this.fetchReqId();
 					canvas.eService.registerAction(requestid,"copyacross " + pointerArray[x].p.getAttr('name'));
 					Debug.write("reqid:", requestid);
 					//we differentiate between copying files and copying directories 
 					if(pointerArray[x].p.getAttr('isleaf')){
-						canvas.eService.doCopyFile(requestid,modexplorer.selecteddir ,areaList.value,canvas.repopath + '/' + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'));
+						canvas.eService.doCopyFile(requestid,modexplorer.selecteddir ,areaList.value,'/repository/' + repoList.value + '/'  + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'));
 					}else{
-						canvas.eService.doCopyDir(requestid,modexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'),areaList.value,canvas.repopath + '/' + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'));
+						canvas.eService.doCopyDir(requestid,modexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'),areaList.value,'/repository/' + repoList.value + '/' + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'));
 
 					}
 				}
@@ -152,6 +155,9 @@
 		<!-- Get Mod Data -->
 		<method name="getmoddata">
 			canvas.eService.doGetModData(this.fetchReqId());
+		</method>
+		<method name="getrepodata">
+			canvas.eService.doGetRepoData(this.fetchReqId());
 		</method>
 		
 		<!-- upload files -->
@@ -342,6 +348,11 @@
 	 <feedback name="feedbak" width="${parent.width}" height="20%" bgcolor="0xEEEEEE" clip="true" />
 	 <view name="selectboxes" align="right">
 	 <simplelayout axis="x" spacing="10" />
+	 <datacombobox  id="repoList" width="150" selectfirst="true" shownitems="10"  itemdatapath="eService:repodata:/repositories/repo" textdatapath="@name" valuedatapath="@name">
+		<handler name="onselect">
+			repoexplorer.controlbox.doRefr();
+		</handler>
+	</datacombobox>
 	<datacombobox  id="sectionList" width="200" selectfirst="true" shownitems="10"  itemdatapath="eService:moddata:/course/section" textdatapath="@sectionname" valuedatapath="@sectionid">
 		<handler name="onselect">
 			
@@ -349,7 +360,7 @@
 			modList.refresh();
 		</handler>
 	</datacombobox>
-	<datacombobox  id="modList" width="200" shownitems="10"  selectfirst="true" itemdatapath="eService:moddata:/course/module" textdatapath="@modname" valuedatapath="@modid">
+	<datacombobox  id="modList" width="150" shownitems="10"  selectfirst="true" itemdatapath="eService:moddata:/course/module" textdatapath="@modname" valuedatapath="@modid">
 		<method name="refresh">
 			this._teardowncblist();
 			this._setupcblist(false);
@@ -357,14 +368,14 @@
 			//defaulttext="Choose One..."
 		</method>
 		<handler name="onselect">
-			canvas.setAttribute("moduleid",this.value);
-			
+			canvas.setAttribute("moduleid",this.value);			
 		</handler>
 	
 	</datacombobox>
-	<combobox id="areaList" width="200"  editable="false">
+	<combobox id="areaList" width="150"  editable="false">
 				<textlistitem text="intro" value="'intro'"/>
-              <textlistitem text="content" value="'content'"/>              
+              <textlistitem text="content" value="'content'"/>
+              <textlistitem text="page_contents" value="'page_contents'"/>  
               <textlistitem text="description" value="'description'"/>
               <textlistitem text="attachment" value="'attachment'"/>
               <textlistitem text="submissions" value="'submissions'"/>
@@ -372,19 +383,34 @@
               <textlistitem text="userfiles" value="'userfiles'"/>
               <textlistitem text="legacy" value="'legacy'"/>
     </combobox>
+	<combobox id="itemList" width="60"  editable="true">
+				<textlistitem text="0"/>
+              <textlistitem text="1" />
+              <textlistitem text="2" />  
+              <textlistitem text="3" />
+              <textlistitem text="4" />
+              <textlistitem text="5" />
+              <textlistitem text="6" />
+              <textlistitem text="7" />
+              <textlistitem text="8" />
+              <textlistitem text="9" />
+              <handler name="onselect">
+					canvas.setAttribute("itemid",this.value);
+			</handler>
+    </combobox>
     <button name="refillButton" onclick="modexplorer.controlbox.doRefr()" text="Fetch Data" />
     
 	</view>
 	<view name="explorers" width="${parent.width}" height="40%">
 		<simplelayout axis="x" spacing="10" />
 		<!-- hsplitpane name="splitpane" bordersize="1"  width="${canvas.width}" bordercolor="#ff0000" -->
-		<moodlefileexplorer id="repoexplorer" name="repoexplorer" width="50%" filedataurl="${canvas.filedataurl + '?datatype=repodirlist&amp;paramone=' + canvas.repopath }" courseid="${canvas.courseid}" height="500"  >
+		<moodlefileexplorer id="repoexplorer" name="repoexplorer" width="50%" filedataurl="${canvas.filedataurl + '?datatype=repodirlist&amp;paramone=' + repoList.value }" courseid="${canvas.courseid}" height="500"  >
 			<handler name="onchoice" args="path">
 				Debug.write("onchoice", path);
 			</handler>
 		</moodlefileexplorer>	
 		<moodlefileexplorer id="modexplorer" name="modexplorer" width="50%" 
-					filedataurl="${canvas.filedataurl + '?datatype=instancedirlist&amp;paramone=&amp;paramtwo=' + areaList.value + '&amp;courseid=' + canvas.courseid + '&amp;moduleid=' + modList.value}" 
+					filedataurl="${canvas.filedataurl + '?datatype=instancedirlist&amp;paramone=&amp;paramtwo=' + areaList.value + '&amp;courseid=' + canvas.courseid + '&amp;moduleid=' + modList.value + '&amp;itemid=' + itemList.value }" 
 					courseid="${canvas.courseid}" height="500"  >
 			<handler name="onchoice" args="path">
 				Debug.write("onchoice", path);

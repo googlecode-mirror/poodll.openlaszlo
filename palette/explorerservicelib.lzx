@@ -53,10 +53,26 @@
 	</dataset>
 	
 		
-	<!-- The dataset containing info about the filesystem -->
+	<!-- The dataset containing info about the instance filesystem -->
 	<!-- The timestamp is to get us over crap browser caching which should not but does occur-->
 	<!-- dataset name="filedata" type="http" src="${classroot.filedataurl + '&amp;timestamp=' + new Date().getTime()}" request="true" -->
 	<dataset name="moddata" type="http" src="${classroot.filedataurl}" request="true" >
+		<handler name="ondata">	
+		<![CDATA[	
+			Debug.write("gotdata");
+			
+			]]>
+		</handler>
+		<handler name="oninit">	
+			Debug.write("url:" + this.src);
+		</handler>
+	</dataset>
+	
+		
+	<!-- The dataset containing info about the repositories-->
+	<!-- The timestamp is to get us over crap browser caching which should not but does occur-->
+	<!-- dataset name="filedata" type="http" src="${classroot.filedataurl + '&amp;timestamp=' + new Date().getTime()}" request="true" -->
+	<dataset name="repodata" type="http" src="${classroot.filedataurl}" request="true" >
 		<handler name="ondata">	
 		<![CDATA[	
 			Debug.write("gotdata");
@@ -140,8 +156,24 @@
 	  p.addValue("requestid", requestid, true);
 	  p.addValue("courseid", canvas.courseid , true);
 	  p.addValue("moduleid", canvas.moduleid , true);
+	  p.addValue("itemid", canvas.itemid , true);
       this.moddata.setQueryString(p);                                 
       this.moddata.doRequest(); 
+	</method>
+	<method name="doGetRepoData" args="requestid">
+		   var p=new LzParam(); 
+	  p.addValue("datatype","getrepodata", true);                                 
+      p.addValue("action","getrepodata", true);
+      p.addValue("hash", "nohash", true);
+	  p.addValue("paramone", "", true);
+	  p.addValue("paramtwo", "", true);
+	  p.addValue("paramthree", "", true);
+	  p.addValue("requestid", requestid, true);
+	  p.addValue("courseid", canvas.courseid , true);
+	  p.addValue("moduleid", canvas.moduleid , true);
+	  p.addValue("itemid", canvas.itemid , true);
+      this.repodata.setQueryString(p);                                 
+      this.repodata.doRequest(); 
 	</method>
 	
 	<method name="sendData" args="requestid,action,hash,arg1=null,arg2=null,arg3=null">
@@ -163,6 +195,7 @@
 	  p.addValue("requestid", requestid, true);
 	  p.addValue("courseid", canvas.courseid , true);
 	  p.addValue("moduleid", canvas.moduleid , true);
+	  p.addValue("itemid", canvas.itemid , true);
       this.dataservice.setQueryString(p);                                 
       this.dataservice.doRequest(); 
 	  
@@ -192,6 +225,7 @@
 	  p.addValue("requestid", requestid, true);
 	  p.addValue("courseid", canvas.courseid , true);
 	  p.addValue("moduleid", canvas.moduleid , true);
+	  p.addValue("itemid", canvas.itemid , true);
 	
 		//create url from params
 	  var params =  p.serialize("=","&");
