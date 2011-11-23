@@ -18,11 +18,11 @@
 	<include href="treenode.lzx"/>
 	<include href="../vsplitpane/vsplitpane.lzx"/>
 
-	<class name="moodlefileexplorer" extends="view">
+	<class name="interfacefileexplorer" extends="view">
 	
 	<!-- we raise this event when we have successfully registered-->
 	<event name="onchoice"/>
-
+	<attribute name="showdirtree"  value="true" /> 
 	<attribute name="filedataurl"  /> 
 	<attribute name="courseid"  /> 
 	<attribute name="donefirstfetch" value="false" />
@@ -36,46 +36,12 @@
 	<datapointer name="tempdp" />
 	
 	<!-- The dataset containing info about the filesystem -->
-	<!-- The timestamp is to get us over crap browser caching which should not but does occur-->
-	<!-- dataset name="filedata" type="http" src="${classroot.filedataurl + '&amp;timestamp=' + new Date().getTime()}" request="true" -->
-	<dataset name="filedata" type="http" src="${classroot.filedataurl}" request="true" >
-		<handler name="ondata">	
-		<![CDATA[	
-			Debug.write("instantiating");
-			if(!classroot.donefirstfetch){
-				classroot.splitpane.dirtreecontainer.completeInstantiation();			
-				classroot.splitpane.filetreecontainer.completeInstantiation();
-				classroot.setAttribute("donefirstfetch",true);
-			}else{
-				//if we have saved xpath, lets reset our tree/grid to that
-				//NB if we delete a directory, we should first reset the selxpath to the higher folder 
-				//and then perform the action. This way the tree will open to the right place
-				if(classroot.selxpath && classroot.selxpath !=''){
-					classroot.tempdp = this.getPointer();
-					//Set the xpath
-					if(classroot.tempdp.setXPath(classroot.selxpath)){
-						//if we got it, open the tree folder(dirs)
-						classroot.splitpane.dirtreecontainer.dirtree.setOpen(classroot.tempdp.p,true);
-						//then set the grid(files)
-						classroot.splitpane.filetreecontainer.filetree.datapath.setAttribute('p', classroot.tempdp.p);
-						//finally make sure the tree is opened right the way through to our folder
-						while(classroot.tempdp.selectParent()){
-							classroot.splitpane.dirtreecontainer.dirtree.setOpen(classroot.tempdp.p,true);
-						}
-					}
-					
-				}
-			}	
-			
-			]]>
-		</handler>
-		<handler name="oninit">	
-			Debug.write("url:" + this.src);
-			//set cookies
-			//Debug.write("cookie:" + document.cookie);
-			//this.setHeader(document.cookie);
-		</handler>
-	</dataset>
+	<!-- this will not work as is, and just because this class is an interface
+		implementations should declare a dataset with name filedata -->
+	<attribute name="filedata" />
+	
+
+	
 	
 	 <node name="adatanode">
         <attribute name="loadnode" value="null"/>
@@ -101,7 +67,7 @@
 	<vsplitpane name="splitpane" bordersize="1"  bordercolor="#ff0000" width="${parent.width}">
 <!-- lhs_min_height="${classroot.whiteboard || classroot.chat  ? (classroot.showvideo=='true' ? 180 : 140) : this.height - (this.bordersize*2) - this.sizer_height}" lhs_height_start="${this.lhs_min_height}" -->
 	<!-- Specify a non null icon, icon="foldericons" to get custom pictures-->
-	<view name="dirtreecontainer" width="${parent.width}" height="100%"  clip="true" initstage="defer" >
+	<view name="dirtreecontainer" width="${parent.width}" height="100%"  clip="true" initstage="defer" visible="${classroot.showdirtree}">
 		<opttree name="dirtree" datapath="local:classroot.filedata:/directorylist" nodepath="directory" nodeclass="treenode" >
 			<handler name="oninit">
 				Debug.write("inited");
@@ -258,6 +224,63 @@
     
     </method>
     <simplelayout spacing="5"/>
+</class>
+<class name="moodlefileexplorer" extends="interfacefileexplorer">
+	<dataset name="filedata" type="http" src="${classroot.filedataurl}" request="true" >
+		<handler name="ondata">	
+		<![CDATA[	
+			Debug.write("instantiating");
+			if(!classroot.donefirstfetch){
+				classroot.splitpane.dirtreecontainer.completeInstantiation();			
+				classroot.splitpane.filetreecontainer.completeInstantiation();
+				classroot.setAttribute("donefirstfetch",true);
+			}else{
+				//if we have saved xpath, lets reset our tree/grid to that
+				//NB if we delete a directory, we should first reset the selxpath to the higher folder 
+				//and then perform the action. This way the tree will open to the right place
+				if(classroot.selxpath && classroot.selxpath !=''){
+					classroot.tempdp = this.getPointer();
+					//Set the xpath
+					if(classroot.tempdp.setXPath(classroot.selxpath)){
+						//if we got it, open the tree folder(dirs)
+						classroot.splitpane.dirtreecontainer.dirtree.setOpen(classroot.tempdp.p,true);
+						//then set the grid(files)
+						classroot.splitpane.filetreecontainer.filetree.datapath.setAttribute('p', classroot.tempdp.p);
+						//finally make sure the tree is opened right the way through to our folder
+						while(classroot.tempdp.selectParent()){
+							classroot.splitpane.dirtreecontainer.dirtree.setOpen(classroot.tempdp.p,true);
+						}
+					}
+					
+				}
+			}	
+			
+			]]>
+		</handler>
+		<handler name="oninit">	
+			Debug.write("url:" + this.src);
+			//set cookies
+			//Debug.write("cookie:" + document.cookie);
+			//this.setHeader(document.cookie);
+		</handler>
+	</dataset>
+</class>
+<class name="emptyfileexplorer" extends="interfacefileexplorer">
+	<!-- we need to init the file areas, because they inited in a deferred action -->
+	<handler name="oninit">
+		this.splitpane.dirtreecontainer.completeInstantiation();			
+		this.splitpane.filetreecontainer.completeInstantiation();
+	</handler>
+	<dataset name="filedata"  >
+		<directorylist>
+			<!--
+			<directory name='cdir' >
+				<file name='Lesson18-1-IntroQs.mp3' isleaf='true'  filesize='2518924' created='14 Nov 2011 22:38:37' modified='20 Apr 2011 16:17:41' type='audio/mpeg'/>
+				<file name='Lesson18-2-LS.mp3' isleaf='true'  filesize='895960' created='14 Nov 2011 22:38:37' modified='20 Apr 2011 16:17:10' type='audio/mpeg'/>
+			</directory>
+			-->
+		</directorylist>
+	</dataset>
 </class>
 
 </library>

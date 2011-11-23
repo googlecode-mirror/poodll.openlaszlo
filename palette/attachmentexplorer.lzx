@@ -55,6 +55,7 @@
 		<button name="syncFileButton" text="Sync File" onclick="parent.syncfile()"/>
 		<button name="doGetModData" text="Mod Data" onclick="parent.getmoddata()"/>
 		<button name="doGetRepoData" text="Repo Data" onclick="parent.getrepodata()"/>
+		<button name="doShowBriefcase" text="Show bcase" onclick="parent.showbriefcase()"/>
 		
 		
 		<!-- generate a random id to id a request -->
@@ -165,11 +166,29 @@
 			var newname = getSelectedField("name");
 			if(!newname){return;}
 		</method>
-		
+		<!-- show briefcase -->
+		<method name="showbriefcase">
+			repocontainer.setAttribute("visible",!repocontainer.visible);
+		</method>
 		<!-- copy files to briefcase -->
 		<method name="copybriefcase">
-			var newname = getSelectedField("name");
-			if(!newname){return;}
+			<![CDATA[	
+				//Debug.write("entered copybriefcase");
+				//get a handle on selected files
+				var pointerArray= modexplorer.splitpane.filetreecontainer.filetree.getSelection();
+				
+				//can out if no selection
+				if(!pointerArray || pointerArray.length<1){return;}
+				
+				
+				//copy data nodes across to briefcase
+				for (var x=0;x < pointerArray.length; x++){
+					//Debug.write("name "+ pointerArray[x].p.getAttr('name'));
+					var bcasepoint = clipboardexplorer.filedata.getPointer();
+					bcasepoint.selectChild();
+					bcasepoint.addNodeFromPointer(pointerArray[x]);
+				}
+		]]>
 		</method>
 		
 		<!-- paste files from briefcase -->
@@ -346,81 +365,130 @@
 	 </view> 
 	 
 	 <feedback name="feedbak" width="${parent.width}" height="20%" bgcolor="0xEEEEEE" clip="true" />
-	 <view name="selectboxes" align="right">
-	 <simplelayout axis="x" spacing="10" />
-	 <datacombobox  id="repoList" width="150" selectfirst="true" shownitems="10"  itemdatapath="eService:repodata:/repositories/repo" textdatapath="@name" valuedatapath="@name">
-		<handler name="onselect">
-			repoexplorer.controlbox.doRefr();
-		</handler>
-	</datacombobox>
-	<datacombobox  id="sectionList" width="200" selectfirst="true" shownitems="10"  itemdatapath="eService:moddata:/course/section" textdatapath="@sectionname" valuedatapath="@sectionid">
-		<handler name="onselect">
-			
-			modList.setAttribute("itemdatapath", this.itemdatapath + "/module[@sectionid=" + this.value + "]");
-			modList.refresh();
-		</handler>
-	</datacombobox>
-	<datacombobox  id="modList" width="150" shownitems="10"  selectfirst="true" itemdatapath="eService:moddata:/course/module" textdatapath="@modname" valuedatapath="@modid">
-		<method name="refresh">
-			this._teardowncblist();
-			this._setupcblist(false);
-			//this._text.setAttribute("text", this.defaulttext);
-			//defaulttext="Choose One..."
-		</method>
-		<handler name="onselect">
-			canvas.setAttribute("moduleid",this.value);			
-		</handler>
 	
-	</datacombobox>
-	<combobox id="areaList" width="150"  editable="false">
-				<textlistitem text="intro" value="'intro'"/>
-              <textlistitem text="content" value="'content'"/>
-              <textlistitem text="page_contents" value="'page_contents'"/>  
-              <textlistitem text="description" value="'description'"/>
-              <textlistitem text="attachment" value="'attachment'"/>
-              <textlistitem text="submissions" value="'submissions'"/>
-              <textlistitem text="blogs" value="'blogs'"/>
-              <textlistitem text="userfiles" value="'userfiles'"/>
-              <textlistitem text="legacy" value="'legacy'"/>
-    </combobox>
-	<combobox id="itemList" width="60"  editable="true">
-				<textlistitem text="0"/>
-              <textlistitem text="1" />
-              <textlistitem text="2" />  
-              <textlistitem text="3" />
-              <textlistitem text="4" />
-              <textlistitem text="5" />
-              <textlistitem text="6" />
-              <textlistitem text="7" />
-              <textlistitem text="8" />
-              <textlistitem text="9" />
-              <handler name="onselect">
-					canvas.setAttribute("itemid",this.value);
-			</handler>
-    </combobox>
-    <button name="refillButton" onclick="modexplorer.controlbox.doRefr()" text="Fetch Data" />
-    
-	</view>
 	<view name="explorers" width="${parent.width}" height="40%">
 		<simplelayout axis="x" spacing="10" />
 		<!-- hsplitpane name="splitpane" bordersize="1"  width="${canvas.width}" bordercolor="#ff0000" -->
-		<moodlefileexplorer id="repoexplorer" name="repoexplorer" width="50%" filedataurl="${canvas.filedataurl + '?datatype=repodirlist&amp;paramone=' + repoList.value }" courseid="${canvas.courseid}" height="500"  >
-			<handler name="onchoice" args="path">
-				Debug.write("onchoice", path);
-			</handler>
-		</moodlefileexplorer>	
-		<moodlefileexplorer id="modexplorer" name="modexplorer" width="50%" 
+		<emptyfileexplorer id="clipboardexplorer" name="clipboardexplorer" width="50%" courseid="${canvas.courseid}" height="500" showdirtree="true" visible="${!repocontainer.visible}"  >				
+				<handler name="onchoice" args="path">
+					Debug.write("onchoice", path);
+				</handler>
+		</emptyfileexplorer>
+		<view name="repocontainer" id="repocontainer" width="50%">
+			<simplelayout axis="y" spacing="5" />
+			<view name="repocombos" width="100%">
+			 	<datacombobox  id="repoList" width="200" selectfirst="true" shownitems="10"  itemdatapath="eService:repodata:/repositories/repo" textdatapath="@name" valuedatapath="@name">
+					<handler name="onselect">
+					repoexplorer.controlbox.doRefr();
+					</handler>
+				</datacombobox>
+			</view>
+			<moodlefileexplorer id="repoexplorer" name="repoexplorer" width="100%" filedataurl="${canvas.filedataurl + '?datatype=repodirlist&amp;paramone=' + repoList.value }" courseid="${canvas.courseid}" height="500"  >
+				<handler name="onchoice" args="path">
+					Debug.write("onchoice", path);
+				</handler>
+			</moodlefileexplorer>	
+		<!-- end of repcontainer -->
+		</view>
+		<view name="modcontainer" width="50%">
+			<simplelayout axis="y" spacing="5" />
+			<view name="modcombos" width="100%">
+				<simplelayout axis="x" spacing="10" />
+				<datacombobox  id="sectionList" width="200" selectfirst="true" shownitems="10"  itemdatapath="eService:moddata:/course/section" textdatapath="@sectionname" valuedatapath="@sectionid">
+					<handler name="onselect">
+						
+						modList.setAttribute("itemdatapath", this.itemdatapath + "/module[@sectionid=" + this.value + "]");
+						modList.refresh();
+					</handler>
+				</datacombobox>
+				<datacombobox  id="modList" width="150" shownitems="10"  selectfirst="true" itemdatapath="eService:moddata:/course/module" textdatapath="@modname" valuedatapath="@modid">
+					<method name="refresh">
+						this._teardowncblist();
+						this._setupcblist(false);
+						//datacombo does not have the method getNumItems
+						//no simple way to check if items exist in the list,
+						//so we poll the dataset directly
+						if(sectionList.selected.p.hasChildNodes()){
+							//Debug.inspect(sectionList.selected.p);
+							this.selectItemAt(0);
+						}
+					</method>
+					<handler name="onselect">
+						switch (this.selected.p.getAttr('modtype')){
+							case 'Quiz': 	areaList.selectItem('intro');
+												itemList.selectItem('0');
+												break;
+							case 'Assignment': areaList.selectItem('intro');
+												itemList.selectItem('0');
+												break;
+							case 'Lesson': areaList.selectItem('page_contents');
+												itemList.selectItem('1');
+												break;
+							case 'Page': areaList.selectItem('content');
+												itemList.selectItem('0');
+												break;
+							case 'Forum': areaList.selectItem('intro');
+												itemList.selectItem('0');
+												break;
+							default: areaList.selectItemAt(0);
+									itemList.selectItemAt(0);
+									break;
+						
+						}
+						canvas.setAttribute("moduleid",this.value);
+						modexplorer.controlbox.doRefr()
+					</handler>
+				
+				</datacombobox>
+				<combobox id="areaList" width="150"  editable="false">
+							<textlistitem text="intro" value="'intro'"/>
+						  <textlistitem text="content" value="'content'"/>
+						  <textlistitem text="submission" value="'submission'"/>
+						  <textlistitem text="page_contents" value="'page_contents'"/> 
+						  <textlistitem text="mediafile" value="'mediafile'"/>
+						  <textlistitem text="feedback" value="'feedback'"/> 
+						  <textlistitem text="questiontext" value="'questiontext'"/> 
+						  <textlistitem text="generalfeedback" value="'generalfeedback'"/> 
+						  <textlistitem text="answerfeedback" value="'answerfeedback'"/>
+						   <textlistitem text="draft" value="'description'"/>					  
+						  <textlistitem text="description" value="'description'"/>
+						  <textlistitem text="attachment" value="'attachment'"/>					  
+						  <textlistitem text="blogs" value="'blogs'"/>					 
+						  <textlistitem text="userfiles" value="'userfiles'"/>
+						  <textlistitem text="legacy" value="'legacy'"/>
+				</combobox>
+				<combobox id="itemList" width="60"  editable="true">
+							<textlistitem text="0"/>
+						  <textlistitem text="1" />
+						  <textlistitem text="2" />  
+						  <textlistitem text="3" />
+						  <textlistitem text="4" />
+						  <textlistitem text="5" />
+						  <textlistitem text="6" />
+						  <textlistitem text="7" />
+						  <textlistitem text="8" />
+						  <textlistitem text="9" />
+						  <handler name="onselect">
+								canvas.setAttribute("itemid",this.value);
+						</handler>
+				</combobox>
+				<button name="refillButton" onclick="modexplorer.controlbox.doRefr()" text="Fetch Data" />
+			<!-- end of modcontainer/modcombos -->
+			</view>
+			<moodlefileexplorer id="modexplorer" name="modexplorer" width="100%" 
 					filedataurl="${canvas.filedataurl + '?datatype=instancedirlist&amp;paramone=&amp;paramtwo=' + areaList.value + '&amp;courseid=' + canvas.courseid + '&amp;moduleid=' + modList.value + '&amp;itemid=' + itemList.value }" 
 					courseid="${canvas.courseid}" height="500"  >
-			<handler name="onchoice" args="path">
-				Debug.write("onchoice", path);
-			</handler>
-			<handler name="onuntilrefresh" reference="canvas.eService">
-				if(canvas.eService.untilrefresh==0){
-					this.controlbox.doRefr();
-				}
-			</handler>
-		</moodlefileexplorer>
+				<handler name="onchoice" args="path">
+					Debug.write("onchoice", path);
+				</handler>
+				<handler name="onuntilrefresh" reference="canvas.eService">
+					if(canvas.eService.untilrefresh==0){
+						this.controlbox.doRefr();
+					}
+				</handler>
+			</moodlefileexplorer>
+		<!-- end of modcontainer -->	
+		</view>
 		<!-- hsplitpane -->
 	</view><!-- end of explorers view -->
 	
