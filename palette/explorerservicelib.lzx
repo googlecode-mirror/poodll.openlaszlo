@@ -129,6 +129,10 @@
 		sendData(requestid,"instancecreatedir", 'nohash',filearea, newpath);
 	</method>
 	
+	<method name="doDuplicateFile" args="requestid,hash, filearea, filepath">
+		sendData(requestid,"instanceduplicatefile", hash , filearea, filepath);
+	</method>
+	
 	<method name="doCopyFile" args="requestid,newpath,filearea, repopath">
 		sendData(requestid,"instancecopyfile",'nohash' ,filearea,repopath, newpath);
 	</method>
@@ -137,16 +141,16 @@
 		sendData(requestid,"instancecopydir",'nohash' ,filearea,repopath, newpath);
 	</method>
 	
-	<method name="doRenameFile" args="requestid,oldpath,filearea, newfilename">
-		sendData(requestid,"instancerenamefile",'nohash' ,filearea,oldpath, newfilename);
+	<method name="doRenameFile" args="requestid,hash, newfilename">
+		sendData(requestid,"instancerenamefile",hash , newfilename);
 	</method>
 	
-	<method name="doCopyAsFile" args="requestid,oldpath,filearea, newfilename">
-		sendData(requestid,"instancecopyasfile",'nohash' ,filearea,oldpath, newfilename);
+	<method name="doCopyAsFile" args="requestid,hash, newfilename">
+		sendData(requestid,"instancecopyasfile",hash , newfilename);
 	</method>
 	
 	<method name="doGetModData" args="requestid">
-		   var p=new LzParam(); 
+	   var p=new LzParam(); 
 	  p.addValue("datatype","getmoddata", true);                                 
       p.addValue("action","getmoddata", true);
       p.addValue("hash", "nohash", true);

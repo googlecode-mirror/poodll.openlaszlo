@@ -174,6 +174,8 @@
 	</vsplitpane>
 	
 	<view name="controlbox" height="50" align="right" x="${classroot.width - this.width - 5}">
+		<simplelayout axis="x" spacing="2" />
+		<button name="rootButton" text="Home" onclick="parent.doRefr()"/>
 		<button name="refreshButton" text="Refresh" onclick="parent.doRefr()"/>
 		<method name="doRefr">
 			<![CDATA[

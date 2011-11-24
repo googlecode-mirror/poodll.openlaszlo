@@ -51,7 +51,7 @@
 		<button name="zipdownloadButton" text="Download(Zip)" onclick="parent.zipdownload()"/>
 		<button name="uploadButton" text="Upload" onclick="parent.upload()"/>
 		<button name="copyToBriefcaseButton" text="Copy To Briefcase" onclick="parent.copybriefcase()"/>
-		<button name="pasteFromBriefcaseButton" text="Paste From Briefcase" onclick="parent.pastbriefcase()"/>
+		<button name="pasteFromBriefcaseButton" text="Paste From Briefcase" onclick="parent.pastebriefcase()"/>
 		<button name="syncFileButton" text="Sync File" onclick="parent.syncfile()"/>
 		<button name="doGetModData" text="Mod Data" onclick="parent.getmoddata()"/>
 		<button name="doGetRepoData" text="Repo Data" onclick="parent.getrepodata()"/>
@@ -122,7 +122,7 @@
 		</method>
 		
 		<!-- copy selected file(s) or directory from repo to mod-->
-		<method name="copyfileover">
+		<method name="copyfileover" >
 		<![CDATA[
 			with (repoexplorer.splitpane.filetreecontainer.filetree){
 				//get a handle on selected files
@@ -192,9 +192,36 @@
 		</method>
 		
 		<!-- paste files from briefcase -->
-		<method name="pastebriefcase">
-			var newname = getSelectedField("name");
-			if(!newname){return;}
+		<method name="pastebriefcase" >
+		<![CDATA[
+			with (clipboardexplorer.splitpane.filetreecontainer.filetree){
+				//get a handle on selected files
+				var pointerArray= getSelection();
+				
+				//can out if no selection
+				if(!pointerArray || pointerArray.length<1){return;}
+				
+				//set up a transaction count. simply so that we can refresh after all
+				canvas.eService.registerTransactions(pointerArray.length);
+				
+				//do the actions
+				for (var x=0;x < pointerArray.length; x++){
+					//Debug.write('/repository/' + repoList.value + '/' + repoexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name') );
+					var requestid = this.fetchReqId();
+					canvas.eService.registerAction(requestid,"briefcase paste  " + pointerArray[x].p.getAttr('name'));
+					Debug.write("reqid:", requestid);
+					//we differentiate between copying files and copying directories 
+					if(pointerArray[x].p.getAttr('isleaf')){
+						canvas.eService.doDuplicateFile(requestid, pointerArray[x].p.getAttr('hash'), areaList.value, "/" +  modexplorer.selecteddir + "/");
+					}else{
+						//currently this wont bring sub dirs and sub files, its bogus J 201111223
+						canvas.eService.doDuplicateFile(requestid, pointerArray[x].p.getAttr('hash'), areaList.value, "/" +  modexplorer.selecteddir + "/");
+
+					}
+				}
+			
+			}
+			]]>
 		</method>
 		
 		<!-- zip and download selected files-->
@@ -282,7 +309,7 @@
 					//Debug.write("hash "+ pointerArray[x].p.getAttr('hash'));
 					var requestid = this.fetchReqId();
 					canvas.eService.registerAction(requestid,"rename " + pointerArray[x].p.getAttr('name')  );
-					canvas.eService.doRenameFile(requestid,modexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'),areaList.value,newfilename);
+					canvas.eService.doRenameFile(requestid,pointerArray[x].p.getAttr('hash'),newfilename);
 					
 				}
 			
@@ -324,8 +351,8 @@
 					//Debug.write("hash "+ pointerArray[x].p.getAttr('hash'));
 					var requestid = this.fetchReqId();
 					canvas.eService.registerAction(requestid,"rename " + pointerArray[x].p.getAttr('name')  );
-					
-					canvas.eService.doCopyAsFile(requestid,modexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'),areaList.value,newfilename);
+					canvas.eService.doCopyAsFile(requestid,pointerArray[x].p.getAttr('hash'),newfilename);
+					//canvas.eService.doCopyAsFile(requestid,modexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'),areaList.value,newfilename);
 					
 				}
 			
