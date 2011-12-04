@@ -3,9 +3,9 @@
 	<include href="../utils/poodllfullscreen.lzx"/>
 	<include href="counterlib.lzx"/>
 	
-	<attribute name="initcount"  value="lz.Browser.getInitArg('initcount')" /> 
-	<attribute name="fontheight"  value="lz.Browser.getInitArg('fontheight')" /> 
-	<attribute name="usepresets"  value="lz.Browser.getInitArg('usepresets')" /> 
+	<attribute name="initcount"  value="$once{lz.Browser.getInitArg('initcount')}" /> 
+	<attribute name="fontheight"  value="$once{lz.Browser.getInitArg('fontheight')}" /> 
+	<attribute name="usepresets"  value="$once{lz.Browser.getInitArg('usepresets')}" /> 
 	
 	<counterview initcount="${canvas.initcount}" usepresets="${canvas.usepresets=='true'}" fontheight="${canvas.fontheight}" width="${parent.width}" height="${parent.height}" />
 </canvas>

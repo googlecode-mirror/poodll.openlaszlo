@@ -5,6 +5,11 @@
 		<frame src="resources/folder24.png" /><!-- open -->
 		<frame src="resources/folder24.png" /><!-- leaf -->
 	</resource>
+	<resource name="buttonicons" >
+		<frame src="resources/folder24.png" /><!-- out -->
+		<frame src="resources/folder24.png" /><!-- over -->
+		<frame src="resources/folder24.png" /><!-- down -->
+	</resource>
 	<resource name="fileicons">
 		<frame src="resources/icon_txt.gif" /><!-- leaf -->
 		<frame src="resources/icon_film.gif" /><!-- closed -->
@@ -38,7 +43,7 @@
 	<!-- The dataset containing info about the filesystem -->
 	<!-- this will not work as is, and just because this class is an interface
 		implementations should declare a dataset with name filedata -->
-	<attribute name="filedata" />
+	<attribute name="filedata" type="node" />
 	
 
 	
@@ -64,6 +69,19 @@
 	<simplelayout axis="y" spacing="2" />
 	<!-- On windows systems this will look crap : need to revisit Justin 20111006 -->
 	<text name="thedir" text="${'/' + classroot.selecteddir}" width="${classroot.width}" bgcolor="0xCCCCCC"  />
+	<button name="topButton" text="top">
+		<handler name="onclick">
+			with(classroot.splitpane.dirtreecontainer.dirtree){
+					//close all folders on this tree
+					setAllOpen(false);
+					//update internals
+					setAttribute("selection", datapath.p);
+					//handle the selection process
+					updateSelection(datapath.p);
+			}
+			
+		</handler>
+	</button>
 	<vsplitpane name="splitpane" bordersize="1"  bordercolor="#ff0000" width="${parent.width}">
 <!-- lhs_min_height="${classroot.whiteboard || classroot.chat  ? (classroot.showvideo=='true' ? 180 : 140) : this.height - (this.bordersize*2) - this.sizer_height}" lhs_height_start="${this.lhs_min_height}" -->
 	<!-- Specify a non null icon, icon="foldericons" to get custom pictures-->
@@ -73,18 +91,32 @@
 				Debug.write("inited");
 			</handler>
 		  <!-- opttree name="innertree" datapath="*" text="$path{'@name'}" isleaf="$path{'@isleaf'}" -->
-				<method name="select" args="el" override="true"><![CDATA[
-                    super.select(el);					
+				<method name="select" args="el" override="true">
+				<![CDATA[
+                    super.select(el);	
+                    
+                    //handle the internals of opttree
                     this.setAttribute("selection", el && el.datapath.p);
-					//classroot.onchoice.sendEvent(this.selection);
 					
-					var path="";
-					var newxpath="";
+					//get selected data element
 					var currentnode=el.datapath.p;
-					//Debug.write(el.datapath);
-					//Debug.write('ok');
-					//Debug.inspect(el);
-					while(currentnode && currentnode.hasAttr('name')){
+					
+					//update class paths that user sees and filexplorer uses
+					this.updateSelection(currentnode);
+					
+					
+					
+					//update our grid(file area) to the correct path
+					classroot.splitpane.filetreecontainer.filetree.datapath.setAttribute("p",el.datapath.p);
+                	]]>
+                </method>
+               
+               <method name="updateSelection" args="currentnode">
+               	<![CDATA[
+                	var path="";
+					var newxpath="";
+					
+                	while(currentnode && currentnode.hasAttr('name')){
 						if(path==""){
 							path = currentnode.getAttr("name");
 							newxpath="directory[@name='" + currentnode.getAttr('name') + "']"; 
@@ -99,14 +131,10 @@
 					//set our currently selected dir(as user will see it) and xpath to it
 					classroot.setAttribute("selecteddir", path);
 					classroot.setAttribute("selxpath", "/directorylist/" + newxpath);
-					//Debug.write("path", path);
-					//Debug.write("newxpath", newxpath);
-					
-					classroot.onchoice.sendEvent(path);
-					
-					//update our grid(file area) to the correct path
-					classroot.splitpane.filetreecontainer.filetree.datapath.setAttribute("p",el.datapath.p);
-                ]]></method>	
+					//noptify user of a choice
+					classroot.onchoice.sendEvent(classroot.selecteddir);
+					]]>
+                </method>
 			
 		</opttree>
 		<scrollbar axis="y" />
@@ -284,6 +312,25 @@
 		</directorylist>
 	</dataset>
 </class>
+    
+    <!--Standard Button for Actions-->
+  <class name="paletteButton" resource="buttonicons" clickable="true" 
+           oninit="this.initButton()"
+          extends="basebutton">
+    <attribute name="showtext" type="string" />
+    <attribute name="labelX" type="number" value="11" />
+    
+    <method name="initButton">
+      this.buttonText.setAttribute('text', this.showtext);
+    </method>
+    
+    <text name="buttonText" font="obliqueText"  fontsize="25" 
+              fgcolor="#ffffff" align="center" valign="middle">
+      <handler name="ontext">
+        this.setAttribute('width', this.getTextWidth() + 5);
+      </handler>
+    </text>
+  </class>
 
 </library>
 

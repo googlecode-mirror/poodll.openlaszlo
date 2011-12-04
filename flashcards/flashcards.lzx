@@ -2,10 +2,10 @@
 <canvas>
 
 	<include href="flashcardslib.lzx"/>
-	<attribute name="cardset" value="lz.Browser.getInitArg('cardset')" />
-	<attribute name="cardwidth" value="lz.Browser.getInitArg('cardwidth')" />  
-	<attribute name="cardheight" value="lz.Browser.getInitArg('cardheight')" /> 
-	<attribute name="randomize" value="lz.Browser.getInitArg('randomize') == 'yes'" />   	
+	<attribute name="cardset" value="$once{lz.Browser.getInitArg('cardset')}" />
+	<attribute name="cardwidth" value="$once{lz.Browser.getInitArg('cardwidth')}" />  
+	<attribute name="cardheight" value="$once{lz.Browser.getInitArg('cardheight')}" /> 
+	<attribute name="randomize" value="$once{lz.Browser.getInitArg('randomize') == 'yes'}" />   	
 	
-	<flashcards align="center" cardset="${canvas.cardset}" cardwidth="${canvas.cardwidth}" cardheight="${canvas.cardheight}" height="${canvas.height}" width="${canvas.width}" randomize="${canvas.randomize}" clip="true"  />
+	<flashcards id="flashcards" align="center" cardset="${canvas.cardset}" cardwidth="${canvas.cardwidth}" cardheight="${canvas.cardheight}" height="${canvas.height}" width="${canvas.width}" randomize="${canvas.randomize}" clip="true"  />
 </canvas>

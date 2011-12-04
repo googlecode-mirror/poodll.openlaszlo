@@ -3,9 +3,9 @@
 
 	<include href="incubator/roundrect.lzx" />
 	<include href="../talkback/justinav/poodllbigbutton.lzx"/>
-	<resource name="add_button" src="../talkback/justinav/newicons/32/classic_add_button.png" />
-	<resource name="remove_button" src="../talkback/justinav/newicons/32/classic_remove_button.png" />	
-	<resource name="reset_button" src="../talkback/justinav/newicons/32/classic_reset_button.png" />
+	<resource name="add_button" src="resources/classic_add_button.png" />
+	<resource name="remove_button" src="resources/classic_remove_button.png" />	
+	<resource name="reset_button" src="resources/classic_reset_button.png" />
 	
 
 	<class name="counterview" extends="view">

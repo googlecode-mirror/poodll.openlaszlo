@@ -5,12 +5,12 @@
 	<include href="feedbacklib.lzx"/>
 	<include href="incubator/hsplitpane.lzx" />
 	
-	<attribute name="filedataurl"  value="lz.Browser.getInitArg('filedataurl')" />
+	<attribute name="filedataurl"  value="$once{lz.Browser.getInitArg('filedataurl')}" />
+	<attribute name="courseid"  value="$once{lz.Browser.getInitArg('courseid')}" /> 
+	<attribute name="moduleid"  value="$once{lz.Browser.getInitArg('moduleid')}" /> 
+	<attribute name="itemid"  value="$once{lz.Browser.getInitArg('itemid') ? lz.Browser.getInitArg('itemid')  : 0}" /> 
 	<attribute name="repopath"  value="''" />  
 	<attribute name="modfilepath"  value="''" />
-	<attribute name="courseid"  value="lz.Browser.getInitArg('courseid')" /> 
-	<attribute name="moduleid"  value="lz.Browser.getInitArg('moduleid')" /> 
-	<attribute name="itemid"  value="lz.Browser.getInitArg('itemid') ? lz.Browser.getInitArg('itemid')  : 0" /> 
 	
 	<!-- layout vertically -->
 	<simplelayout axis="y" spacing="10" />

@@ -13,9 +13,9 @@
 	<include href="../talkback/justinav/poodllbigbutton.lzx"/>
 	
 	
-	<resource name="play_button" src="../talkback/justinav/newicons/32/classic_play_button.png" />
-	<resource name="stop_button" src="../talkback/justinav/newicons/32/classic_stop_button.png" />	
-	<resource name="reset_button" src="../talkback/justinav/newicons/32/classic_reset_button.png" />
+	<resource name="play_button" src="./resources/classic_play_button.png" />
+	<resource name="stop_button" src="./resources/classic_stop_button.png" />	
+	<resource name="reset_button" src="./resources/classic_reset_button.png" />
 	
 	
 	<class name="stopwatch" extends="loopingtimer">
@@ -96,17 +96,18 @@
 
 	 <simplelayout axis="y" spacing="10"/>
 
-
 		<roundrect align="center" name="displayview" width="${parent.width}" height="${parent.height - parent.buttonsview.height - 30}" 
 					backgroundStartColor="0xEEEEEE"
 					backgroundStopColor="0xDDDDDD"
-					borderColor="#0000FF"
+					borderColor="0x0000FF"
 					borderWidth="5"				
 					>
 			 <text align="center" valign="middle" name="timeDisplay" fontsize="${classroot.usefontheight}" fgcolor="${classroot.ltimer.timer_state == 'STOPPED' ? 0xFF0000 : 0x000000}" />
 			 <text y="${parent.timeDisplay.y + parent.timeDisplay.height + 4}" x="${parent.timeDisplay.x + parent.timeDisplay.width - this.width}" 
 				name="milliDisplay" fgcolor="${parent.timeDisplay.fgcolor}" fontsize="${(classroot.usefontheight / 8) * 3}" />
 		</roundrect>
+
+
 
 		 <view name="buttonsview" align="center">
 			<simplelayout axis="x" spacing="10"/>

@@ -19,9 +19,9 @@
 	<attribute name="cardwidth" value="150"/>
 	<attribute name="cardheight" value="100"/>
 	<attribute name="frontfgcolor" value="0x00FF00" />
-	<attribute name="frontbgcolor" value="null" />
-	<attribute name="backfgcolor" value="null" />
-	<attribute name="backbgcolor" value="null" />
+	<attribute name="frontbgcolor" value="0xFF0000" />
+	<attribute name="backfgcolor" value="0x0" />
+	<attribute name="backbgcolor" value="0x0" />
 	
 
 	
@@ -40,10 +40,10 @@
 					dp.p.childNodes.sort(function() {return (Math.random() > 0.5) ? 1  : -1});
 				}
 				
-				classroot.setAttribute("frontfgcolor", dp.xpathQuery('@frontfgcolor'));
-				classroot.setAttribute("frontbgcolor", dp.xpathQuery('@frontbgcolor'));
-				classroot.setAttribute("backfgcolor", dp.xpathQuery('@backfgcolor'));
-				classroot.setAttribute("backbgcolor", dp.xpathQuery('@backbgcolor'));
+				classroot.setAttribute("frontfgcolor", Number(dp.xpathQuery('@frontfgcolor')));
+				classroot.setAttribute("frontbgcolor", Number(dp.xpathQuery('@frontbgcolor')));
+				classroot.setAttribute("backfgcolor", Number(dp.xpathQuery('@backfgcolor')));
+				classroot.setAttribute("backbgcolor", Number(dp.xpathQuery('@backbgcolor')));
 				Debug.write("cardfgcolor:",classroot.frontfgcolor);
 				
 				//allow the cards to instantiate
@@ -54,7 +54,6 @@
 	</dataset>
 <attribute name="cardorder" value="null" />
 	
-
 <view name="deckview" y="0" width="${parent.width}" height="${parent.height -parent.buttonsview.height - 10}" initstage="defer">
 	<animatedview name="cardview" bordersize="10" valign="middle" x="$once{-1 * classroot.cardwidth}"  width="${classroot.cardwidth}" height="${classroot.cardheight}" 
 			maincolor="${this.showingfront ? classroot.frontbgcolor : classroot.backbgcolor}" 
@@ -71,7 +70,7 @@
 			  <handler name="onclones">
 				if (!this['doneDel']) {
 				  this.doneDel = new LzDelegate(this, 'showFirstCard')
-				  this.doneDel.register(clones[clones.length - 1], 'oninit')
+				  this.doneDel.register(this.clones[this.clones.length - 1], 'oninit')
 				}
 			  </handler>
 			  <method name="showFirstCard" args="ignore=null">
@@ -135,17 +134,17 @@
 	<button name="backButton"  width="${(parent.width - 5) / 2}"  height="30" text="Back">
         	<handler name="onclick" >
 			<![CDATA[
-				Debug.write("started", classroot.deckview.cardview.clones[classroot.currentIndex]._swiveltransition.isactive);
-				if (classroot.deckview.cardview.clones[classroot.currentIndex]._swiveltransition.isactive){
+				Debug.write("started", classroot.deckview.cardview.clones[classroot.currentIndex]._swiveltransishion.isactive);
+				if (classroot.deckview.cardview.clones[classroot.currentIndex]._swiveltransishion.isactive){
 					return;
 				}
-				classroot.deckview.cardview.clones[classroot.currentIndex].setTransition('anmSlideAwayLeft');			
+				classroot.deckview.cardview.clones[classroot.currentIndex].setTransishion('anmSlideAwayLeft');			
 				classroot.deckview.cardview.clones[classroot.currentIndex].setAttribute("onscreen",false);
 				classroot.currentIndex--;
 				if (classroot.currentIndex < 0){
 					classroot.setAttribute("currentIndex",classroot.totalCards -1);
 				}
-				classroot.deckview.cardview.clones[classroot.currentIndex].setTransition('anmSlideInLeft');
+				classroot.deckview.cardview.clones[classroot.currentIndex].setTransishion('anmSlideInLeft');
 				classroot.switchCard(classroot.deckview.cardview.clones[classroot.currentIndex]);
 				Debug.write("currentIndex" , classroot.currentIndex);
 				]]>
@@ -154,17 +153,17 @@
 	<button name="nextButton" valign="middle"  width="${parent.backButton.width}" height="30" text="Next">
         	<handler name="onclick" >	
 					<![CDATA[
-					if (classroot.deckview.cardview.clones[classroot.currentIndex]._swiveltransition.isactive){
-					return;
-				}
-				classroot.deckview.cardview.clones[classroot.currentIndex].setTransition('anmSlideAwayRight');	
+					if (classroot.deckview.cardview.clones[classroot.currentIndex]._swiveltransishion.isactive){
+						return;
+					}
+				classroot.deckview.cardview.clones[classroot.currentIndex].setTransishion('anmSlideAwayRight');	
 				classroot.deckview.cardview.clones[classroot.currentIndex].setAttribute("onscreen",false);	
 				classroot.currentIndex++;
 				if (classroot.currentIndex > classroot.totalCards -1){
 					classroot.setAttribute('currentIndex',0);
 				}
 					
-				classroot.deckview.cardview.clones[classroot.currentIndex].setTransition('anmSlideInRight');
+				classroot.deckview.cardview.clones[classroot.currentIndex].setTransishion('anmSlideInRight');
 				classroot.switchCard(classroot.deckview.cardview.clones[classroot.currentIndex]);
 					Debug.write("currentIndex" , classroot.currentIndex);
 				]]>

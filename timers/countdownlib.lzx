@@ -12,9 +12,9 @@
 	<include href="../utils/kmeixnertimer.lzx"/>	
 	<include href="incubator/roundrect.lzx" />
 	<include href="../talkback/justinav/poodllbigbutton.lzx"/>
-	<resource name="play_button" src="../talkback/justinav/newicons/32/classic_play_button.png" />
-	<resource name="stop_button" src="../talkback/justinav/newicons/32/classic_stop_button.png" />	
-	<resource name="reset_button" src="../talkback/justinav/newicons/32/classic_reset_button.png" />
+	<resource name="play_button" src="./resources/classic_play_button.png" />
+	<resource name="stop_button" src="./resources/classic_stop_button.png" />	
+	<resource name="reset_button" src="./resources/classic_reset_button.png" />
 	
 	<class name="countdowntimer" extends="loopingtimer">
 

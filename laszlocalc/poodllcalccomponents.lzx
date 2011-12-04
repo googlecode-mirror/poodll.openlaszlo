@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-
 <library>
 
  <!-- calculator display image -->
-  <resource name="calc_display" src="./resources/display.png"/>
+  <resource name="calc_display" src="resources/display.png"/>
   
     <!-- calculator button images-->
   <resource name="button_grn">
-    <frame src="./resources/new_button_green_off.png"/>
-    <frame src="./resources/new_button_green_over.png"/>
-    <frame src="./resources/new_button_green_down.png"/>
+    <frame src="resources/new_button_green_off.png"/>
+    <frame src="resources/new_button_green_over.png"/>
+    <frame src="resources/new_button_green_down.png"/>
   </resource>
   <resource name="button_blu">
-    <frame src="./resources/new_button_blue_off.png"/>
-    <frame src="./resources/new_button_blue_over.png"/>
-    <frame src="./resources/new_button_blue_down.png"/>
+    <frame src="resources/new_button_blue_off.png"/>
+    <frame src="resources/new_button_blue_over.png"/>
+    <frame src="resources/new_button_blue_down.png"/>
   </resource>
   <resource name="button_red">
-    <frame src="./resources/new_button_red_off.png"/>
-    <frame src="./resources/new_button_red_over.png"/>
-    <frame src="./resources/new_button_red_down.png"/>
+    <frame src="resources/new_button_red_off.png"/>
+    <frame src="resources/new_button_red_over.png"/>
+    <frame src="resources/new_button_red_down.png"/>
   </resource>
   
    <!-- A calculator button -->
@@ -70,7 +69,10 @@
     <!-- handles the push of a button -->
     <method name="inputDigit" args="buttonObj">
     <![CDATA[
-      var val = buttonObj.buttonText.getText();
+    	//errored out on ol50 so changed to simple .text Justin 20111202
+    //  var val = buttonObj.buttonText.getText();
+    var val = buttonObj.buttonText.text;
+    
       // weed out any non-numbers (e.g. operators, clear button)
       if (isInArray(val, this.allOperators)) {
         var theOperator = val;
@@ -89,7 +91,11 @@
         this.equals();
         return;
       }
-      var displ = this.screen.getText();
+      
+    //errored out on ol50 so changed to simple .text Justin 20111202
+      //var displ = this.screen.getText();
+      var displ = this.screen.text;
+      
       if ((displ == '0') && (val == '0')) {
         return;
       }
@@ -109,16 +115,17 @@
     
     <method name="inputOperator" args="operator">
       if (this.lastInput == 'digit') {
-        this.execute(this.screen.getText());
+      	//errored out on ol50 so changed getText() to simple .text Justin 20111202
+        this.execute(this.screen.text);
       }
-      this.valueX = this.screen.getText();
+      this.valueX = this.screen.text;
       this.operator = operator;
       this.lastInput = 'operator';
     </method>
     
     <method name="equals">
       if (this.lastInput != 'equals') {
-        this.oldValue = this.screen.getText();
+        this.oldValue = this.screen.text;
         this.lastInput = 'equals';
         this.execute(this.oldValue);
       } else {
@@ -142,12 +149,12 @@
       }
       valFromDisp = val;
       this.screen.setAttribute('text', valFromDisp.toString());
-      this.valueX = this.screen.getText();
+      this.valueX = this.screen.text;
     </method>
     
     <method name="isThereDecimal">
     <![CDATA[
-      var disp = this.screen.getText();
+      var disp = this.screen.text;
       var isDecimal = false;
       for (var i=0; i != disp.length; i++) {
         if (disp.charAt(i) == '.') {
@@ -166,7 +173,7 @@
         }
       } else if (this.lastInput == 'digit') {
         if (!this.isThereDecimal()) {
-            var newText = this.screen.getText();
+            var newText = this.screen.text;
             newText += ".";
             this.screen.setAttribute('text', newText);
         }
@@ -180,7 +187,7 @@
     <method name="negative">
       if ((this.lastInput == 'digit') ||
           (this.lastInput == 'equals')) {
-        var newDisp = (this.screen.getText() - 0) * -1;
+        var newDisp = (this.screen.text - 0) * -1;
         this.screen.setAttribute('text', newDisp.toString()); 
       } else {
         clear();

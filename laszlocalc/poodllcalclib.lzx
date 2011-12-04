@@ -1,8 +1,7 @@
-
-
+<?xml version="1.0" encoding="UTF-8" ?>
 <library>
   <!-- art assets -->
-  <resource name="calc_body" src="./resources/body.png"/>
+  <resource name="calc_body" src="resources/body.png"/>
   
   <!-- includes -->
   <include href="poodllcalccomponents.lzx" />
@@ -22,6 +21,7 @@
         }
   
   ]]></script>
+
 
 <class name="poodllcalc" extends="view" >
 

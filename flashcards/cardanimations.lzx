@@ -46,9 +46,9 @@
 		</animatorgroup>
 	</class>
 	<class name="animatedview" extends="roundrect" clip="true">
-			<attribute name="_transition" value="$once{transitions.anmSlideInRight}" />
-			<attribute name="_swiveltransition" value="$once{transitions.anmSwivelCard}" />
-			<attribute name="maincolor" type="color" value="white" />
+			<attribute name="_transishion" value="$once{transishions.anmSlideInRight}" />
+			<attribute name="_swiveltransishion" value="$once{transishions.anmSwivelCard}" />
+			<attribute name="maincolor" type="color" value="0xFFFFFF" />
 			<attribute name="onscreen" value="false" />
 			<attribute name="defaultfontsize" value="14" />
 			<attribute name="cardwidth" value="150" />
@@ -73,20 +73,20 @@
 				this.drawStructure();			
 			</handler>
 			
-			<method name="setTransition" args="newtransition">
+			<method name="setTransishion" args="newtransishion">
 				<![CDATA[
-					switch (newtransition){
+					switch (newtransishion){
 						case "anmSlideInLeft":
-								this._transition=transitions.anmSlideInLeft;
+								this._transishion=transishions.anmSlideInLeft;
 								break;
 						case "anmSlideAwayLeft":
-								this._transition=transitions.anmSlideAwayLeft;
+								this._transishion=transishions.anmSlideAwayLeft;
 								break;
 						case "anmSlideInRight":
-								this._transition=transitions.anmSlideInRight;
+								this._transishion=transishions.anmSlideInRight;
 								break;
 						case "anmSlideAwayRight":
-								this._transition=transitions.anmSlideAwayRight;
+								this._transishion=transishions.anmSlideAwayRight;
 								break;
 						
 					}				
@@ -94,24 +94,24 @@
 			</method>
 			<method name="swivelcard" args="">
 				<![CDATA[
-						//if (!this._transition.started){
-						if (!this._transition.isactive){
-							this._swiveltransition.doStart();
-							//this._swiveltransition.setAttribute("started",true);
+						//if (!this._transishion.started){
+						if (!this._transishion.isactive){
+							this._swiveltransishion.doStart();
+							//this._swiveltransishion.setAttribute("started",true);
 						}
 				]]>
 			</method>
 			<handler name="ononscreen">
 				<![CDATA[
-						//if(!this._swiveltransition.started){
-						if(!this._swiveltransition.isactive){
-							this._transition.doStart();
-							//this._transition.setAttribute("started",true);
+						//if(!this._swiveltransishion.started){
+						if(!this._swiveltransishion.isactive){
+							this._transishion.doStart();
+							//this._transishion.setAttribute("started",true);
 						}
 						
 				]]>
 			</handler>				
-			<animations name="transitions" cardtarget="${this.parent}"/>
+			<animations name="transishions" cardtarget="${this.parent}"/>
 	</class>
 	
 </library>

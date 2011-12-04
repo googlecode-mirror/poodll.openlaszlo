@@ -7,7 +7,7 @@
 	
 		<attribute name="fullscreenxoffset" value="60" />
 		<attribute name="fullscreenyoffset" value="35" />
-		<attribute name="permitfullscreen" value="lz.Browser.getInitArg('permitfullscreen')=='true'" />
+		<attribute name="permitfullscreen" value="$once{lz.Browser.getInitArg('permitfullscreen')=='true'}" />
  
        
 	   <view 
