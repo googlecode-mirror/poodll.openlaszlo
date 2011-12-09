@@ -41,21 +41,26 @@
 	
 	<view name="actionarea"  height="30" align="center">
 		<simplelayout axis="x" spacing="5" />
-		<button name="copyFileButton" text="CopyFile" onclick="parent.copyfileover()"/>
+		<button name="copyFileButton" text="Repo->Mod" onclick="parent.copyfileover()"/>
 		<button name="delButton" text="Delete" onclick="parent.del()"/>
 		<button name="makedirButton" text="Make Dir" onclick="parent.makedir()"/>
 		<button name="copyFileAsButton" text="Copy File As" onclick="parent.copyasfile()"/>
 		<button name="renameButton" text="Rename" onclick="parent.rename()"/>
 		<button name="clipboardButton" text="URL to Clipboard" onclick="parent.copyclipboard()"/>
 		<button name="downloadButton" text="Download(file)" onclick="parent.download()"/>
-		<button name="zipdownloadButton" text="Download(Zip)" onclick="parent.zipdownload()"/>
-		<button name="uploadButton" text="Upload" onclick="parent.upload()"/>
+		<button name="doShowBriefcase" text="Show bcase" onclick="parent.showbriefcase()"/>
 		<button name="copyToBriefcaseButton" text="Copy To Briefcase" onclick="parent.copybriefcase()"/>
 		<button name="pasteFromBriefcaseButton" text="Paste From Briefcase" onclick="parent.pastebriefcase()"/>
+		
+		
+		<!-- hide for now buttons-->
+		<!--
+		<button name="zipdownloadButton" text="Download(Zip)" onclick="parent.zipdownload()"/>
+		<button name="uploadButton" text="Upload" onclick="parent.upload()"/>
 		<button name="syncFileButton" text="Sync File" onclick="parent.syncfile()"/>
 		<button name="doGetModData" text="Mod Data" onclick="parent.getmoddata()"/>
 		<button name="doGetRepoData" text="Repo Data" onclick="parent.getrepodata()"/>
-		<button name="doShowBriefcase" text="Show bcase" onclick="parent.showbriefcase()"/>
+		-->
 		
 		
 		<!-- generate a random id to id a request -->

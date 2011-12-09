@@ -68,20 +68,31 @@
 	
 	<simplelayout axis="y" spacing="2" />
 	<!-- On windows systems this will look crap : need to revisit Justin 20111006 -->
-	<text name="thedir" text="${'/' + classroot.selecteddir}" width="${classroot.width}" bgcolor="0xCCCCCC"  />
-	<button name="topButton" text="top">
-		<handler name="onclick">
-			with(classroot.splitpane.dirtreecontainer.dirtree){
+	
+	
+	<view name="controlbox" height="25" align="right" x="${classroot.width - this.width - 5}">
+		<simplelayout axis="x" spacing="2" />
+		<text name="thedir" text="${'/' + classroot.selecteddir}" height="25" width="${classroot.width - parent.topButton.width - parent.refreshButton.width - 4}" bgcolor="0xCCCCCC"  />
+		<button name="topButton" text="Home">
+			<handler name="onclick">
+				with(classroot.splitpane.dirtreecontainer.dirtree){
 					//close all folders on this tree
 					setAllOpen(false);
 					//update internals
 					setAttribute("selection", datapath.p);
 					//handle the selection process
 					updateSelection(datapath.p);
-			}
-			
-		</handler>
-	</button>
+				}
+			</handler>
+		</button>
+		<button name="refreshButton" text="Refresh" onclick="parent.doRefr()"/>
+		<method name="doRefr">
+			<![CDATA[
+				classroot.filedata.doRequest();
+			]]>
+		</method>
+	</view>
+
 	<vsplitpane name="splitpane" bordersize="1"  bordercolor="#ff0000" width="${parent.width}">
 <!-- lhs_min_height="${classroot.whiteboard || classroot.chat  ? (classroot.showvideo=='true' ? 180 : 140) : this.height - (this.bordersize*2) - this.sizer_height}" lhs_height_start="${this.lhs_min_height}" -->
 	<!-- Specify a non null icon, icon="foldericons" to get custom pictures-->
@@ -201,17 +212,6 @@
 	</view>
 	</vsplitpane>
 	
-	<view name="controlbox" height="50" align="right" x="${classroot.width - this.width - 5}">
-		<simplelayout axis="x" spacing="2" />
-		<button name="rootButton" text="Home" onclick="parent.doRefr()"/>
-		<button name="refreshButton" text="Refresh" onclick="parent.doRefr()"/>
-		<method name="doRefr">
-			<![CDATA[
-				classroot.filedata.doRequest();
-			]]>
-		</method>
-	</view>
-
 
 
 
