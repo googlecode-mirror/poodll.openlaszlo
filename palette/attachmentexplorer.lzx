@@ -13,8 +13,7 @@
 	<attribute name="modfilepath"  value="''" />
 	
 	<!-- layout vertically -->
-	<simplelayout axis="y" spacing="10" />
-
+	<simplelayout axis="y" spacing="9" />
 	
 	<handler name="oninit">
 		<![CDATA[
@@ -39,7 +38,7 @@
 		</handler>
 	</explorerservice>
 	
-	<view name="actionarea"  height="30" align="center">
+	<view name="actionarea"  height="30" align="center" valign="middle" bgcolor="0xDDF8C6">
 		<simplelayout axis="x" spacing="5" />
 		<button name="copyFileButton" text="Repo->Mod" onclick="parent.copyfileover()"/>
 		<button name="delButton" text="Delete" onclick="parent.del()"/>
@@ -395,18 +394,16 @@
 			]]>
 		</method>
 	 </view> 
-	 
-	 <feedback name="feedbak" width="${parent.width}" height="20%" bgcolor="0xEEEEEE" clip="true" />
 	
-	<view name="explorers" width="${parent.width}" height="40%">
+	<view name="explorers" align="center" width="${parent.width - 30}" height="550">
 		<simplelayout axis="x" spacing="10" />
 		<!-- hsplitpane name="splitpane" bordersize="1"  width="${canvas.width}" bordercolor="#ff0000" -->
-		<emptyfileexplorer id="clipboardexplorer" name="clipboardexplorer" width="50%" courseid="${canvas.courseid}" height="500" showdirtree="true" visible="${!repocontainer.visible}"  >				
+		<emptyfileexplorer id="clipboardexplorer" name="clipboardexplorer" width="50%" courseid="${canvas.courseid}" height="100%" showdirtree="true" visible="${!repocontainer.visible}"  >				
 				<handler name="onchoice" args="path">
 					Debug.write("onchoice", path);
 				</handler>
 		</emptyfileexplorer>
-		<view name="repocontainer" id="repocontainer" width="50%">
+		<view name="repocontainer" id="repocontainer" width="50%" height="100%">
 			<simplelayout axis="y" spacing="5" />
 			<view name="repocombos" width="100%">
 			 	<datacombobox  id="repoList" width="200" selectfirst="true" shownitems="10"  itemdatapath="eService:repodata:/repositories/repo" textdatapath="@name" valuedatapath="@name">
@@ -422,7 +419,7 @@
 			</moodlefileexplorer>	
 		<!-- end of repcontainer -->
 		</view>
-		<view name="modcontainer" width="50%">
+		<view name="modcontainer" width="50%" height="100%">
 			<simplelayout axis="y" spacing="5" />
 			<view name="modcombos" width="100%">
 				<simplelayout axis="x" spacing="10" />
@@ -522,9 +519,12 @@
 		<!-- end of modcontainer -->	
 		</view>
 		<!-- hsplitpane -->
-	</view><!-- end of explorers view -->
-	
-<poodllmodal name="mydialog" width="300" height="200" />
+	</view>
+	<!-- end of explorers view -->
+	<!-- start of feedback view -->
+	<feedback name="feedbak" align="center" width="${parent.width - 30}" height="10%" bgcolor="0xDDF8C6" clip="true" />
+	<!-- start of feedback view -->
+<poodllmodal name="mydialog" width="300" height="200" options="ignorelayout"/>
  
 
 
