@@ -73,7 +73,6 @@
 
 			
 			//This is to ensure that the savefilename gets set in onfilename handler
-			//previously took filename input, but canned it in favor of certainty (Justin 2009/06/14)
 			if(classroot.course=="-1"){
 				classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".flv");					
 			}else{

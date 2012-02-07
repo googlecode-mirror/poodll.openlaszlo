@@ -63,8 +63,13 @@
    
 		    
 		<handler name="oninit" >
-
-			classroot.setAttribute("filename", "moddata/" + classroot.assigName + "/" + classroot.uid + "/" + Math.floor(Math.random()*100001) + ".flv");
+		
+			//This is to ensure that the savefilename gets set in onfilename handler
+			if(classroot.course=="-1"){
+				classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".flv");					
+			}else{
+				classroot.setAttribute("filename", "moddata/" + classroot.assigName + "/" + classroot.uid + "/" + Math.floor(Math.random()*1000000000000001) + ".flv");
+			}
 
 		</handler>
 		
@@ -135,7 +140,11 @@
 			enabled="${classroot.playstream.playing == false}" 
 			onclick="record()">
         	<method name="record">
-				classroot.setAttribute("filename", "moddata/" + classroot.assigName + "/" + classroot.uid + "/" + Math.floor(Math.random()*100001) + ".flv");
+				if(classroot.course=="-1"){
+						classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".flv");					
+					}else{
+						classroot.setAttribute("filename", "moddata/" + classroot.assigName + "/" + classroot.uid + "/" + Math.floor(Math.random()*1000000000000001) + ".flv");
+				}
 				classroot.ms.setAttribute("url",classroot.savefilename);
 				Debug.write("ms.url:" + classroot.ms.url);
         		classroot.vview_tslider.record_tpane.recordview.mymic.capturing=true;
