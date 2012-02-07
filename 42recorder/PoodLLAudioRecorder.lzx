@@ -19,8 +19,8 @@
 	<attribute name="uid" value="lz.Browser.getInitArg('uid')" />
 	<attribute name="assigname" value="lz.Browser.getInitArg('assigName')" />
 
-	<!-- The course id (parent will pass -1 if there is no course id) -->
 	<attribute name="course" value="lz.Browser.getInitArg('course')" />
+	<!-- The course id (parent will pass -1 if there is no course id) -->
 	
 	<!-- Audio Settings -->
 	<attribute name="gain" value="lz.Browser.getInitArg('gain')" />
@@ -37,6 +37,7 @@
 
     <simplelayout inset="10" axis="y" spacing="5"/>
 	<poodllaudiorecorder 
+		name="par"
 		width="${parent.width}" 
 		height="${parent.iconsize + 18}"
 		filename="${parent.filename}"

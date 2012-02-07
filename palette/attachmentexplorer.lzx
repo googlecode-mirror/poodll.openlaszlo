@@ -38,8 +38,8 @@
 		</handler>
 	</explorerservice>
 	
-	<view name="actionarea"  height="30" align="center" valign="middle" bgcolor="0xDDF8C6">
-		<simplelayout axis="x" spacing="5" />
+	<view name="actionarea"  height="80" width="90%" align="center" valign="middle" bgcolor="0xDDF8C6">
+		<wrappinglayout axis="x" spacing="5" />
 		<button name="copyFileButton" text="Repo->Mod" onclick="parent.copyfileover()"/>
 		<button name="delButton" text="Delete" onclick="parent.del()"/>
 		<button name="makedirButton" text="Make Dir" onclick="parent.makedir()"/>

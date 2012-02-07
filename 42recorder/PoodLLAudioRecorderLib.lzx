@@ -53,7 +53,7 @@
 		<![CDATA[
 			Debug.write("course", this.course);
 			Debug.write("red5url", this.red5url);
-			if (this.course!=-1){
+			if (this.course!="-1"){
 				this.setAttribute("savefilename", this.course + '/' + this.filename);
 			}else{ 
 				this.setAttribute("savefilename", this.filename);
@@ -69,12 +69,16 @@
 		<handler name="oninit" >
 			Debug.write("filename:" + classroot.filename);
 			Debug.write("overwritefile:" + classroot.overwritefile);
+			Debug.write("course:" + classroot.course);
 
 			
 			//This is to ensure that the savefilename gets set in onfilename handler
 			//previously took filename input, but canned it in favor of certainty (Justin 2009/06/14)
-			
-			classroot.setAttribute("filename", "moddata/" + classroot.assigname + "/" + classroot.uid + "/" + Math.floor(Math.random()*100001) + ".flv");
+			if(classroot.course=="-1"){
+				classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".flv");					
+			}else{
+				classroot.setAttribute("filename", "moddata/" + classroot.assigname + "/" + classroot.uid + "/" + Math.floor(Math.random()*1000000000000001) + ".flv");
+			}
 
 		</handler>		   		
 	</rtmpconnection>
@@ -125,7 +129,13 @@
 				//if the user is overwriting files
 				if (classroot.overwritefile == "false" || classroot.filename==""){
 					Debug.write("Reassigning filename.");
-					classroot.setAttribute("filename", "moddata/" + classroot.assigname + "/" + classroot.uid + "/" + Math.floor(Math.random()*100001) + ".flv");
+					Debug.write("course:" + classroot.course);
+					//a courseid of -1 indicates Moodle 2, so we don't append all the filepaths
+					if(classroot.course=="-1"){
+						classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".flv");					
+					}else{
+						classroot.setAttribute("filename", "moddata/" + classroot.assigname + "/" + classroot.uid + "/" + Math.floor(Math.random()*1000000000000001) + ".flv");
+					}
 				}
 				if (classroot.ms.url != classroot.savefilename){
 					Debug.write("Resetting url attribute to:", classroot.savefilename);
