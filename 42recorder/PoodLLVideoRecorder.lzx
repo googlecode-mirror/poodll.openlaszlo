@@ -3,6 +3,7 @@
  <goldstyle name="defaultstyle" isdefault="true"/>
 
 	<include href="PoodLLVideoRecorderLib.lzx"/>
+	<!-- include href="explorerservicelib.lzx" -->
 	
 	<!-- The URL of the Red5 server -->
 	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  	
@@ -33,6 +34,13 @@
 	<!-- Overwritefile or generate random filename, depends on server-->
 	<attribute name="overwritefile" value="lz.Browser.getInitArg('overwritefile')" />
 	
+	<!--Moodle 2 File system info -->
+	<attribute name="poodllfilelib" value="lz.Browser.getInitArg('poodllfilelib')" />
+	<attribute name="contextid" value="lz.Browser.getInitArg('contextid')" />
+	<attribute name="component" value="lz.Browser.getInitArg('component')" />
+	<attribute name="filearea" value="lz.Browser.getInitArg('filearea')" />
+	<attribute name="itemid" value="lz.Browser.getInitArg('itemid')" />
+	
 	
 	<poodllvideorecorder name="recorder" 
 			red5url="${canvas.red5url}" 
@@ -48,7 +56,12 @@
 			captureheight="canvas.captureheight"
 			bandwidth="canvas.bandwidth"
 			picqual="canvas.picqual"
-			capturefps="canvas.capturefps"			
+			capturefps="canvas.capturefps"
+			poodllfilelib="${canvas.poodllfilelib}"
+			contextid="${canvas.contextid}"
+			component="${canvas.component}"
+			filearea="${canvas.filearea}"
+			itemid="${canvas.itemid}"
 			width="${parent.width}" 
 			height="${parent.height}" />
 </canvas>

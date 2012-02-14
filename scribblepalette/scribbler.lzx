@@ -2,8 +2,13 @@
 <canvas width="500" height="500">
 <include href="scribblepalette.lzx" />	
 <include href="scribblecpanel.lzx" />	
-<include href="../interview/sharedObject.lzx" />	
-<include href="../messaging/MessagingRtmpConnection.lzx" />
+<switch>
+	<unless property="$dhtml">
+		<include href="../interview/sharedObject.lzx" />	
+		<include href="../messaging/MessagingRtmpConnection.lzx" />
+	</unless>
+</switch>
+
 
 		<attribute name="red5url" value="lz.Browser.getInitArg('red5url')"/>  	
 		<attribute name="mename"  value="lz.Browser.getInitArg('mename')" /> 
@@ -15,21 +20,28 @@
 
 <!--rtmp connection -->
 		<!-- we set altsrc and src to the same value, to force a reconnect if timeouts, seems to happen, -->
-		<MessagingRtmpConnection name="rtmpc" userid="${canvas.mename}" appprofileid="${canvas.headeridtag}" 
-			src="${unescape(canvas.red5url) + '/' + canvas.courseid +  '/' + canvas.headeridtag}"  
-			altsrc="${unescape(canvas.red5url) + '/' + canvas.courseid +  '/' + canvas.headeridtag}" 
-			debug="false" autoconnect="true">
+	<switch>
+		<when property="$dhtml">
+			<view name="rtmpc" />
+		</when>
+		<otherwise>
+			<MessagingRtmpConnection name="rtmpc" userid="${canvas.mename}" appprofileid="${canvas.headeridtag}" 
+				src="${unescape(canvas.red5url) + '/' + canvas.courseid +  '/' + canvas.headeridtag}"  
+				altsrc="${unescape(canvas.red5url) + '/' + canvas.courseid +  '/' + canvas.headeridtag}" 
+				debug="false" autoconnect="true">
 
-			<!--on connecting we init the whiteboard shared object with the boardname -->
-			<!--However we only do this if there is no list of drop down rooms available -->
-			<handler name="onconnect">
-				if(canvas.rooms==null || canvas.rooms==''){
-					Debug.write("connecting to SO");
-					parent.scribbleview.scribble.api.connectSO(canvas.boardname);
-					Debug.write("connected to SO");
-				}
-			</handler>			
-		</MessagingRtmpConnection>
+				<!--on connecting we init the whiteboard shared object with the boardname -->
+				<!--However we only do this if there is no list of drop down rooms available -->
+				<handler name="onconnect">
+					if(canvas.rooms==null || canvas.rooms==''){
+						Debug.write("connecting to SO");
+						parent.scribbleview.scribble.api.connectSO(canvas.boardname);
+						Debug.write("connected to SO");
+					}
+				</handler>			
+			</MessagingRtmpConnection>
+		</otherwise>
+	</switch>
 
 <!--Beginning of scribble view -->
 <view name="scribbleview"  width="${canvas.width}" height="${canvas.height}" bgcolor="green">

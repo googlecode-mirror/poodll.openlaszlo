@@ -16,7 +16,7 @@
 	<attribute name="untilrefresh" value="0"  />
 	
 	<!-- The dataset containing info about the filesystem -->
-	<!-- IF we don't set the multirequest to true, pwnding requests fail ie only one at a time -->
+	<!-- IF we don't set the multirequest to true, pending requests fail ie only one at a time -->
 	<dataset name="dataservice" multirequest="true" type="http" src="${classroot.filedataurl}" request="false" >
 		<handler name="ondata">
 			<![CDATA[

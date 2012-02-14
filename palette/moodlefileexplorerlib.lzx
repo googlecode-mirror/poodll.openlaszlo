@@ -221,17 +221,18 @@
 <class name="poodllmodal" extends="modaldialog">
 	<attribute name="themessage" value="''"/>
 	<attribute name="showinput" value="false"/>
+	<attribute name="confirmonly" value="false"/>
 	<attribute name="callbackDel" />
     <text text="${parent.themessage}" width="${parent.width-20}" height="${parent.showinput  ? 30 : parent.height - 100}" multiline="true"/>
     <inputtext name="itext" visible="${parent.showinput}" align="center" width="${parent.width-20}" bgcolor="0xCCFFFF"/>
     <view align="right" layout="axis:x; spacing:20">
-      <button text="Cancel">
+      <button name="cancelbutton" text="Cancel" visible="${!parent.parent.confirmonly}">
       	<handler name="onclick">	
       		classroot.callbackDel.unregisterAll();
       		this.parent.parent.close();
       	</handler>
       </button>
-      <button  isdefault="true" text="OK">
+      <button name="okbutton" isdefault="true" text="OK" visible="${!parent.parent.confirmonly}">
       	<handler name="onclick">
       		if (classroot.showinput){
       			//Debug.write("showing");
@@ -243,6 +244,13 @@
       		
       		this.parent.parent.close();
       		
+      	</handler>
+      </button>
+	  <button name="confirmbutton" text="OK" visible="${parent.parent.confirmonly}">
+      	<handler name="onclick">	
+			this.parent.parent.setAttribute("confirmonly",false);
+      		classroot.callbackDel.unregisterAll();
+      		this.parent.parent.close();
       	</handler>
       </button>
     </view>

@@ -2,15 +2,19 @@
 <canvas>
 	<include href="moodlefileexplorerlib.lzx"/>
 	<include href="explorerservicelib.lzx"/>
+	<include href="filterlib.lzx"/>
 	<include href="feedbacklib.lzx"/>
 	<include href="incubator/hsplitpane.lzx" />
+	 <include href="lz"/>
 	
 	<attribute name="filedataurl"  value="$once{lz.Browser.getInitArg('filedataurl')}" />
 	<attribute name="courseid"  value="$once{lz.Browser.getInitArg('courseid')}" /> 
 	<attribute name="moduleid"  value="$once{lz.Browser.getInitArg('moduleid')}" /> 
+	<attribute name="componentlist"  value="$once{lz.Browser.getInitArg('componentlist')}" /> 
 	<attribute name="itemid"  value="$once{lz.Browser.getInitArg('itemid') ? lz.Browser.getInitArg('itemid')  : 0}" /> 
 	<attribute name="repopath"  value="''" />  
 	<attribute name="modfilepath"  value="''" />
+
 	
 	<!-- layout vertically -->
 	<simplelayout axis="y" spacing="9" />
@@ -38,7 +42,7 @@
 		</handler>
 	</explorerservice>
 	
-	<view name="actionarea"  height="80" width="90%" align="center" valign="middle" bgcolor="0xDDF8C6">
+	<view name="actionarea" id="actionarea" height="45" width="90%" align="center" valign="middle" bgcolor="0xDDF8C6">
 		<wrappinglayout axis="x" spacing="5" />
 		<button name="copyFileButton" text="Repo->Mod" onclick="parent.copyfileover()"/>
 		<button name="delButton" text="Delete" onclick="parent.del()"/>
@@ -47,10 +51,8 @@
 		<button name="renameButton" text="Rename" onclick="parent.rename()"/>
 		<button name="clipboardButton" text="URL to Clipboard" onclick="parent.copyclipboard()"/>
 		<button name="downloadButton" text="Download(file)" onclick="parent.download()"/>
-		<button name="doShowBriefcase" text="Show bcase" onclick="parent.showbriefcase()"/>
 		<button name="copyToBriefcaseButton" text="Copy To Briefcase" onclick="parent.copybriefcase()"/>
 		<button name="pasteFromBriefcaseButton" text="Paste From Briefcase" onclick="parent.pastebriefcase()"/>
-		
 		
 		<!-- hide for now buttons-->
 		<!--
@@ -170,10 +172,7 @@
 			var newname = getSelectedField("name");
 			if(!newname){return;}
 		</method>
-		<!-- show briefcase -->
-		<method name="showbriefcase">
-			repocontainer.setAttribute("visible",!repocontainer.visible);
-		</method>
+
 		<!-- copy files to briefcase -->
 		<method name="copybriefcase">
 			<![CDATA[	
@@ -278,9 +277,22 @@
 		
 		<!-- copy to clipboard url of selected file -->
 		<method name="copyclipboard">
-			if(getSelectedCount()!=1){return;}
+			var url = fetchurl();
+			if(url!=""){
+				lz.Browser.setClipboard(url);
+			}
+		</method>
+		
+		<!-- copy to clipboard url of selected file -->
+		<method name="fetchurl">
+			if(getSelectedCount()!=1){return "";}
 			var url = getSelectedField("url");
-			lz.Browser.setClipboard(url);
+			return url;
+		</method>
+		
+		<!-- dummy callback for delagaste of modal dialog -->
+		<method name="donothing" args="ignore=null">;
+			Debug.write("doing nothing");
 		</method>
 		
 		<!-- rename   selected file -->
@@ -395,34 +407,50 @@
 		</method>
 	 </view> 
 	
-	<view name="explorers" align="center" width="${parent.width - 30}" height="550">
+	<view name="explorers" align="center" width="${parent.width - 30}" height="500">
 		<simplelayout axis="x" spacing="10" />
-		<!-- hsplitpane name="splitpane" bordersize="1"  width="${canvas.width}" bordercolor="#ff0000" -->
-		<emptyfileexplorer id="clipboardexplorer" name="clipboardexplorer" width="50%" courseid="${canvas.courseid}" height="100%" showdirtree="true" visible="${!repocontainer.visible}"  >				
-				<handler name="onchoice" args="path">
-					Debug.write("onchoice", path);
-				</handler>
-		</emptyfileexplorer>
-		<view name="repocontainer" id="repocontainer" width="50%" height="100%">
-			<simplelayout axis="y" spacing="5" />
-			<view name="repocombos" width="100%">
-			 	<datacombobox  id="repoList" width="200" selectfirst="true" shownitems="10"  itemdatapath="eService:repodata:/repositories/repo" textdatapath="@name" valuedatapath="@name">
-					<handler name="onselect">
-					repoexplorer.controlbox.doRefr();
-					</handler>
-				</datacombobox>
-			</view>
-			<moodlefileexplorer id="repoexplorer" name="repoexplorer" width="100%" filedataurl="${canvas.filedataurl + '?datatype=repodirlist&amp;paramone=' + repoList.value }" courseid="${canvas.courseid}" height="500"  >
-				<handler name="onchoice" args="path">
-					Debug.write("onchoice", path);
-				</handler>
-			</moodlefileexplorer>	
-		<!-- end of repcontainer -->
-		</view>
+		<!-- Start of Lefthand TabSet -->
+		<basetabs y="2" tabclass="tab" barclass="tabsbar" width="50%" height="${parent.height}">
+			
+			<basetabpane text="files">
+				<view name="repocontainer" id="repocontainer" width="${parent.parent.width}" height="100%">
+					<simplelayout axis="y" spacing="5" />
+					<view name="repocombos" width="100%">
+						<datacombobox  id="repoList" width="200" selectfirst="true" shownitems="10"  itemdatapath="eService:repodata:/repositories/repo" textdatapath="@name" valuedatapath="@name">
+							<handler name="onselect">
+							repoexplorer.controlbox.doRefr();
+							</handler>
+						</datacombobox>
+					</view>
+					<moodlefileexplorer id="repoexplorer" name="repoexplorer" width="100%" filedataurl="${canvas.filedataurl + '?datatype=repodirlist&amp;paramone=' + repoList.value }" courseid="${canvas.courseid}" height="400"  >
+						<handler name="onchoice" args="path">
+							Debug.write("onchoice", path);
+						</handler>
+					</moodlefileexplorer>	
+				<!-- end of repcontainer -->
+				</view>
+			</basetabpane>
+			<basetabpane text="briefcase">
+				<emptyfileexplorer id="clipboardexplorer" name="clipboardexplorer" width="${parent.parent.width}" courseid="${canvas.courseid}" height="400" showdirtree="true" visible="true"  >				
+						<handler name="onchoice" args="path">
+							Debug.write("onchoice", path);
+						</handler>
+				</emptyfileexplorer>
+			</basetabpane>
+			<basetabpane text="filter">
+				<filtermaker id="filtermaker" name="filtermaker" width="${parent.parent.width}" height="${parent.parent.height}"  componentlist="${canvas.componentlist}" poodlllogicurl="${canvas.filedataurl}" visible="true"  >				
+						<handler name="onchoice" args="path">
+							Debug.write("onchoice", path);
+						</handler>
+				</filtermaker>
+			</basetabpane>
+		</basetabs>
+		<!-- End of Lefthand TabSet -->
+		<!-- Start of moodle file area controls -->
 		<view name="modcontainer" width="50%" height="100%">
 			<simplelayout axis="y" spacing="5" />
 			<view name="modcombos" width="100%">
-				<simplelayout axis="x" spacing="10" />
+				<wrappinglayout axis="x" spacing="10" />
 				<datacombobox  id="sectionList" width="200" selectfirst="true" shownitems="10"  itemdatapath="eService:moddata:/course/section" textdatapath="@sectionname" valuedatapath="@sectionid">
 					<handler name="onselect">
 						
@@ -506,7 +534,7 @@
 			</view>
 			<moodlefileexplorer id="modexplorer" name="modexplorer" width="100%" 
 					filedataurl="${canvas.filedataurl + '?datatype=instancedirlist&amp;paramone=&amp;paramtwo=' + areaList.value + '&amp;courseid=' + canvas.courseid + '&amp;moduleid=' + modList.value + '&amp;itemid=' + itemList.value }" 
-					courseid="${canvas.courseid}" height="500"  >
+					courseid="${canvas.courseid}" height="400"  >
 				<handler name="onchoice" args="path">
 					Debug.write("onchoice", path);
 				</handler>
@@ -518,13 +546,13 @@
 			</moodlefileexplorer>
 		<!-- end of modcontainer -->	
 		</view>
-		<!-- hsplitpane -->
+		<!-- End of moodle file area controls -->
 	</view>
 	<!-- end of explorers view -->
 	<!-- start of feedback view -->
 	<feedback name="feedbak" align="center" width="${parent.width - 30}" height="10%" bgcolor="0xDDF8C6" clip="true" />
 	<!-- start of feedback view -->
-<poodllmodal name="mydialog" width="300" height="200" options="ignorelayout"/>
+<poodllmodal name="mydialog" width="400" height="200" options="ignorelayout"/>
  
 
 

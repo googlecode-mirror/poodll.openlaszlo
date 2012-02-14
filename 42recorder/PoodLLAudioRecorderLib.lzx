@@ -6,6 +6,7 @@
 	<include href="../talkback/justinav/flashutils.lzx"/>
 	<include href="../talkback/justinav/audiosettings.lzx" />
 	<include href="../talkback/justinav/mediadevicesettings.lzx" />
+	<include href="explorerservicelib.lzx" />
 	<include href="lz" />
 
 <class name="poodllaudiorecorder" extends="view">
@@ -42,6 +43,14 @@
 	
 	<!-- A flag to tell us if we should be overwriting files -->
 	<attribute name="overwritefile" />
+	
+	<!-- Attributes required for writing directly to Moodle Draft Files Area -->
+	<attribute name="poodllfilelib"  />
+	<attribute name="contextid"  />
+	<attribute name="component"  />
+	<attribute name="filearea"  />
+	<attribute name="itemid"  />
+	
 
 	<!-- The save name of our file. Added Justin 2009/06/12 -->
 	<attribute name="savefilename" value="''" />
@@ -62,7 +71,14 @@
 		]]>
 	</handler>
 
-
+	<method name="updatepage" args="newvalue">
+			
+				//record the url on the html page, the checked=true, is probbaly redundant								
+				var somejs='var cbox = document.getElementById(\"' + this.updatecontrol + '\"); ';
+				somejs = somejs + 'cbox.checked=\"true\"; ';
+				somejs = somejs + 'cbox.value=\"' + newvalue +'\"; ';							
+				lz.Browser.loadJS(somejs);					
+	</method>
 	
 	<!-- The server connection -->
 	<rtmpconnection name="rtmpc" src="${unescape(classroot.red5url)}"  autoconnect="true" debug="false">	
@@ -148,12 +164,8 @@
         		classroot.ms.record();
 				
 				//record the url on the html page
-				//be careful here, we want moodle to save filename NOT savefilename					
-				//moodle will add the courseid to the filename at runtime.
-				var somejs='var cbox = document.getElementById(\"' + classroot.updatecontrol + '\"); ';
-				somejs = somejs + 'cbox.checked=\"true\"; ';
-				somejs = somejs + 'cbox.value=\"' + classroot.filename +'\"; ';							
-				lz.Browser.loadJS(somejs);					
+				classroot.updatepage(classroot.filename);
+				
 				
         	</method>
 			<view name="micicon" width="${classroot.iconsize}" height="${classroot.iconsize}" x="5" y="5" opacity="${1 - ((classroot.ms.recording || classroot.playstream.playing ) * 0.8)}" resource="icons/128x128/PlainGreen/RecordNormal.png" ></view>	
@@ -192,6 +204,9 @@
 				}else if (classroot.ms.recording){
 					classroot.ms.stop();
 					Debug.write("stopped recording");
+					if(classroot.itemid){
+						classroot.eService.moveMedia(classroot.contextid,classroot.itemid,classroot.filename,"user","draft");
+					}
 				}
        			       			
        		</method>
@@ -232,6 +247,21 @@
 		<audiosettings name="audiosettings" themic="${classroot.mic}" />
 		<button onclick="parent.close()">Close</button>
    </modaldialog>
+   
+   	
+	<explorerservice name="eService" filedataurl="${classroot.poodllfilelib}"  >
+		<handler name="onActionComplete" args="message">
+			Debug.write("actioncomplete:" + message);
+			classroot.updatepage(message);
+		</handler>
+		<handler name="onActionError" args="message">
+			Debug.write("actionerror:" + message);
+		</handler>
+		<handler name="onActionStart" args="message">
+			Debug.write("started:");
+		</handler>
+	</explorerservice>
+   
 </class>
 
 </library>

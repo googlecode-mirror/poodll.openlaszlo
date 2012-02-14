@@ -8,7 +8,9 @@
 	<include href="../talkback/justinav/audiosettings.lzx" />
 	<include href="../talkback/justinav/videosettings.lzx" />
 	<include href="../talkback/justinav/mediadevicesettings.lzx" />
+	<include href="explorerservicelib.lzx" />
 	<include href="lz" />
+	
 		
 <class name="poodllvideorecorder" extends="view">
 
@@ -35,6 +37,15 @@
 	<attribute name="picqual"  />
 	<!-- Overwrite file or not ... depends on server -->
 	<attribute name="overwritefile"  />
+	
+	<!-- Attributes required for writing directly to Moodle Draft Files Area -->
+	<attribute name="poodllfilelib"  />
+	<attribute name="contextid"  />
+	<attribute name="component"  />
+	<attribute name="filearea"  />
+	<attribute name="itemid"  />
+	
+	
 <!-- **************** The above atributes are set from parent class ******************************* -->
 
 	<!-- The save name of our file. Added Justin 2009/06/12 -->
@@ -56,24 +67,25 @@
 		]]>
 	</handler>
 	
-
+	<method name="updatepage" args="newvalue">
+			
+				//record the url on the html page, the checked=true, is probbaly redundant								
+				var somejs='var cbox = document.getElementById(\"' + this.updatecontrol + '\"); ';
+				somejs = somejs + 'cbox.checked=\"true\"; ';
+				somejs = somejs + 'cbox.value=\"' + newvalue +'\"; ';							
+				lz.Browser.loadJS(somejs);					
+	</method>
 	
 	<!-- The server connection -->
 	<rtmpconnection name="rtmpc" src="${unescape(classroot.red5url)}"  debug="false">	
-   
-		    
 		<handler name="oninit" >
-		
 			//This is to ensure that the savefilename gets set in onfilename handler
 			if(classroot.course=="-1"){
 				classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".flv");					
 			}else{
 				classroot.setAttribute("filename", "moddata/" + classroot.assigName + "/" + classroot.uid + "/" + Math.floor(Math.random()*1000000000000001) + ".flv");
 			}
-
-		</handler>
-		
-	   		
+		</handler>	
 	</rtmpconnection>
 
 	<!-- The recording media stream -->
@@ -153,12 +165,7 @@
         		classroot.ms.record();
 				
 				//record the url on the html page	
-				//be careful here, we want moodle to save filename NOT savefilename					
-				//moodle will add the courseid to the filename at runtime.								
-				var somejs='var cbox = document.getElementById(\"' + classroot.updatecontrol + '\"); ';
-				somejs = somejs + 'cbox.checked=\"true\"; ';
-				somejs = somejs + 'cbox.value=\"' + classroot.filename +'\"; ';							
-				lz.Browser.loadJS(somejs);					
+				classroot.updatepage(classroot.filename);
 				
         	</method>
 			<view name="micicon" width="32" height="32" x="5" y="5" opacity="${1 - ((classroot.ms.recording || classroot.playstream.playing ) * 0.8)}" resource="icons/32x32/PlainGreen/RecordNormal.png" ></view>	
@@ -188,13 +195,15 @@
 				}else if (classroot.ms.recording){
 					classroot.ms.stop();
 					Debug.write("stopped recording");
+					if(classroot.itemid){
+						classroot.eService.moveMedia(classroot.contextid,classroot.itemid,classroot.filename,"user","draft");
+						}
 				}
        			
        			
        		</method>
 			<view name="stopicon" width="32" height="32"  x="5" y="5" opacity="${0.2 + ((classroot.playstream.playing || classroot.ms.recording) ? 0.8 : 0)}" resource="icons/32x32/CircleBordered/Stop1NormalRed.png" ></view>	
-        </button>		
-		
+        </button>			
 	</view>
 		
 	<!-- This works OK but the tabs don't resize properly after showing settings. tried and tried and tried .. -->
@@ -213,7 +222,20 @@
 	</checkbox>
     
 	</view>
-  
-
+	
+	<explorerservice name="eService" filedataurl="${classroot.poodllfilelib}"  >
+		<handler name="onActionComplete" args="message">
+			Debug.write("actioncomplete:" + message);
+			classroot.updatepage(message);
+		</handler>
+		<handler name="onActionError" args="message">
+			Debug.write("actionerror:" + message);
+		</handler>
+		<handler name="onActionStart" args="message">
+			Debug.write("started:");
+		</handler>
+	</explorerservice>
+	
 </class>
+
 </library>

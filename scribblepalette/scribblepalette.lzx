@@ -19,7 +19,11 @@
     -->
 	
 <include href="lz"/>
-<include href="../interview/sharedObject.lzx"/>
+	<switch>
+		<unless property="$dhtml">
+			<include href="../interview/sharedObject.lzx"/>
+		</unless>
+	</switch>
 	
 <class name="scribblepalette" width="100%" height="100%" extends="view">
 
@@ -60,52 +64,62 @@
 <!-- an all purpose data pointer we use to get at the data in the dataset -->	
 <datapointer name="dp" />
 
-<!-- The shared object for making it a shared whiteboard	-->
-<sharedobject name="scribbleso" rtmpc="${classroot.rtmpc}" persist="${false}" >
-	<handler name="datachanged" args="field">
-		<![CDATA[
-		Debug.write("updating from so:" );
-		Debug.write("field:", field );
-		Debug.write("field:", this.getProperty(field));
-		
-		switch (field){
-			case "newnode":
-				var newNode =  lz.DataElement.stringToLzData(this.getProperty(field));
-				var dpPoints = parent.dsPoints.getPointer();		
-				dpPoints.setXPath("/drawing");
-				Debug.write("appending child");
-				dpPoints.p.appendChild(newNode);
-				
-				//Fetch the last child node od drawing (ie the last stroke)
-				var nodeCount = dpPoints.getNodeCount();
-				dpPoints.selectChild();
-				dpPoints.selectNext(nodeCount-1);
-				
-				//then pass it in and start drawing it
-				parent.drawStroke(dpPoints);				
-				
-				break;
-				
-			case "goback":
-				parent.goback();
-				parent.d_view.clear();
-				parent.drawFromDS();
-				break;
-			
-			case "reset":
-				parent.reset();
-				break;			
-			
-			default:
-				break;
-		
-		
-		}
-		]]>
-			
-	</handler>
-</sharedobject>
+<switch>
+		<when property="$dhtml">
+			<view name="scribbleso">
+				<attribute name="connected" value="false" />
+					<attribute name="uniquename" value="'solo'" />
+			</view>
+		</when>
+		<otherwise>
 
+			<!-- The shared object for making it a shared whiteboard	-->
+			<sharedobject name="scribbleso" rtmpc="${classroot.rtmpc}" persist="${false}" >
+				<handler name="datachanged" args="field">
+					<![CDATA[
+					Debug.write("updating from so:" );
+					Debug.write("field:", field );
+					Debug.write("field:", this.getProperty(field));
+					
+					switch (field){
+						case "newnode":
+							var newNode =  lz.DataElement.stringToLzData(this.getProperty(field));
+							var dpPoints = parent.dsPoints.getPointer();		
+							dpPoints.setXPath("/drawing");
+							Debug.write("appending child");
+							dpPoints.p.appendChild(newNode);
+							
+							//Fetch the last child node od drawing (ie the last stroke)
+							var nodeCount = dpPoints.getNodeCount();
+							dpPoints.selectChild();
+							dpPoints.selectNext(nodeCount-1);
+							
+							//then pass it in and start drawing it
+							parent.drawStroke(dpPoints);				
+							
+							break;
+							
+						case "goback":
+							parent.goback();
+							parent.d_view.clear();
+							parent.drawFromDS();
+							break;
+						
+						case "reset":
+							parent.reset();
+							break;			
+						
+						default:
+							break;
+					
+					
+					}
+					]]>
+						
+				</handler>
+			</sharedobject>
+	</otherwise>
+</switch>
 <!-- handlers -->
 
 <!-- When user starts drawing, we open a new stroke node on the dsPoints-->
@@ -163,6 +177,7 @@
 	dpTempPoints.selectNext(nodeCount-1);
 	dpPoints.addNodeFromPointer(dpTempPoints);
 	
+
   //post data to shared objects(other partners) if we are connected
   if(this.scribbleso.connected){
 
