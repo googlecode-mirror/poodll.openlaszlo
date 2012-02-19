@@ -19,6 +19,15 @@
 	<!-- layout vertically -->
 	<simplelayout axis="y" spacing="9" />
 	
+	<!-- A trim function. We sometimes need one of these -->
+	<script>
+		var trimPattern = new RegExp("^\\s*(.*?)\\s*$");
+
+		function stringTrim (str) {
+			return str.replace(trimPattern, "$1");
+		}
+	</script>
+	
 	<handler name="oninit">
 		<![CDATA[
 		var fpath=this.filedataurl + '?datatype=instancedirlist&paramone=&paramtwo=content&courseid=' + this.courseid + '&moduleid=' + this.moduleid + '&itemid=' + this.itemid;
@@ -42,17 +51,26 @@
 		</handler>
 	</explorerservice>
 	
-	<view name="actionarea" id="actionarea" height="45" width="90%" align="center" valign="middle" bgcolor="0xDDF8C6">
-		<wrappinglayout axis="x" spacing="5" />
-		<button name="copyFileButton" text="Repo->Mod" onclick="parent.copyfileover()"/>
-		<button name="delButton" text="Delete" onclick="parent.del()"/>
-		<button name="makedirButton" text="Make Dir" onclick="parent.makedir()"/>
-		<button name="copyFileAsButton" text="Copy File As" onclick="parent.copyasfile()"/>
-		<button name="renameButton" text="Rename" onclick="parent.rename()"/>
-		<button name="clipboardButton" text="URL to Clipboard" onclick="parent.copyclipboard()"/>
-		<button name="downloadButton" text="Download(file)" onclick="parent.download()"/>
-		<button name="copyToBriefcaseButton" text="Copy To Briefcase" onclick="parent.copybriefcase()"/>
-		<button name="pasteFromBriefcaseButton" text="Paste From Briefcase" onclick="parent.pastebriefcase()"/>
+	<view name="actionarea" id="actionarea" height="45" width="95%" align="center" valign="middle" bgcolor="0xDDF8C6">
+		
+		<view name="tabactionbuttons" x="5" width="${parent.width / 2}">
+			<wrappinglayout axis="x" spacing="5" />
+			<button name="copyFileButton" text="Repo->Mod" onclick="parent.parent.copyfileover()" visible="${canvas.explorers.explorertabs.filetab.visible}"/>
+			<button name="copyToBriefcaseButton" text="Copy To Briefcase" onclick="parent.parent.copybriefcase()" visible="${canvas.explorers.explorertabs.briefcasetab.visible}" />
+			<button name="pasteFromBriefcaseButton" text="Paste From Briefcase" onclick="parent.parent.pastebriefcase()" visible="${canvas.explorers.explorertabs.briefcasetab.visible}"/>
+			<button name="removeFromBriefcaseButton" text="Remove From Briefcase" onclick="parent.parent.removebriefcase()" visible="${canvas.explorers.explorertabs.briefcasetab.visible}"/>
+		</view>
+		<view name="moodleactionbuttons" x="${(parent.width / 2)}" width="${parent.width / 2}" >
+			<wrappinglayout axis="x" spacing="5" />
+			<button name="delButton" text="Delete" onclick="parent.parent.del()"/>
+			<button name="makedirButton" text="Make Dir" onclick="parent.parent.makedir()"/>
+			<button name="copyFileAsButton" text="Copy File As" onclick="parent.parent.copyasfile()"/>
+			<button name="renameButton" text="Rename" onclick="parent.parent.rename()"/>
+			<button name="clipboardButton" text="URL to Clipboard" onclick="parent.parent.copyclipboard()"/>
+			<button name="downloadButton" text="Download(file)" onclick="parent.parent.download()"/>
+		</view>
+		
+		
 		
 		<!-- hide for now buttons-->
 		<!--
@@ -226,6 +244,24 @@
 			}
 			]]>
 		</method>
+		<!-- remove files from briefcase -->
+		<method name="removebriefcase">
+			<![CDATA[	
+			with (clipboardexplorer.splitpane.filetreecontainer.filetree){
+				//get a handle on selected files
+				var pointerArray= getSelection();
+				
+				//can out if no selection
+				if(!pointerArray || pointerArray.length<1){return;}
+				
+				//do the actions
+				for (var x=0;x < pointerArray.length; x++){
+					pointerArray[x].deleteNode();
+				}
+			
+			}
+		]]>
+		</method>
 		
 		<!-- zip and download selected files-->
 		<method name="zipdownload">
@@ -279,7 +315,7 @@
 		<method name="copyclipboard">
 			var url = fetchurl();
 			if(url!=""){
-				lz.Browser.setClipboard(url);
+				lz.Browser.setClipboard(stringTrim(url));
 			}
 		</method>
 		
@@ -287,6 +323,13 @@
 		<method name="fetchurl">
 			if(getSelectedCount()!=1){return "";}
 			var url = getSelectedField("url");
+			return stringTrim(url);
+		</method>
+		
+		<!-- copy to clipboard url of selected file -->
+		<method name="fetchdirpath">
+			if(getSelectedCount()!=1){return "";}
+			var url = stringTrim(modexplorer.selecteddir) + '/'
 			return url;
 		</method>
 		
@@ -325,7 +368,7 @@
 					//Debug.write("hash "+ pointerArray[x].p.getAttr('hash'));
 					var requestid = this.fetchReqId();
 					canvas.eService.registerAction(requestid,"rename " + pointerArray[x].p.getAttr('name')  );
-					canvas.eService.doRenameFile(requestid,pointerArray[x].p.getAttr('hash'),newfilename);
+					canvas.eService.doRenameFile(requestid,pointerArray[x].p.getAttr('hash'),stringTrim(newfilename));
 					
 				}
 			
@@ -368,7 +411,7 @@
 					var requestid = this.fetchReqId();
 					canvas.eService.registerAction(requestid,"rename " + pointerArray[x].p.getAttr('name')  );
 					canvas.eService.doCopyAsFile(requestid,pointerArray[x].p.getAttr('hash'),newfilename);
-					//canvas.eService.doCopyAsFile(requestid,modexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'),areaList.value,newfilename);
+					//canvas.eService.doCopyAsFile(requestid,modexplorer.selecteddir + '/' + pointerArray[x].p.getAttr('name'),areaList.value,stringTrim(newfilename));
 					
 				}
 			
@@ -398,7 +441,7 @@
 						Debug.write("makedir: " + newpath);
 						var requestid = this.fetchReqId();
 						canvas.eService.registerAction(requestid,"makedir " + newpath);
-						canvas.eService.doMakeDir(requestid,areaList.value,newpath);
+						canvas.eService.doMakeDir(requestid,areaList.value,stringTrim(newpath));
 				
 				
 		
@@ -410,9 +453,8 @@
 	<view name="explorers" align="center" width="${parent.width - 30}" height="500">
 		<simplelayout axis="x" spacing="10" />
 		<!-- Start of Lefthand TabSet -->
-		<basetabs y="2" tabclass="tab" barclass="tabsbar" width="50%" height="${parent.height}">
-			
-			<basetabpane text="files">
+		<basetabs name="explorertabs" y="2" tabclass="tab" barclass="tabsbar" width="50%" height="${parent.height}">
+			<basetabpane name="filetab" text="files">
 				<view name="repocontainer" id="repocontainer" width="${parent.parent.width}" height="100%">
 					<simplelayout axis="y" spacing="5" />
 					<view name="repocombos" width="100%">
@@ -430,14 +472,14 @@
 				<!-- end of repcontainer -->
 				</view>
 			</basetabpane>
-			<basetabpane text="briefcase">
+			<basetabpane name="briefcasetab" text="briefcase">
 				<emptyfileexplorer id="clipboardexplorer" name="clipboardexplorer" width="${parent.parent.width}" courseid="${canvas.courseid}" height="400" showdirtree="true" visible="true"  >				
 						<handler name="onchoice" args="path">
 							Debug.write("onchoice", path);
 						</handler>
 				</emptyfileexplorer>
 			</basetabpane>
-			<basetabpane text="filter">
+			<basetabpane name="filtertab" text="filter">
 				<filtermaker id="filtermaker" name="filtermaker" width="${parent.parent.width}" height="${parent.parent.height}"  componentlist="${canvas.componentlist}" poodlllogicurl="${canvas.filedataurl}" visible="true"  >				
 						<handler name="onchoice" args="path">
 							Debug.write("onchoice", path);
@@ -493,7 +535,8 @@
 						
 						}
 						canvas.setAttribute("moduleid",this.value);
-						modexplorer.controlbox.doRefr()
+						modexplorer.controlbox.doHome();
+						modexplorer.controlbox.doRefr();
 					</handler>
 				
 				</datacombobox>
@@ -529,7 +572,12 @@
 								canvas.setAttribute("itemid",this.value);
 						</handler>
 				</combobox>
-				<button name="refillButton" onclick="modexplorer.controlbox.doRefr()" text="Fetch Data" />
+				<button name="refillButton" text="Fetch Data">
+					<handler name="onclick">
+						modexplorer.controlbox.doHome();
+						modexplorer.controlbox.doRefr();
+					</handler>
+				</button>
 			<!-- end of modcontainer/modcombos -->
 			</view>
 			<moodlefileexplorer id="modexplorer" name="modexplorer" width="100%" 

@@ -20,7 +20,7 @@
 		</component>
 		<component componentname="Audio List Player" type="audiolist">
 			<field label="filearea" input="content|intro|draft|submission" default="content" tooltip="The filearea from which to fetch the files." />
-			<field label="path" input="path" default="" tooltip="The path to the audio files directory. Or the path to an xml descriptor file." />
+			<field label="path" input="dirpath" default="" tooltip="The path to the audio files directory. Or the path to an xml descriptor file." />
 			<field label="protocol" input="rtmp|http" default="rtmp" tooltip="The protocol to use to play the file." />
 			<field label="sequentialplay" input="true|false" default="true" tooltip="After track had finished, plays the next track in the list." />
 			<field label="width" input="number" default="400"/>

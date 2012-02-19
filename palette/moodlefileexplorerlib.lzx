@@ -72,9 +72,18 @@
 	
 	<view name="controlbox" height="25" align="right" x="${classroot.width - this.width - 5}">
 		<simplelayout axis="x" spacing="2" />
-		<text name="thedir" text="${'/' + classroot.selecteddir}" height="25" width="${classroot.width - parent.topButton.width - parent.refreshButton.width - 4}" bgcolor="0xCCCCCC"  />
-		<button name="topButton" text="Home">
+		<text name="thedir" text="${'/' + classroot.selecteddir}" height="25" width="${classroot.width  - parent.refreshButton.width - 4}" bgcolor="0xCCCCCC" />
+		<button name="refreshButton" text="Home">
 			<handler name="onclick">
+				parent.doHome();
+				parent.doRefr();
+			</handler>
+		</button>
+		<method name="doHome">
+			<![CDATA[
+				//if our explorers have not been instantiated, we can out
+				if(!classroot.donefirstfetch){return;}
+				
 				with(classroot.splitpane.dirtreecontainer.dirtree){
 					//close all folders on this tree
 					setAllOpen(false);
@@ -83,9 +92,9 @@
 					//handle the selection process
 					updateSelection(datapath.p);
 				}
-			</handler>
-		</button>
-		<button name="refreshButton" text="Refresh" onclick="parent.doRefr()"/>
+			]]>
+		</method>
+		
 		<method name="doRefr">
 			<![CDATA[
 				classroot.filedata.doRequest();
@@ -101,6 +110,9 @@
 			<handler name="oninit">
 				Debug.write("inited");
 			</handler>
+			<handler name="ondata">
+				Debug.write("inited");
+			</handler>
 		  <!-- opttree name="innertree" datapath="*" text="$path{'@name'}" isleaf="$path{'@isleaf'}" -->
 				<method name="select" args="el" override="true">
 				<![CDATA[
@@ -112,7 +124,7 @@
 					//get selected data element
 					var currentnode=el.datapath.p;
 					
-					//update class paths that user sees and filexplorer uses
+					//update class paths that user sees and fileexplorer uses
 					this.updateSelection(currentnode);
 					
 					
@@ -272,7 +284,9 @@
 				classroot.splitpane.dirtreecontainer.completeInstantiation();			
 				classroot.splitpane.filetreecontainer.completeInstantiation();
 				classroot.setAttribute("donefirstfetch",true);
-			}else{
+	
+				
+			}else if(classroot.selxpath && classroot.selxpath !=''){
 				//if we have saved xpath, lets reset our tree/grid to that
 				//NB if we delete a directory, we should first reset the selxpath to the higher folder 
 				//and then perform the action. This way the tree will open to the right place
@@ -291,7 +305,11 @@
 					}
 					
 				}
-			}	
+			}else{
+				
+			
+			
+			}
 			
 			]]>
 		</handler>
