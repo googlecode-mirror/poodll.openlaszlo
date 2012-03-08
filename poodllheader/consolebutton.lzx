@@ -15,25 +15,25 @@
         <frame src="resources/Green4.png"/>
     </resource>
 	<resource name="icon_resource" >
-        <frame src="consoleicons/chalk_board.png"/>
-        <frame src="consoleicons/equalizer.png"/>
-        <frame src="consoleicons/target.png"/>
-        <frame src="consoleicons/headphones.png"/>
-		<frame src="consoleicons/headphones_delete.png"/>
-		<frame src="consoleicons/television.png"/>
-		<frame src="consoleicons/artwork.png"/>
-		<frame src="consoleicons/canvas_holder.png"/>
-		<frame src="consoleicons/cloud_comment.png"/>
-		<frame src="consoleicons/card.png"/>
-		<frame src="consoleicons/games.png"/>
-		<frame src="consoleicons/process.png"/>
-		<frame src="consoleicons/up.png"/>
-		<frame src="consoleicons/music.png"/>
-		<frame src="consoleicons/interview.png"/>
-		<frame src="consoleicons/pairsession.png"/>
-		<frame src="consoleicons/back.png"/>
-		<frame src="consoleicons/rss.png"/>		
-		<frame src="consoleicons/rss_delete.png"/>
+        <frame src="resources/chalk_board.png"/>
+        <frame src="./resources/equalizer.png"/>
+        <frame src="./resources/target.png"/>
+        <frame src="./resources/headphones.png"/>
+		<frame src="./resources/headphones_delete.png"/>
+		<frame src="./resources/television.png"/>
+		<frame src="./resources/artwork.png"/>
+		<frame src="./resources/canvas_holder.png"/>
+		<frame src="./resources/cloud_comment.png"/>
+		<frame src="./resources/card.png"/>
+		<frame src="./resources/games.png"/>
+		<frame src="./resources/process.png"/>
+		<frame src="./resources/up.png"/>
+		<frame src="./resources/music.png"/>
+		<frame src="./resources/interview.png"/>
+		<frame src="./resources/pairsession.png"/>
+		<frame src="resources/back.png"/>
+		<frame src="./resources/rss.png"/>		
+		<frame src="./resources/rss_delete.png"/>
     </resource>
 	
 	<!-- necessary to do resources and frames in this way, cos seems impossible to pass a resource or src string in -->

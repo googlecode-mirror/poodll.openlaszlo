@@ -74,7 +74,7 @@
 	<method name="updatepage" args="newvalue">
 			
 				//record the url on the html page, the checked=true, is probbaly redundant								
-				var somejs='var cbox = document.getElementById(\"' + this.updatecontrol + '\"); ';
+				var somejs='var cbox = parent.document.getElementById(\"' + this.updatecontrol + '\"); ';
 				somejs = somejs + 'cbox.checked=\"true\"; ';
 				somejs = somejs + 'cbox.value=\"' + newvalue +'\"; ';							
 				lz.Browser.loadJS(somejs);					
@@ -205,7 +205,8 @@
 					classroot.ms.stop();
 					Debug.write("stopped recording");
 					if(classroot.itemid){
-						classroot.eService.moveMedia(classroot.contextid,classroot.itemid,classroot.filename,"user","draft");
+						classroot.eService.moveMedia(classroot.contextid,classroot.itemid,classroot.filename,classroot.component,classroot.filearea);
+						//classroot.eService.moveMedia(classroot.contextid,classroot.itemid,classroot.filename,"user","draft");
 					}
 				}
        			       			

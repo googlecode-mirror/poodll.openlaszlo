@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <library>
 
-<include href="../poodllheader/consolebutton.lzx"/>
+<include href="consolebutton.lzx"/>
 <include href="colorpalette.lzx" />
 <include href="../talkback/justinav/poodllbigbutton.lzx"/>
-<resource name="reset_button" src="../talkback/justinav/newicons/32/classic_reset_button.png" />
+<resource name="reset_button" src="./resources/classic_reset_button.png" />
 
 <class name="scribblecpanel" width="100%" height="100%" extends="view">
 

@@ -10,12 +10,12 @@
 </switch>
 
 
-		<attribute name="red5url" value="lz.Browser.getInitArg('red5url')"/>  	
-		<attribute name="mename"  value="lz.Browser.getInitArg('mename')" /> 
-		<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />  	
-		<attribute name="boardname" value="lz.Browser.getInitArg('boardname')" />
-		<attribute name="rooms" value="lz.Browser.getInitArg('rooms')" />  			
-		<attribute name="imageurl" value="lz.Browser.getInitArg('imageurl')" />  		
+		<attribute name="red5url" value="$once{lz.Browser.getInitArg('red5url')}"/>  	
+		<attribute name="mename"  value="$once{lz.Browser.getInitArg('mename')}" /> 
+		<attribute name="courseid" value="$once{lz.Browser.getInitArg('courseid')}" />  	
+		<attribute name="boardname" value="$once{lz.Browser.getInitArg('boardname')}" />
+		<attribute name="rooms" value="$once{lz.Browser.getInitArg('rooms')}" />  			
+		<attribute name="imageurl" value="$once{lz.Browser.getInitArg('imageurl')}" />  		
 		<attribute name="headeridtag" value="'scribble01'" />
 
 <!--rtmp connection -->
@@ -49,7 +49,7 @@
 	<scribblecpanel name="scribbleCP" y="10" rooms="${canvas.rooms == '' ? null : canvas.rooms}" width="180" height="${parent.height-20}" refscribblepalette="${parent.scribble}" >
 		<handler name="oninit">	
 			Debug.write("scribblepanelparent", parent.name);
-			Debug.write("canvas rooms", "@" + canvas.rooms + "@");
+			//Debug.write("canvas rooms", "@" + canvas.rooms + "@");
 		</handler>
 	</scribblecpanel>
 	<scribblepalette name="scribble" y="10" rtmpc="${canvas.rtmpc}" imageurl="${canvas.imageurl}" width="${parent.width-parent.scribbleCP.width - 25}" height="${parent.height-20}"  >
