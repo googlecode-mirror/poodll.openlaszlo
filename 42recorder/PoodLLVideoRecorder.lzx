@@ -64,4 +64,18 @@
 			itemid="${canvas.itemid}"
 			width="${parent.width}" 
 			height="${parent.height}" />
+			
+			
+		<view name="thespinner" id="thespinner" resource="spinner2.swf" stretches="both" align="center" options="ignorelayout: true" visible="false" width="$once{0.8*(Math.min(canvas.height,canvas.width))}" height="$once{0.8*(Math.min(canvas.height,canvas.width))}">
+			<method name="hidespinner" args="ignore=null">
+				this.setAttribute("visible",false);
+			</method>
+			<method name="showspinner" args="ignore=null">
+				this.bringToFront();
+				this.setAttribute("visible",true);
+			</method>
+			<handler name="onclick">
+				this.hidespinner();
+			</handler>
+		</view>
 </canvas>

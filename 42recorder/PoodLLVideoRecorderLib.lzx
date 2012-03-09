@@ -11,6 +11,7 @@
 	<include href="explorerservicelib.lzx" />
 	<include href="lz" />
 	
+
 		
 <class name="poodllvideorecorder" extends="view">
 
@@ -78,6 +79,10 @@
 	
 	<!-- The server connection -->
 	<rtmpconnection name="rtmpc" src="${unescape(classroot.red5url)}"  debug="false">	
+	
+		<!-- reconnect timer delegate -->
+		<attribute name="timerdel" value="null" />
+	
 		<handler name="oninit" >
 			//This is to ensure that the savefilename gets set in onfilename handler
 			if(classroot.course=="-1"){
@@ -85,7 +90,20 @@
 			}else{
 				classroot.setAttribute("filename", "moddata/" + classroot.assigName + "/" + classroot.uid + "/" + Math.floor(Math.random()*1000000000000001) + ".flv");
 			}
+			
+			//initiate reconnect timer
+			this.setAttribute("timerdel", new LzDelegate( this, "confirmconnected" ));
+			 lz.Timer.addTimer(this.timerdel,3000);
 		</handler>	
+		
+		<method name="confirmconnected" args="ignore=null">
+			//if we are in a disconnected state, call connect
+			if(this.stage==0){
+				this.connect();
+			}
+			//Debug.write("timer");
+			lz.Timer.resetTimer(this.timerdel, 3000);
+		</method>
 	</rtmpconnection>
 
 	<!-- The recording media stream -->
@@ -226,14 +244,14 @@
 	
 	<explorerservice name="eService" filedataurl="${classroot.poodllfilelib}"  >
 		<handler name="onActionComplete" args="message">
-			Debug.write("actioncomplete:" + message);
+			thespinner.hidespinner();
 			classroot.updatepage(message);
 		</handler>
 		<handler name="onActionError" args="message">
-			Debug.write("actionerror:" + message);
+			thespinner.hidespinner();
 		</handler>
 		<handler name="onActionStart" args="message">
-			Debug.write("started:");
+			thespinner.showspinner();
 		</handler>
 	</explorerservice>
 	

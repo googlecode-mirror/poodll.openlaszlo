@@ -80,8 +80,14 @@
 				lz.Browser.loadJS(somejs);					
 	</method>
 	
+
+	
 	<!-- The server connection -->
-	<rtmpconnection name="rtmpc" src="${unescape(classroot.red5url)}"  autoconnect="true" debug="false">	
+	<rtmpconnection name="rtmpc" src="${unescape(classroot.red5url)}"  autoconnect="true" debug="false">
+		
+		<!-- reconnect timer delegate -->
+		<attribute name="timerdel" value="null" />
+		
 		<handler name="oninit" >
 			Debug.write("filename:" + classroot.filename);
 			Debug.write("overwritefile:" + classroot.overwritefile);
@@ -94,8 +100,20 @@
 			}else{
 				classroot.setAttribute("filename", "moddata/" + classroot.assigname + "/" + classroot.uid + "/" + Math.floor(Math.random()*1000000000000001) + ".flv");
 			}
+			
+			//initiate reconnect timer
+			this.setAttribute("timerdel", new LzDelegate( this, "confirmconnected" ));
+			 lz.Timer.addTimer(this.timerdel,3000);
 
-		</handler>		   		
+		</handler>		   
+		<method name="confirmconnected" args="ignore=null">
+			//if we are in a disconnected state, call connect
+			if(this.stage==0){
+				this.connect();
+			}
+			//Debug.write("timer");
+			lz.Timer.resetTimer(this.timerdel, 3000);
+		</method>
 	</rtmpconnection>
 
 	<!-- The media stream -->
@@ -174,7 +192,7 @@
 		<button name="playButton" 
 			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}" 
 			valign="middle" 
-			enabled="${!(classroot.playstream.playing  || classroot.ms.recording  || !classroot.haveRecorded)}" 
+			enabled="${!(classroot.playstream.playing  || classroot.ms.recording || !classroot.haveRecorded)}" 
 			onclick="playRecording()">
 			<method name="playRecording" args="">
 				if (classroot.playstream.url != classroot.savefilename){
@@ -252,14 +270,14 @@
    	
 	<explorerservice name="eService" filedataurl="${classroot.poodllfilelib}"  >
 		<handler name="onActionComplete" args="message">
-			Debug.write("actioncomplete:" + message);
+			thespinner.hidespinner();
 			classroot.updatepage(message);
 		</handler>
 		<handler name="onActionError" args="message">
-			Debug.write("actionerror:" + message);
+			thespinner.hidespinner();
 		</handler>
 		<handler name="onActionStart" args="message">
-			Debug.write("started:");
+			thespinner.showspinner();
 		</handler>
 	</explorerservice>
    
