@@ -8,7 +8,7 @@
 <library>
     <include href="./justinvideoslider.lzx"/>
 
-    <class name="poodllaudioplayer" extends="view">
+    <class name="poodllaudioplayer" aaactive="true" extends="view">
 	
 	<attribute name="fontcolor" value="0x000000"/>
 	

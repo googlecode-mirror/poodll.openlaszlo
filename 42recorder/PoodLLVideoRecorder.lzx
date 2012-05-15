@@ -34,6 +34,13 @@
 	<!-- Overwritefile or generate random filename, depends on server-->
 	<attribute name="overwritefile" value="lz.Browser.getInitArg('overwritefile')" />
 	
+		<!-- Audio Settings -->
+	<attribute name="gain" value="lz.Browser.getInitArg('gain')" />
+	<attribute name="rate" value="lz.Browser.getInitArg('rate')"  />
+	<attribute name="echosuppression" value="lz.Browser.getInitArg('echosuppression')" />
+	<attribute name="loopback" value="lz.Browser.getInitArg('loopback')" />
+	<attribute name="silencelevel" value="lz.Browser.getInitArg('silencelevel')" />
+	
 	<!--Moodle 2 File system info -->
 	<attribute name="poodllfilelib" value="lz.Browser.getInitArg('poodllfilelib')" />
 	<attribute name="contextid" value="lz.Browser.getInitArg('contextid')" />
@@ -57,6 +64,11 @@
 			bandwidth="canvas.bandwidth"
 			picqual="canvas.picqual"
 			capturefps="canvas.capturefps"
+			gain="$once{parent.gain ? Number(parent.gain) : 50}"
+			silencelevel="$once{parent.silencelevel ? Number(parent.silencelevel) : 10}"		
+			rate="$once{parent.rate ? Number(parent.rate) : 22}"
+			echosuppression="$once{parent.echosuppression ? parent.echosuppression=='yes' : true}"	
+			loopback="$once{parent.loopback ? parent.loopback=='yes' : false}"	
 			poodllfilelib="${canvas.poodllfilelib}"
 			contextid="${canvas.contextid}"
 			component="${canvas.component}"

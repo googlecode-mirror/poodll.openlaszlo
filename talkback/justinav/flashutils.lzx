@@ -30,7 +30,7 @@
 						<![CDATA[
 						// sourceView is the view we are going to capture and copy
 						//
-						var sourceView_mc = sourceView.getMCRef();
+						var sourceView_mc = sourceView.getDisplayObject();
 
 						// create the BitmapData object
 						//
@@ -47,11 +47,14 @@
 						var colorTransform = new flash.geom.ColorTransform();
 						var rect = new flash.geom.Rectangle(0, 0, w, h);
 						Debug.write("going to draw bitmap");
+						//this draw function caused problems 201205 when creating poodllsnapshot
+						//might pay to re do this
 						bitmap.draw(sourceView_mc, matrix, colorTransform, 1, rect);
+						bitmap.draw(sourceView_mc, matrix);
 						Debug.write("drew bitmap");
 						// load the bitmap into a destination view
 						//
-						var destinationView_mc = destinationView.getMCRef();
+						var destinationView_mc = destinationView.getDisplayObject();
 						destinationView_mc.createEmptyMovieClip("bitmap_mc", 1);
 						Debug.write("attaching bitmap");
 						destinationView_mc.bitmap_mc.attachBitmap(bitmap, 1);

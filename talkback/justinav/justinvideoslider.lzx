@@ -18,11 +18,11 @@
 	        <frame src="newicons/32/play_button_mo.png"/>
 	        <frame src="newicons/32/play_button_dn.png"/>
 	</resource>
+
 	<resource name="play_button">
 		<frame src="newicons/32/pause_button_up.png"/>
 		<frame src="newicons/32/play_button_up.png"/>
 	</resource>
-
 
     <resource name="scroll_track"
         src="resources/scroll_track.swf"
@@ -156,6 +156,7 @@
 		
 
         <justinvideotogglebutton name="playbutton"
+			aaname="play pause button"
             width="${parent.height}"
             height="${parent.height}"
             resource="play_button"
@@ -346,6 +347,7 @@
         </view>
 
 		<slider name="volumebutton" 
+				aaname="volume control"
 				x="${parent.width - this.width}" 
 				y="${(parent.height - this.height) / 2}" 
 				width="40" 

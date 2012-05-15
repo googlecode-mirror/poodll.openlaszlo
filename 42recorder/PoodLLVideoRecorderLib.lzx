@@ -36,6 +36,13 @@
 	<attribute name="capturefps"  />
 	<attribute name="bandwidth" />
 	<attribute name="picqual"  />
+	<!-- Audio settings passed in -->
+	<attribute name="gain" value="50"/>
+	<attribute name="rate" value="22" />
+	<attribute name="silencelevel" value="10" />
+	<attribute name="echosuppression" value="false" />
+	<attribute name="loopback" value="true" />
+	
 	<!-- Overwrite file or not ... depends on server -->
 	<attribute name="overwritefile"  />
 	
@@ -132,7 +139,18 @@
 				</poodllcamera>									
 				
 				<!-- The microphone object -->
-				<poodllmicrophone name="mymic" prefdevice="${classroot.prefmic}" capturing="true" />
+				<poodllmicrophone name="mymic" prefdevice="${classroot.prefmic}" capturing="true" >		
+					<handler name="oninit">
+						this.setAttribute("gain",classroot.gain);
+						this.setAttribute("rate",classroot.rate);
+						this.setAttribute("silencelevel",classroot.silencelevel);
+						this.setAttribute("echosuppression",classroot.echosuppression);
+						this.setAttribute("loopback",classroot.loopback);
+						Debug.write("on init Mike Rate: " + this.rate);
+						//Debug.write("on init Mike Gain: " + this.gain);
+						// getMicrophone().setRate("22");
+					</handler>
+				</poodllmicrophone>
 					
 			</videoview>
 	</tabelement>

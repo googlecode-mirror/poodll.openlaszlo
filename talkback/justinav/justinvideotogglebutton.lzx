@@ -9,6 +9,8 @@
 
     <class name="justinvideotogglebutton"
         frame="${this.frameTable[ (this.playing ? 0 : 1)]}"
+		focusable="true"
+		extends="basecomponent"
     >
 
 
@@ -64,6 +66,16 @@
             }
           ]]>
         </handler>
+
+		
+		<!--- When the space bar is up, call the trigger event
+			added this for accessibility purposes
+		-->
+        <method name="doSpaceUp" >
+            <![CDATA[
+                this.trigger();
+            ]]>
+        </method>
 
 
         <method name="trigger"><![CDATA[

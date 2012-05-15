@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<library>
+
+	<include href="../talkback/justinav/videosettings.lzx" />
+	<include href="../talkback/justinav/mediadevicesettings.lzx" />
+	<include href="lz" />
+	
+
+		
+<class name="poodllsnapshot" extends="view">
+<!-- AS3 import statements -->  
+   <switch>  
+	 <when property="$as3">  
+	   <passthrough>  
+	   import flash.events.*;
+		 import flash.display.*;  
+		 import com.adobe.images.JPGEncoder;
+		 import flash.utils.ByteArray;
+		 import flash.geom.*;  
+		 import flash.media.Camera;	
+		import flash.net.*;		 
+	   </passthrough>  
+	 </when>  
+   </switch>
+
+<!-- **************** These attributes are set from parent class ******************************* -->
+	
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename"  />	
+	<!-- The id of the control on the enclosing HTMLpage to update with the  filename -->
+	<attribute name="updatecontrol"  />
+
+	<!-- To set a particular camera as default -->
+	<attribute name="prefcam"  />
+
+	<!-- the url of the moodle site -->
+	<attribute name="moodlewww" />
+
+	<!-- Some camera settings-->
+	<attribute name="capturewidth"  />
+	<attribute name="captureheight"  />
+	<attribute name="capturefps"  />
+	<attribute name="bandwidth" />
+	<attribute name="picqual"  />
+
+	<!-- camera and save states -->
+	<attribute name="cameraviewactive" value="true"/>
+	<attribute name="haveSnapshot" value="false"/>
+	<attribute name="written" value="false"/>
+
+<!-- **************** The above atributes are set from parent class ******************************* -->
+
+	<!-- The save name of our file. Added Justin 2009/06/12 -->
+	<attribute name="savefilename" value="''" />	
+	<attribute name="buttonwidth" value="42" />
+	
+
+	<!-- Justin 2000/06/12-->
+	<!-- Had many problems keeping this logic central and used with constraints-->
+	<!-- This is not elgant but it works. The job is to start from courseid, if we have one-->
+	<handler name="onfilename">
+		<![CDATA[
+			this.setAttribute("savefilename", this.filename);
+		]]>
+	</handler>
+	
+	<method name="updatepage" args="newfilename">
+		
+				//first get the filename
+				var somejs='var namebox = parent.document.getElementById(\"' + this.updatecontrol + '\"); ';
+
+				//set them with data 
+				somejs = somejs + 'namebox.value=\"' + newfilename +'\"; ';	
+
+				//then run the JS
+				Debug.write(somejs);
+				lz.Browser.loadJS(somejs);
+		
+/*
+//old logic if using mp3recorder method. 
+//this will work if we get/make a base 64 encoder to encode the newfiledata
+//the actual javascript is in /filter/poodll/flash/javascript.php .. might have to add another "parent" to the js code 				
+				var somejs = "updateUploadForm('" + newfilename + "', '" +  newfiledata + "');";
+				Debug.write(somejs);
+				lz.Browser.callJS(somejs);
+*/
+	</method>
+	<flashutils name="futils" />
+	<simplelayout axis="y" spacing="5"/>
+	<tabslider name="vview_tslider" width="${parent.width}" height="${parent.height - (classroot.buttonwidth + 8) - 20}" spacing="2" slideduration="300">
+		<tabelement name="webcam_tpane" text="Take a picture" selected="true" >
+			<videoview bgcolor="#c0f4ad" name="webcamview" width="${parent.width}" 
+					height="${parent.height}" >
+				<!-- The camera object -->
+			<poodllcamera name="mycam" prefdevice="${classroot.prefcam}" show="true">
+					<handler name="oninit">
+						this.setQuality(classroot.bandwidth,(classroot.picqual / 10));
+						this.setMode(classroot.capturewidth,classroot.captureheight,classroot.capturefps,true);
+						Debug.write("bandwidth: " + classroot.bandwidth);
+						Debug.write("picqual: " + classroot.picqual);
+						Debug.write("capturewidth: " + classroot.capturewidth);
+						Debug.write("captureheight: " + classroot.captureheight);
+						Debug.write("capturefps: " + classroot.capturefps);											
+					</handler>
+				</poodllcamera>									
+
+					
+			</videoview>
+	</tabelement>
+	<tabelement name="playback_tpane" text="Playback" >
+		<view bgcolor="#c0f4ad" name="playview"  height="${parent.height}" width="${parent.width}"  />
+	</tabelement>
+	<tabelement name="settings_tpane" text="Settings" visible="${classroot.bottombar.settingsbox.value}" >
+		<basetabs name="settingstabs" bordersize="5" tabclass="tab">
+		
+			<basetabpane name="video" text="Video" bgcolor="#bdbdbd">
+				<!-- Start of videosettings-->
+				<videosettings name="videosettings" 
+						thecam="${classroot.vview_tslider.webcam_tpane.webcamview.mycam}" />
+			</basetabpane>	
+			<basetabpane text="Device" bgcolor="#bdbdbd">
+				<mediadevicesettings thecam="${classroot.vview_tslider.webcam_tpane.webcamview.mycam}" themic="'null'" />
+			</basetabpane>
+		</basetabs>
+	</tabelement>
+	</tabslider> 
+
+	 
+	 <view name="bottombar" bgcolor="#bdbdbd" valign="middle" width="${classroot.vview_tslider.width}" height="${classroot.buttonwidth + 8}">
+      <simplelayout axis="x" spacing="0"  />		
+	<view name="buttonbar" width="${parent.width - parent.settingsbox.width}" height="${parent.height}" valign="middle" >	 
+        <simplelayout axis="x" spacing="5" inset="${(classroot.vview_tslider.width  - (classroot.buttonwidth * 3) - (5 * 2)) * 0.5}"  />
+        <button name="snapButton" 
+			x="${(classroot.vview_tslider.width - (this.width * 3) - (5 * 2)) * 0.5}"
+			width="${classroot.buttonwidth}" height="${classroot.buttonwidth}"
+			valign="middle" 
+			enabled="true" 
+			onclick="dosnap()">
+			<method name="dosnap" args="">
+				if(classroot.cameraviewactive){
+					snap();
+				}else{
+					resnap();
+				}
+			</method>
+        	<method name="snap">
+				classroot.captureAndCopyView(classroot.vview_tslider.webcam_tpane.webcamview,classroot.vview_tslider.playback_tpane.playview);
+				
+				classroot.vview_tslider.select(classroot.vview_tslider.playback_tpane);
+				classroot.setAttribute("cameraviewactive",false);
+				classroot.setAttribute("written",false);
+				
+				
+				classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".jpg");					
+				//classroot.ms.setAttribute("url",classroot.savefilename);
+				classroot.vview_tslider.select(classroot.vview_tslider.playback_tpane);
+
+				
+				//record the url on the html page	
+				//classroot.updatepage(classroot.filename);
+				
+        	</method>
+			<method name="resnap">
+				classroot.vview_tslider.select(classroot.vview_tslider.webcam_tpane);
+				classroot.setAttribute("cameraviewactive",true);
+				
+        	</method>
+			<view name="speakericon" width="32" height="32" x="5" y="5" visible="${!classroot.cameraviewactive}" resource="icons/32x32/goback32.png" ></view>	
+			<view name="micicon" width="32" height="32" x="5" y="5" visible="${classroot.cameraviewactive}" resource="icons/32x32/yellowcamera.png" ></view>	
+        </button>
+		<button
+			name = "submitButton"
+			width="${classroot.buttonwidth}" 
+			height="${classroot.buttonwidth}"
+			valign="middle"
+			enabled="${!classroot.cameraviewactive &amp;&amp; classroot.haveSnapshot}"
+			onclick="submitSnapshot()">
+       		<method name="submitSnapshot" args="">
+				classroot.writeImageToBrowser(classroot.vview_tslider.playback_tpane.playview);
+				Debug.write("should submit here");
+			</method>
+			<view name="saveicon" width="32" height="32"  x="5" y="5" visible="${!classroot.written}" opacity="${0.2 + (this.parent.enabled ? 0.8 : 0)}" resource="icons/32x32/save32.png" ></view>	
+			<view name="saveicontick" width="32" height="32"  x="5" y="5" visible="${classroot.written}" resource="icons/32x32/save32tick.png" ></view>	
+        </button>			
+	</view>
+		
+	<!-- This works OK but the tabs don't resize properly after showing settings. tried and tried and tried .. -->
+	<checkbox  name="settingsbox" text="settings" value="false">
+		<handler name="onchanged">
+			Debug.write("tab height before:", classroot.vview_tslider.height);
+			Debug.write("tab height before:", classroot.vview_tslider.webcam_tpane.height);
+			if(this.value){
+					classroot.vview_tslider.select(classroot.vview_tslider.settings_tpane);					
+				}else{
+					classroot.vview_tslider.select(classroot.vview_tslider.webcam_tpane);
+				}
+			Debug.write("tab height after:", classroot.vview_tslider.height);
+			Debug.write("tab height after:", classroot.vview_tslider.webcam_tpane.height);
+		</handler>
+	</checkbox>
+    
+	</view>
+	
+		 <method name="captureAndCopyView" args="sourceView, destinationView">
+			<![CDATA[
+			
+				// create a new bitmap object
+				var tempSnapshot:BitmapData =new BitmapData(sourceView.width, sourceView.height, true, 0x00FFFFFF);
+				tempSnapshot.draw(sourceView.getDisplayObject(), new Matrix());
+				
+				// place the snapshop in a view
+				var targetView = destinationView.getDisplayObject();
+				targetView.addChild(new Bitmap(tempSnapshot));
+				this.setAttribute("haveSnapshot",true);
+				
+	
+				
+			]]>
+		</method>	
+		<method name="writeImageToBrowser" args="snapshotView">
+		<![CDATA[
+			
+			if(this.haveSnapshot) {
+				
+				// Take the snapshot movieclip
+				var sketch_mc = snapshotView.getDisplayObject();
+				
+				// Get the image data from that
+				var jpgSource:BitmapData = new BitmapData(sketch_mc.width, sketch_mc.height);
+				jpgSource.draw(sketch_mc);
+				
+				// Create a Jpeg from the image data
+				var jpgEncoder:JPGEncoder = new JPGEncoder(85);
+				var jpgStream:ByteArray = jpgEncoder.encode(jpgSource);
+				Debug.write("jpeg stream created");
+				
+				//If we are uploading like the mp3 recorder, then here
+				//update filename on page
+				//this.updatepage(this.filename, Base64.encodeByteArray(jpgStream));
+				//return;
+				//we need to somehow use this base64 encoder though .. http://code.google.com/p/as3crypto/source/browse/trunk/as3crypto/src/com/hurlant/util/Base64.as
+				
+				
+				//submit jpg data to server
+				// Create an URLRequest with the image
+				var header:URLRequestHeader = new URLRequestHeader("Content-type", "application/octet-stream");
+				var jpgURLRequest:URLRequest = new URLRequest(this.moodlewww + "/repository/poodll/uploadHandler.php");
+				jpgURLRequest.requestHeaders.push(header);
+				jpgURLRequest.method = URLRequestMethod.POST;
+				jpgURLRequest.data = jpgStream;
+				
+				// create the image loader & send the image to the server;
+				var urlLoader : URLLoader = new URLLoader();
+				urlLoader.dataFormat = URLLoaderDataFormat.BINARY;
+				
+				//register listener
+				urlLoader.addEventListener(Event.COMPLETE, this.loadComplete);
+				
+				//send req to server, await response
+				urlLoader.load( jpgURLRequest );
+
+			}
+			
+		]]>
+		</method>	
+		<method name="loadComplete" args="evt">
+			var filename = evt.target.data;
+			Debug.write("gotfilename:" + filename);
+			this.updatepage(filename);
+			this.setAttribute("written",true);
+		</method>
+
+</class>
+
+</library>

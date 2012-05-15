@@ -56,6 +56,8 @@
 		<combobox name="availableMics" width="200" editable="false">
 			<handler name="oninit">
 				<![CDATA[
+				if(classroot.themic =='null') return;
+				
 				//Get all availible Mike's
 				var tw = classroot.futils.getMicrophoneNames();
 				var t = "";
@@ -70,6 +72,8 @@
 			</handler>
 			<handler name="onselect" args="v">		
 				<![CDATA[
+						if(classroot.themic =='null') return;
+				
 					//we have to be careful here because if we set the device to something
 					//before user has granted permissions(settings dialog is popped up)
 					//nothing will get recorded
