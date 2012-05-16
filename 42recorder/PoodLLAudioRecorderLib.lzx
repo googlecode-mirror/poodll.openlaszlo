@@ -232,7 +232,13 @@
 					classroot.ms.stop();
 					Debug.write("stopped recording");
 					if(classroot.itemid){
-						classroot.eService.moveMedia(classroot.contextid,classroot.itemid,classroot.filename,classroot.component,classroot.filearea);
+						if(classroot.saveformat=="mp3"){
+							var usefilename = classroot.filename.substr(0,classroot.filename.length - 3);
+							usefilename = usefilename + "mp3";
+						}else{
+							var usefilename=classroot.filename;
+						}	
+						classroot.eService.moveMedia(classroot.contextid,classroot.itemid,usefilename,classroot.component,classroot.filearea);
 						//classroot.eService.moveMedia(classroot.contextid,classroot.itemid,classroot.filename,"user","draft");
 					}
 				}
