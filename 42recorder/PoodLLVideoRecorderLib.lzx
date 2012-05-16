@@ -53,6 +53,9 @@
 	<attribute name="filearea"  />
 	<attribute name="itemid"  />
 	
+	<!-- Attribute for if we are transcoding to MP4 -->
+	<attribute name="saveformat" value="'flv'" />
+	
 	
 <!-- **************** The above atributes are set from parent class ******************************* -->
 
@@ -75,12 +78,17 @@
 		]]>
 	</handler>
 	
-	<method name="updatepage" args="newvalue">
+	<method name="updatepage" args="newfilename">
 			
-				//record the url on the html page, the checked=true, is probbaly redundant								
+				//record the url on the html page, 							
 				var somejs='var cbox = parent.document.getElementById(\"' + this.updatecontrol + '\"); ';
 				somejs = somejs + 'cbox.checked=\"true\"; ';
-				somejs = somejs + 'cbox.value=\"' + newvalue +'\"; ';							
+				if(this.saveformat=="mp4"){
+					var newname = newfilename.substr(0,newfilename.length - 3);
+					newname = newname + "mp4";
+					newfilename = newname;
+				}
+				somejs = somejs + 'cbox.value=\"' + newfilename +'\"; ';							
 				lz.Browser.loadJS(somejs);					
 	</method>
 	
