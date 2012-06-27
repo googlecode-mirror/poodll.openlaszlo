@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="200" height="200">
+	<include href="explorerservicelib.lzx" />
+ <goldstyle name="defaultstyle" isdefault="true"/>
+
+	<text text="hello" />
+	
+	
+</canvas>

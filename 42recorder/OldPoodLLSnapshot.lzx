@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+
+   
+<canvas>
+
+
+ <goldstyle name="defaultstyle" isdefault="true"/>
+ <greenstyle name="specialstyle"/>
+
+	<include href="lz"/>
+	
+
+	<!-- The URL of the Red5 server -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  	
+
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename" value="lz.Browser.getInitArg('filename')" />  	
+
+	<!-- The course id (parent will pass -1 if there is no course id) -->
+	<attribute name="course"  value="lz.Browser.getInitArg('course')" />  	
+	
+	<!-- The id of the control on the enclosing HTMLpage to update with the ilename -->
+	<attribute name="updatecontrol"  value="lz.Browser.getInitArg('updatecontrol')" />  	
+>
+	
+	<!-- The save name of our file. Added Justin 2009/06/12 -->
+	<attribute name="savefilename" value="''" />
+	
+	<!-- Flash Utilities Class -->
+	<flashutils name="futils" />
+
+
+
+	<!-- Justin 2000/06/12-->
+	<!-- Had many problems keeping this logic central and used with constraints-->
+	<!-- This is not elegant but it works. The job is to start from courseid, if we have one-->
+	<handler name="onfilename">
+		<![CDATA[
+			
+			if (this.course!=-1){
+				this.setAttribute("savefilename", this.course + '/' + this.filename);
+			}else{ 
+				this.setAttribute("savefilename",this.filename);
+			}
+		]]>
+	</handler>
+
+	
+	<!-- The layout structure
+		canvas layout: top=toptabs bottom=buttonbar
+		tabs are: main / audio / video / device
+		main tab: view:videosview:  leftcol=vview_tslider (record/play/snapshot tabslider)
+		main tab: view:videosview:  rightcol=sesset1 and sesset2
+		audio tab: left col(view:audiosettings1) and right col(view:audiosettings2)
+		video tab: left col(view:videosettings1) and right col(view:videosettings2)
+		device tab: 
+		button bar = record/play/stop/snapshot buttons | mic volume | record time		
+	-->
+
+	
+
+    <simplelayout inset="10" spacing="10"/>
+	<basetabs id="toptabs" y="10" bordersize="5" tabclass="tab">
+	   <basetabpane id="maintab" text="Main" selected="true" bgcolor="#bdbdbd">
+		<!-- Start of videos-->
+		<view name="videosview"  layout="axis:x; inset:10; spacing:10" >
+			 <tabslider id="vview_tslider" width="160" height="160" spacing="2" slideduration="200">
+					<tabelement id="record_tpane" text="Camera View" selected="true">
+						<videoview bgcolor="#c0f4ad" name="recordview" id="recordview" height="${parent.height}" width="${parent.width}" >
+							<!-- The camera object -->
+							<camera id="mycam" show="true" />									
+						
+						</videoview>
+				</tabelement>
+				<tabelement id="playback_tpane" text="Snapshot View" >
+					<view bgcolor="#c0f4ad" name="playview" id="playview"  height="${parent.height}" width="${parent.width}"  />
+				</tabelement>	
+			</tabslider>
+			<view name="sessset2">
+			<simplelayout axis="y" spacing="10"/>	
+			<view name="sessset1">
+			<simplelayout axis="y" spacing="10"/>	
+			<text>Filename:</text>
+			<view name="topview">
+				<simplelayout axis="x" spacing="5"/>	
+			 
+				<edittext id="fileid" text="${canvas.filename}" />				 		
+			</view>			
+		</view>
+		
+			
+		</view>
+		<!-- end of videos-->	
+		</view>
+	</basetabpane>	
+	
+	<basetabpane text="Device Settings" bgcolor="#bdbdbd">
+		<simplelayout axis="y" spacing="10" />
+		<text>Cameras:</text>
+		   <combobox id="availableCams" width="280" editable="false">
+			<handler name="oninit">
+				<![CDATA[
+				//Get all availible Cam's
+				var tw = canvas.futils.getCameraNames();
+				var t = "";
+				this.addItem("default(" + mycam.devicename + ")",-1);
+				for (var eg=0;eg<tw.length;eg++){
+					Debug.write(tw[eg],eg);
+					this.addItem(tw[eg],eg);
+					t=eg;
+				}   
+				this.selectItem(-1); 			  
+				]]>
+			</handler>
+			<handler name="onselect" args="v">
+					if(v.value != mycam.deviceindex){
+						mycam.setAttribute("deviceindex",v.value);
+					}
+					Debug.write("camera: " + mycam.deviceindex + ":" + mycam.devicename);					
+			</handler>
+		</combobox>
+	
+	</basetabpane>
+	</basetabs>
+
+	
+	
+	
+	 
+	 <view id="buttonbar" bgcolor="#bdbdbd" valign="middle" width="${parent.width}" height="${recordButton.height + 8}">
+      <simplelayout axis="x" spacing="5" />
+	 	<!-- snapshots doesn't work on swf9, mcref issue, so disabled -->
+		<button id="snapshotButton" valign="middle"  enabled="true" width="30" height="30" visible="true">	
+					<view id="snapshoticon" width="24" height="24"  x="3" y="3" resource="icons/24x24/CircleBordered/YellowCamera.png" ></view>	
+					<flashutils name="futils" />
+					<handler name="onclick" >
+						
+							canvas.futils.captureAndCopyView(recordview,playview);
+				
+						vview_tslider.select(playback_tpane);		
+					</handler>
+										
+		</button>
+
+		</view>
+      
+        <text valign="middle" fgcolor="red" id="errorText" width="200"/>
+
+    </view>
+	
+<class name="flashutils">
+<!-- AS3 import statements -->  
+   <switch>  
+	 <when property="$as3">  
+	   <passthrough>  
+					 import flash.display.*;  
+					 import flash.geom.*;  
+					 import flash.media.Microphone;
+					 import flash.media.Camera;					 
+	   </passthrough>  
+	 </when>  
+   </switch>
+ <method name="getCameraNames">
+		return Camera.names;
+   </method>
+   	 <method name="getMicrophoneNames">
+		return Microphone.names;
+	 </method>
+
+   <method name="captureAndCopyView" args="sourceView, destinationView">
+						<![CDATA[
+						// sourceView is the view we are going to capture and copy
+						//
+						var sourceView_mc = sourceView.getMCRef();
+
+						// create the BitmapData object
+						//
+						var x = 0;
+						var y = 0;
+						var w = sourceView.width;
+						var h = sourceView.height;
+						var bitmap = new flash.display.BitmapData(w, h, false);
+						Debug.write("declared bitmap");
+						// draw the source view into the BitmapData object
+						//
+						var matrix = new flash.geom.Matrix();
+						matrix.translate(-x, -y)
+						var colorTransform = new flash.geom.ColorTransform();
+						var rect = new flash.geom.Rectangle(0, 0, w, h);
+						Debug.write("going to draw bitmap");
+						bitmap.draw(sourceView_mc, matrix, colorTransform, 1, rect);
+						Debug.write("drew bitmap");
+						// load the bitmap into a destination view
+						//
+						var destinationView_mc = destinationView.getMCRef();
+						destinationView_mc.createEmptyMovieClip("bitmap_mc", 1);
+						Debug.write("attaching bitmap");
+						destinationView_mc.bitmap_mc.attachBitmap(bitmap, 1);
+						//destinationView_mc.bitmap_mc.removeBitmap();
+						//showsnapshot
+						//vview_tslider.select(snapshot_tpane);	
+
+						]]>
+					</method> 
+   
+ </class>
+
+   
+</canvas>
+
+
+
+
+
+
+
+

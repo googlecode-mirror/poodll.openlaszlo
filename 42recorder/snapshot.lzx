@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="800" height="600">
+	
+	<switch>
+		<unless property="$as3">
+			<handler name="oninit">
+			<![CDATA[
+				Debug.error("ActionScript 3 required");
+			]]>
+			</handler>				
+		</unless>
+		<otherwise> 
+		
+			<passthrough>				
+				import flash.net.*;
+				import com.adobe.images.JPGEncoder;
+				import flash.utils.ByteArray;
+				import flash.display.Bitmap;
+				import flash.display.BitmapData;
+				import flash.media.Camera;
+				import flash.geom.Matrix;
+			</passthrough>
+			
+			<attribute name="imageWidth" type="number" value="400"/>
+			<attribute name="imageHeight" type="number" value="270"/>
+						
+			<attribute name="shotAvailable" type="boolean" value="false"/>
+			
+			<handler name="oninit">
+			<![CDATA[
+				
+				// Get the webcam 
+				var cam:Camera = Camera.getCamera();
+				
+				// Specifies the maximum amount of bandwidth that the current outgoing video feed can use, in bytes per second. To specify that Flash Player video can use as much bandwidth as needed to maintain the value of quality , pass 0 for bandwidth . The default value is 16384.
+				var bandwidth:int = 0; 
+				
+				// This value is 0-100 with 1 being the lowest quality. 
+				// Pass 0 if you want the quality to vary to keep better framerates
+				var quality:int = 100; 
+				
+				// Set bandwidth and quality
+				cam.setQuality(bandwidth, quality);
+		
+				// Set measurements and framerate
+				cam.setMode(canvas.imageWidth, canvas.imageHeight, 30, false); 
+				
+			]]>
+			</handler>	
+			
+			<method name="takeSnapshot">
+			<![CDATA[
+			
+				// create a new bitmap object
+				var tempSnapshot:BitmapData =new BitmapData(canvas.imageWidth, canvas.imageHeight, true, 0x00FFFFFF);
+				tempSnapshot.draw(canvas.videoView.videoView.video.getDisplayObject(), new Matrix());
+				
+				// place the snapshop i a view
+				var targetView = canvas.videoView.snapshot.getDisplayObject();
+				targetView.addChild(new Bitmap(tempSnapshot));
+				
+				canvas.setAttribute("shotAvailable", true);
+				
+			]]>
+			</method>	
+						
+			<method name="saveImage">
+			<![CDATA[
+				
+				if(canvas.shotAvailable) {
+					
+					// Take the snapshot movieclip
+					var sketch_mc = canvas.videoView.snapshot.getDisplayObject();
+					
+					// Get the image data from that
+					var jpgSource:BitmapData = new BitmapData(sketch_mc.width, sketch_mc.height);
+					jpgSource.draw(sketch_mc);
+					
+					// Create a Jpeg from the image data
+					var jpgEncoder:JPGEncoder = new JPGEncoder(85);
+					var jpgStream:ByteArray = jpgEncoder.encode(jpgSource);
+					
+					// Create an URLRequest with the image
+					var header:URLRequestHeader = new URLRequestHeader("Content-type", "application/octet-stream");
+					var jpgURLRequest:URLRequest = new URLRequest("http://thomas.deuling.org/samples/snapShot/snapShotHandle.php?name=sketch.jpg");
+					jpgURLRequest.requestHeaders.push(header);
+					jpgURLRequest.method = URLRequestMethod.POST;
+					jpgURLRequest.data = jpgStream;
+					
+					// Send the image for download
+					navigateToURL(jpgURLRequest, "_blank");
+				}
+				
+			]]>
+			</method>	
+			
+			
+			<simplelayout axis="y" spacing="0" />
+			<view name="videoView" width="$once{canvas.imageWidth*2}" height="$once{canvas.imageHeight}">
+				<simplelayout axis="x" spacing="0" />
+				<view name="videoView" width="$once{canvas.imageWidth}" height="$once{canvas.imageHeight}">
+					<videoview name="video" oninit="this.stream.broadcast()" width="$once{canvas.imageWidth}" height="$once{canvas.imageHeight}">
+						<camera name="webcam" show="true" width="$once{canvas.imageWidth}" height="$once{canvas.imageHeight}" bandwidth="0" picturequality="1.0" />
+					</videoview>
+				</view>
+				
+				<view name="snapshot" width="$once{canvas.imageWidth}" height="$once{canvas.imageHeight}" />
+			</view>
+						
+			<view layout="axis: x; spacing:0">
+				<button text="Take a snapshot" onclick="canvas.takeSnapshot();" width="$once{canvas.imageWidth}" />
+				<button text="Save snapshot" onclick="canvas.saveImage();" width="$once{canvas.imageWidth}" />		
+			</view>	
+	
+		</otherwise>
+	</switch>
+		
+</canvas>

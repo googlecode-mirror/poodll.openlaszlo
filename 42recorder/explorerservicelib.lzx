@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<library>
+
+<class name="explorerservice" extends="view">
+	
+		<!-- we raise these events when we receive an asynch result-->
+	<event name="onActionStart"/>
+	<event name="onActionComplete"/>
+	<event name="onActionError"/>
+
+	<!-- Path to poodll logic lib -->
+	<attribute name="filedataurl"  /> 
+	
+		<!-- The dataset containing info about the filesystem -->
+	<!-- IF we don't set the multirequest to true, pwnding requests fail ie only one at a time -->
+	<!-- the errors object contains messages. The name is erroneous. Should be changed here and in poodllfilelib.php and in file explorer -->
+	<dataset name="dataservice" multirequest="true" type="http" src="${classroot.filedataurl}" request="false" >
+		<handler name="ondata">
+			<![CDATA[
+			Debug.write("gotdata to dataservice");
+		
+			//check we have a result and request id in the returned data
+			var theRequest = classroot.dp.xpathQuery("result/@requestid");			
+			if(theRequest){
+				var theResult = classroot.dp.xpathQuery("result/text()");
+				
+		
+					var messages = classroot.dp.xpathQuery("result/error");
+					if(!messages){
+						//shouldn't happen but might. No data received
+						classroot.onActionError.sendEvent('no messages received with result set.');
+					}else if(messages instanceof lz.DataElement){
+						//a single message object
+						if (theResult == "success"){
+							classroot.onActionComplete.sendEvent(messages.childNodes[0].data);
+						}else{
+							classroot.onActionError.sendEvent(messages.childNodes[0].data);
+						}
+					}else{
+						for (var x=0;x < messages.length; x++){
+							//an array of message objects. probably won't happen here. But supported.
+							if (theResult == "success"){
+								classroot.onActionComplete.sendEvent(messages[x].childNodes[0].data);
+							}else{
+								classroot.onActionError.sendEvent(messages[x].childNodes[0].data);
+							}
+						}
+					}
+			}
+			]]>
+		</handler>
+	</dataset>
+	
+	<!-- we use this datapointer for notification of a request en -->
+	<datapointer name="dp" xpath="local:dataservice:/" />
+	
+	<method name="moveMedia" args="contextid,itemid,filename,component,filearea">
+		//Debug.write("move file");
+		this.sendData(contextid,"instanceremotedownload",itemid,filename,component,filearea);
+	</method>
+
+
+	<method name="sendData" args="contextid,action,itemid,arg1=null,arg2=null,arg3=null">
+			<![CDATA[
+		Debug.write("sendingdata");
+		Debug.write("filedataurl:" + this.filedataurl);
+
+	 //dummy variables, not necessary for moveMedia
+	 var courseid=0;
+	 var moduleid=0;
+	 var requestid=999;
+	 var hash=0;
+	 
+	 	 //notify feedback class we are starting, if we registered this action before calling
+	 	this.onActionStart.sendEvent(requestid);
+
+	 
+      var p=new LzParam(); 
+	  p.addValue("datatype",action, true);                                 
+      p.addValue("action",action, true);
+      p.addValue("hash", hash, true);
+	  p.addValue("paramone", arg1, true);
+	  p.addValue("paramtwo", arg2, true);
+	  p.addValue("paramthree", (arg3==null ? '':arg3), true);
+	  p.addValue("requestid", requestid, true);
+	  p.addValue("contextid", contextid, true);
+	  p.addValue("courseid", courseid , true);
+	  p.addValue("moduleid", moduleid , true);
+	  p.addValue("itemid", itemid , true);
+      this.dataservice.setQueryString(p);                                 
+      this.dataservice.doRequest(); 
+	  Debug.write("data request sent");
+	  Debug.inspect(p);
+	  //set up the asynch callback listener
+		//var datadelegate = new LzDelegate(this, 'updatePath');
+		//datadelegate.register(classroot, 'on' + action);   
+		]]>
+    </method>
+	
+</class>
+
+
+</library>

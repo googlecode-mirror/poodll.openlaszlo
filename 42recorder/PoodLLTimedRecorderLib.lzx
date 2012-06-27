@@ -9,7 +9,7 @@
 	<include href="explorerservicelib.lzx" />
 	<include href="lz" />
 
-<class name="poodllaudiorecorder" extends="view">
+<class name="poodlltimedrecorder" extends="view">
 	
 	<!-- The size of the buttons et al. -->
 	<attribute name="iconsize" />
@@ -38,8 +38,13 @@
 	<attribute name="loopback" value="true" />
 	<attribute name="prefdevice" value="''" />
 	
-	<attribute name="haveRecorded" value="false" />
 	
+	<!-- Flag to indicate we have recorded -->
+	<attribute name="haveRecorded" value="false" />
+	<!-- Flag to indicate copying was successful -->
+	<attribute name="haveCopied" value="false" />
+	<!-- UI suspended after timeout -->
+	<attribute name="uisuspended" value="false" />
 	
 	<!-- A flag to tell us if we should be overwriting files -->
 	<attribute name="overwritefile" />
@@ -85,10 +90,16 @@
 					newname = newname + "mp3";
 					newfilename = newname;
 				}
-				somejs = somejs + 'cbox.value=\"' + newfilename +'\"; ';							
+				somejs = somejs + 'cbox.value=\"' + newfilename +'\"; ';	
+										
 				lz.Browser.loadJS(somejs);					
 	</method>
-	
+	<method name="nextpage">
+				//add code to click "next" button
+				var somejs =  'var f=document.getElementById(\"responseform\"); ';
+				somejs = somejs + 'f.next.click(); ';					
+				lz.Browser.loadJS(somejs);	
+	</method>
 
 	
 	<!-- The server connection -->
@@ -159,11 +170,12 @@
     <simplelayout inset="10" axis="y" spacing="5"/>
 	 
 	 <view name="buttonview" bgcolor="#bdbdbd" valign="middle" width="${parent.width}" height="${this.recordButton.height + 8}">
-      <simplelayout axis="x" spacing="5" />    
+      <!-- simplelayout axis="x" spacing="5" -->    
         <button name="recordButton" 
 			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}"
 			valign="middle" 
-			enabled="${classroot.playstream.playing == false}" 
+			x="${(parent.width / 2) - (this.width+20)}"
+			enabled="${!(classroot.playstream.playing || classroot.ms.recording || classroot.uisuspended)}" 
 			onclick="record()">
         	<method name="record">
 				//have recorded
@@ -188,21 +200,25 @@
         		classroot.mic.capturing=true;
         		classroot.ms.setAttribute("totaltime", 0);
 				classroot.setAttribute("haveRecorded",true);
+				//flag to indicate that copying is not yet complete for this recording
+				classroot.setAttribute("haveCopied",false);
         		classroot.ms.record();
 				
 				//record the url on the html page
 				classroot.updatepage(classroot.filename);
 				
+				//classroot.ms.recording || classroot.playstream.playing  || classroot.uisuspended
 				
         	</method>
-			<view name="micicon" width="${classroot.iconsize}" height="${classroot.iconsize}" x="5" y="5" opacity="${1 - ((classroot.ms.recording || classroot.playstream.playing ) * 0.8)}" resource="icons/128x128/PlainGreen/RecordNormal.png" ></view>	
+			<view name="micicon" width="${classroot.iconsize}" height="${classroot.iconsize}" x="5" y="5" opacity="${1 - ((parent.enabled ? 0 : 1) * 0.8)}" resource="icons/128x128/PlainGreen/RecordNormal.png" ></view>	
         </button>
 		
 		<button name="playButton" 
 			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}" 
 			valign="middle" 
-			enabled="${!(classroot.playstream.playing  || classroot.ms.recording || !classroot.haveRecorded)}" 
-			onclick="playRecording()">
+			enabled="${!(classroot.playstream.playing || classroot.uisuspended || classroot.ms.recording || !classroot.haveRecorded)}" 
+			onclick="playRecording()"
+			visible="false">
 			<method name="playRecording" args="">
 				if (classroot.playstream.url != classroot.savefilename){
 						classroot.playstream.setAttribute("url",classroot.savefilename);
@@ -221,7 +237,8 @@
 			name = "stopButton"
 			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}"
 			valign="middle"
-			enabled="${classroot.playstream.playing || classroot.ms.recording}"
+			x="${(parent.width / 2) + 20}"
+			enabled="${(classroot.playstream.playing || classroot.ms.recording) &amp;&amp; !classroot.uisuspended}"
 		        onclick="stopAll()">
 
        		<method name="stopAll" args="">
@@ -231,6 +248,7 @@
 				}else if (classroot.ms.recording){
 					classroot.ms.stop();
 					Debug.write("stopped recording");
+					classroot.setAttribute("uisuspended",true);
 					if(classroot.itemid){
 						if(classroot.saveformat=="mp3"){
 							var usefilename = classroot.filename.substr(0,classroot.filename.length - 3);
@@ -244,7 +262,7 @@
 				}
        			       			
        		</method>
-			<view name="stopicon" width="${classroot.iconsize}" height="${classroot.iconsize}"  x="5" y="5" opacity="${0.2 + ((classroot.playstream.playing || classroot.ms.recording) ? 0.8 : 0)}" resource="icons/128x128/CircleBordered/Stop1NormalRed.png" ></view>	
+			<view name="stopicon" width="${classroot.iconsize}" height="${classroot.iconsize}"  x="5" y="5" opacity="${0.2 + ((classroot.playstream.playing || classroot.ms.recording) ? 0.8 : 0)}" resource="icons/128x128/CircleBordered/Stop1NormalBlue.png" ></view>	
         </button>		
 		
 
@@ -282,11 +300,12 @@
 		<button onclick="parent.close()">Close</button>
    </modaldialog>
    
-   	
 	<explorerservice name="eService" filedataurl="${classroot.poodllfilelib}"  >
 		<handler name="onActionComplete" args="message">
 			thespinner.hidespinner();
 			classroot.updatepage(message);
+			//set flag to show that copying is complete for this recording
+			classroot.setAttribute("haveCopied",true);
 		</handler>
 		<handler name="onActionError" args="message">
 			thespinner.hidespinner();
