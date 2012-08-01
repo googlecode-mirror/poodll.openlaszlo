@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	<class name="uniplayer" extends="view">
+		
+		<attribute name="src"  />
+	
+		<attribute name="sourceset" value="false" />
+		<!-- flag to show the state of the player -->
+		<attribute name="now_playing" value="false"/>
+		
+		<!-- if we have finished make sure to reset the buttons -->
+		<method name="finished">      
+		  this.setAttribute('now_playing',false);
+		</method>
+		 
+		  <!--test for mp3 or flv -->
+		 <method name="srcismp3" args="ignore=null">
+			return this.src.lastIndexOf(".mp3") == (this.src.length-4);
+		 </method>
+		 
+		 <!--Stop the playing track -->
+		 <method name="pauseTrack" args="ignore=null">
+			if(this.srcismp3()){
+				this.mp3player.stop(); 
+			}else{
+				this.flvplayer.pause();
+			}
+			this.setAttribute('now_playing', false);
+		 </method>
+		 
+		
+		<!-- Play the track -->
+		  <method name="playTrack" args="ignore=null">
+		  //if mp3 was set to src
+		  if(this.srcismp3()){
+			  if (!this.sourceset) {
+				this.mp3player.setResource(this.src);
+				this.setAttribute('sourceset', true);
+			  }else{
+				this.mp3player.play();
+			  }
+			  
+		  //if flv was set to src
+		  }else{
+			if (!this.sourceset) {
+				this.flvplayer.setAttribute("url", this.src);
+				this.setAttribute('sourceset', true);
+			  }
+			  this.flvplayer.play();
+		  }
+		  
+		  //flag that we are playing
+		  this.setAttribute('now_playing', true);
+	 
+		</method>
+		 		
+	  <!-- Standard view for playing back mp3 audio files (as resources) -->
+	  <view name="mp3player"> 
+		 <!-- these events should tell us if the player stopped automatically -->
+		 <handler name="onlastframe">
+			classroot.finished();
+		</handler>
+		<handler name="onstop">
+			classroot.finished();
+		</handler>
+		
+	  </view>
+		
+		<!-- mediastream for playing back flv audio files -->
+		<mediastream name="flvplayer" type="http" autoplay="false"  >
+			<handler name="oninit" >
+				Debug.write("type:", type);
+			</handler>
+			<handler name="onstop" >
+				Debug.write("ms stopped:");
+				classroot.finished();
+			</handler>
+		</mediastream>
+		
+	</class>
+</library>

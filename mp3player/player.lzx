@@ -1,0 +1,182 @@
+<!-- The Mp3 player. Responsible for playing the track and displaying the basic information
+
+1. Has controls like Play/Pause/Stop/ and a movable progress bar implemented
+2. To implement nextTrack() and previousTrack(), declare global javascript functions with the same name and buttons will be visible 
+
+Known Bugs
+
+Total time displayed during song load (when song is not in cache) is off by a few 10 secs
+-->                                                                                                         
+
+<library>
+
+  <script>
+	function sec2min(secs){
+	<![CDATA[
+			    var s;
+			    if(secs > 60){
+				var min = Math.floor(secs / 60);
+				s = min < 10 ? "0" : "";
+				s += min +":";
+				secs = secs - min * 60;
+			    } else {
+				s = "00:";
+			    }
+
+			    if(secs < 10){
+				s+= "0" + Math.floor(secs);
+			    } else {
+				s += Math.floor(secs);
+			    }
+				return s;
+	]]>
+	}
+  </script>
+
+  <resource name="previous_btn" src="icons/previous_blue.png"/>	
+  <resource name="play_btn" src="icons/play_blue.png"/>
+  <resource name="pause_btn" src="icons/pause_blue.png"/>
+  <resource name="stop_btn" src="icons/stop_blue.png"/>
+  <resource name="next_btn" src="icons/next_blue.png"/>
+  <resource name="sound_low" src="icons/sound_low.png"/>
+  <resource name="sound_high" src="icons/sound_high.png"/>
+  <resource name="scrubber" src="icons/audio_scrubber.png"/>
+  <resource name="scrub_track" src="icons/audio_scrubtrack.png"/>
+
+  <class name="player" extends="view" visible="true" play="false">
+      <attribute name="load_progress_color" value="0x999999"/>
+      
+      <!-- To know if the player is currently playing or not -->
+      <attribute name="now_playing" value="false"/>  	
+      <attribute name="paused" value="false"/>  	
+
+      <!-- This helps us in estimating the total time and then in moving the progress bar -->
+  		<attribute name="total_time" value="${this.getTotalTime()/this.loadratio}"/>		
+
+      <!-- Play next track when the song gets over -->
+  		<handler name="onlastframe">
+        this.setAttribute('now_playing',false)
+  			nextTrack();
+  		</handler>
+
+      <handler name="onplay">
+        this.setAttribute('now_playing',true);
+        this.setVolume(volume_slider.value);
+        Debug.write('setting volume');
+  		</handler>
+
+      <!-- This handler is to make sure that during loading all timers etc move properly -->
+      <handler name="onloadperc" args="p">      
+        <![CDATA[
+        if(p==0 || this.now_playing == false){
+          this.play();
+          this.setVolume(Math.floor((volume_slider.getMouse('x')/volume_slider.width)*100));
+          Debug.write('Setting now_playing for the first time and calling play()');
+        }
+        total_time_counter.setText(Math.floor(p*100)+'%');
+        ]]>
+      </handler>
+  		
+    	<handler name="onstop">
+        Debug.write('onstop');
+  	  	this.setAttribute('now_playing',false)  				
+        Debug.write('Stopped');
+  		</handler>
+
+      <handler name="onload">
+        total_time_counter.setText(sec2min(this.getTotalTime()));
+        Debug.write(sec2min(this.getTotalTime()));
+      </handler>
+      
+      <handler name="ontimeout">
+        canvas.nextTrack();
+      </handler>
+
+      <handler name="onframe">
+        current_time_counter.setText(sec2min(this.getCurrentTime()));
+      </handler>
+
+      <handler name="onunload">
+        Debug.write('onunload');
+        <!-- Since this is equal to stop and then play, call stop -->
+        if(this.now_playing){
+          this.stop();
+        }
+      </handler>
+
+      <method name="pauseTrack">
+        this.stop(this.frame);
+        this.setAttribute('paused',true);
+      </method>
+      
+      <method name="playTrack">
+        this.play();
+        this.setAttribute('paused',false);
+      </method>
+
+      <method name="stopTrack">
+        playbar.setX(0);
+        this.stop(0);
+      </method>
+
+      
+
+    <!-- Display the progress bar and other track information when playing a track -->	
+  		 <view name="background">
+        <!-- Progress Bar -->
+  		 	<simplelayout axis="y" spacing="5"/>
+            <view name="progress_bar_background">
+            	<simplelayout axis="x"/>
+           		<view><text id="current_time_counter">00:00</text></view>
+            
+            	<view y="3" resource="scrub_track" name="scrub_track">                   
+            		<view name="loadbar" bgcolor="${classroot.load_progress_color}" height="100%" width="${classroot.loadratio*(parent.width)}" opacity=".5"/>            
+          
+            		<basebutton id="playbar" resource="scrubber" y="1"
+            					x="${(parseInt(parent.width * classroot.getCurrentTime())/classroot.total_time) > (parent.width - this.width) ? (parent.width - this.width) : parseInt(parent.width * classroot.getCurrentTime()/classroot.total_time)}">
+            			<method event="onmousedown">
+							if(classroot.now_playing){								
+								parent.play_loc_bar.setVisible(true);									
+							}
+            			</method>        
+            			<method event="onmouseup">
+            				if(classroot.now_playing){
+	            				parent.play_loc_bar.setVisible(false);
+            					var slidestop = ((parent.getMouse('x') / parent.width) * classroot.total_time);	
+								      classroot.play(slidestop*30);
+            				}
+        	    		</method>    	
+    	        	</basebutton>
+	          
+            		<basebutton name="play_loc_bar" resource="scrubber" opacity=".5" visible="false"
+            					x="${(0 > this.mouseVal ? 0 : (this.mouseVal >
+                            classroot.loadratio*(parent.width) ? parseInt(classroot.loadratio*parent.width - this.width) : 
+                              (this.mouseVal > (parent.width - this.width) ? (parent.width - this.width) : this.mouseVal)))}">
+            			<attribute name="mouseVal" value="${(parent.getMouse('x') - (this.width / 2))}" />
+            		</basebutton>
+            	</view>
+            
+            	<view x="200"><text id="total_time_counter">0%</text></view>
+        	</view>    
+		
+            
+            <view x="5" id="button_panel" y="20">       
+            	<simplelayout axis="x" spacing="5"/>
+            	<basebutton resource="previous_btn" onclick="previousTrack()" visible="${typeof(previousTrack)=='function'}"/>
+            	<basebutton resource="play_btn" onclick="classroot.playTrack()" visible="${typeof(classroot.playTrack)=='function'}"/>
+            	<basebutton resource="pause_btn" onclick="classroot.pauseTrack()" visible="${typeof(classroot.pauseTrack)=='function'}"/>
+            	<basebutton resource="stop_btn" onclick="classroot.stopTrack()" visible="${classroot.loadperc==1}"/>
+            	<basebutton resource="next_btn" onclick="nextTrack()" visible="${typeof(nextTrack)=='function'}"/>      
+            	<view resource="sound_low"/>
+            	<slider y="4" id="volume_slider" thumbheight="0" thumbwidth="0" width="50" oninit="this.setValue(classroot.getVolume())" showvalue="false" showrange="false">
+            		<handler name="onclick">
+            			var slider_val = Math.floor((this.getMouse('x')/this.width)*100)
+            			classroot.setVolume(slider_val);
+            			this.setValue(slider_val);
+            		</handler>
+            	</slider>  	
+            </view>                  
+        </view>
+
+  </class>
+</library>

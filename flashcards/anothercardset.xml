@@ -44,7 +44,7 @@
         <back fontsize="24" type="text">便利</back>                
     </card>
 	<card>
-        <front fontsize="24" type="text">metal</front>
+        <front fontsize="48" type="text">metal</front>
         <back fontsize="24" type="text">金属</back>                
     </card>
 	<card>

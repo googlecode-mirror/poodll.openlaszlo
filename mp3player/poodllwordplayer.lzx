@@ -1,0 +1,36 @@
+<canvas proxied="false"  medialoadtimeout="180000">
+	
+	<!-- includes : the flv/mp3 player component-->
+	<include href="uniplayerlib.lzx"/>
+	
+	<!-- params -->
+	<!-- The URL of the audio file (flv or mp3) -->
+	<attribute name="src" value="lz.Browser.getInitArg('src')" />
+	<!-- The text to display -->
+	<attribute name="word" value="lz.Browser.getInitArg('word')" />  
+	<!-- the fontsize of the word -->
+	<attribute name="fontheight" value="lz.Browser.getInitArg('fontsize')" />  
+
+  <!-- the audio Player-->
+  <uniplayer name="uplayer" src="${canvas.src}" /> 
+  
+  
+  <!-- This is the only visible component -->
+  <text name="theword" x="0" y="0" fontsize="${canvas.fontheight}" fgcolor="${canvas.uplayer.now_playing ? '0xFF0000' : '0x0000FF'}" text="${canvas.word}">
+	<handler name="onclick">
+		if(canvas.uplayer.now_playing){
+			canvas.uplayer.pauseTrack();
+		}else{
+			canvas.uplayer.playTrack();
+		}
+	</handler>
+	<handler name="onmouseover">
+		canvas.setAttribute("bgcolor","0x99FFFF");
+	</handler>
+	<handler name="onmouseout">
+		canvas.setAttribute("bgcolor",null);
+	</handler>
+  </text>
+ 
+
+</canvas>

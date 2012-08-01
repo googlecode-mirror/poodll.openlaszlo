@@ -59,7 +59,9 @@
 	<!-- Attribute for if we are transcoding to MP4 -->
 	<attribute name="saveformat" value="'flv'" />
 	
-	
+	<!-- UI Labels-->
+	<attribute name="recordlabel" />
+	<attribute name="stoplabel" />
 
 	<!-- The save name of our file. Added Justin 2009/06/12 -->
 	<attribute name="savefilename" value="''" />
@@ -138,7 +140,9 @@
 
 	<!-- The media stream -->
 	<mediastream name="ms" rtmp="${classroot.rtmpc}" type="rtmp" url="${classroot.savefilename}" />
+	<!--
 	<mediastream name="playstream" rtmp="${classroot.rtmpc}" type="rtmp" url="${classroot.savefilename}"/>
+	-->
 
 
 	<!-- The microphone object -->
@@ -167,16 +171,24 @@
 	</poodllmicrophone>
 	
 	
-    <simplelayout inset="10" axis="y" spacing="5"/>
+    <simplelayout inset="2" axis="y" spacing="3"/>
 	 
-	 <view name="buttonview" bgcolor="#bdbdbd" valign="middle" width="${parent.width}" height="${this.recordButton.height + 8}">
+	 <view name="buttonview" valign="middle" width="${parent.width}" height="${this.recordButton.height + 8}">
       <!-- simplelayout axis="x" spacing="5" -->    
         <button name="recordButton" 
-			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}"
+			width="200"
+			height="${classroot.iconsize + 20}"
 			valign="middle" 
-			x="${(parent.width / 2) - (this.width+20)}"
-			enabled="${!(classroot.playstream.playing || classroot.ms.recording || classroot.uisuspended)}" 
-			onclick="record()">
+			x="0"
+			enabled="${!(classroot.uisuspended)}" 
+			>
+			<handler name="onclick">
+				if(!classroot.haveRecorded){
+					this.record();
+				}else{
+					this.stopAll();
+				}
+			</handler>
         	<method name="record">
 				//have recorded
 			
@@ -207,12 +219,32 @@
 				//record the url on the html page
 				classroot.updatepage(classroot.filename);
 				
-				//classroot.ms.recording || classroot.playstream.playing  || classroot.uisuspended
 				
         	</method>
-			<view name="micicon" width="${classroot.iconsize}" height="${classroot.iconsize}" x="5" y="5" opacity="${1 - ((parent.enabled ? 0 : 1) * 0.8)}" resource="icons/128x128/PlainGreen/RecordNormal.png" ></view>	
+        	<method name="stopAll" args="">
+				if (classroot.ms.recording){
+					classroot.ms.stop();
+					Debug.write("stopped recording");
+					classroot.setAttribute("uisuspended",true);
+					if(classroot.itemid){
+						if(classroot.saveformat=="mp3"){
+							var usefilename = classroot.filename.substr(0,classroot.filename.length - 3);
+							usefilename = usefilename + "mp3";
+						}else{
+							var usefilename=classroot.filename;
+						}	
+						classroot.eService.moveMedia(classroot.contextid,classroot.itemid,usefilename,classroot.component,classroot.filearea);
+						//classroot.eService.moveMedia(classroot.contextid,classroot.itemid,classroot.filename,"user","draft");
+					}
+				}       			       			
+       		</method>
+			<view name="micicon" align="center" width="${classroot.iconsize}" height="${classroot.iconsize}"  y="2" visible="${!classroot.haveRecorded}" opacity="${1 - ((parent.enabled ? 0 : 1) * 0.8)}" resource="icons/64x64/PlainGreen/RecordNormal.png" ></view>	
+        	<view name="stopicon" align="center" width="${classroot.iconsize}" height="${classroot.iconsize}"   y="2" visible="${classroot.haveRecorded}" opacity="${0.2 + (classroot.ms.recording ? 0.8 : 0)}" resource="icons/64x64/CircleBordered/Stop1NormalBlue.png" ></view>
+       		<text visible="${parent.micicon.visible}" align="center" valign="bottom" fontsize="18" fgcolor="${classroot.uisuspended ?  '0xCCCCCC' : '0x0'}" text="${classroot.recordlabel}" />
+       		<text visible="${parent.stopicon.visible}" align="center" valign="bottom" fontsize="18" fgcolor="${classroot.uisuspended ? '0xCCCCCC' : '0x0'}" text="${classroot.stoplabel}" />
         </button>
-		
+   
+		<!--
 		<button name="playButton" 
 			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}" 
 			valign="middle" 
@@ -229,7 +261,7 @@
 			</method>
 			<view name="speakericon" width="${classroot.iconsize}" height="${classroot.iconsize}"  
 				x="5" y="5" opacity="${1 - (parent.enabled ? 0 : 0.8)}" 
-				resource="icons/128x128/CircleBordered/VolumePressed.png" >
+				resource="icons/64x64/CircleBordered/VolumePressed.png" >
 			</view>	
 		</button>	
 
@@ -238,6 +270,7 @@
 			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}"
 			valign="middle"
 			x="${(parent.width / 2) + 20}"
+			visible="false"
 			enabled="${(classroot.playstream.playing || classroot.ms.recording) &amp;&amp; !classroot.uisuspended}"
 		        onclick="stopAll()">
 
@@ -262,44 +295,43 @@
 				}
        			       			
        		</method>
-			<view name="stopicon" width="${classroot.iconsize}" height="${classroot.iconsize}"  x="5" y="5" opacity="${0.2 + ((classroot.playstream.playing || classroot.ms.recording) ? 0.8 : 0)}" resource="icons/128x128/CircleBordered/Stop1NormalBlue.png" ></view>	
+			<view name="stopicon" width="${classroot.iconsize}" height="${classroot.iconsize}"  x="5" y="5" opacity="${0.2 + ((classroot.playstream.playing || classroot.ms.recording) ? 0.8 : 0)}" resource="icons/64x64/CircleBordered/Stop1NormalBlue.png" ></view>	
         </button>		
-		
+		-->
 
     </view>
 	
-	<view name="recordinfo" >
-			<simplelayout axis="y" spacing="2"/>
-			
-			<view name="infobar">
-				<!-- Talktime -->
-				<simplelayout axis="x" spacing="10" />
-				<rtmpstatus rtmpc="${classroot.rtmpc}" />	
-				<!-- Talktime -->
-				<!-- The maths is just to round the number to 1 place, and not throw errors on zero -->
-				<text text="talk time: " /> 
-				<text text="${Math.round(((1 + classroot.ms.totaltime) * 10) / 10)-1}" />
-			</view>
-			
+	<view name="recordinfo" height="24">
+			<simplelayout axis="x" spacing="2"/>
+			<rtmpstatus rtmpc="${classroot.rtmpc}" />
 			<!-- Indicator for microphone level -->
 			<!-- The miclevel loading 1.8is just from trial and error -->			
 			<view width="184" resource="volumemeter.gif" height="12" bgcolor="black">       
 				<!-- To show micvolume always: mic.level * 1.8  -->
 				<view x="${parent.width - this.width}" y="0"  bgcolor="black" width="${parent.width - ( classroot.ms.recording ? classroot.mic.level * 1.8 : 0)}" height="12"/>
-			</view>			
+			</view>	
+			
+			<view name="infobar">
+				<!-- Talktime -->
+				
+				<simplelayout axis="x" spacing="10" />
+				
+				<button name="settingsbutton" visible="false" width="${classroot.recordinfo.height}" height="${parent.parent.height}" >
+						<handler name="onclick">
+							parent.settingswindow.open();
+						</handler>
+						<view name="settingsicon" width="${parent.height-4}" height="${parent.height-4}" stretches="both" x="2" y="2"  resource="icons/24x24/process.png" ></view>	
+				</button>	
+				<modaldialog name="settingswindow" width="320" height="210" initstage="late">
+					<simplelayout axis="y" spacing="2"/>
+					<audiosettings name="audiosettings" themic="${classroot.mic}" />
+					<button onclick="parent.close()">Close</button>
+			   </modaldialog>
+			</view>
+			
+					
 	</view> 
-	<button name="settingsbutton" width="${classroot.recordinfo.height}" height="${classroot.recordinfo.height}" options="ignorelayout" y="${classroot.recordinfo.y}" x="${classroot.width - this.width}">
-				<handler name="onclick">
-					classroot.settingswindow.open();
-				</handler>
-				<view name="settingsicon" width="${parent.height-4}" height="${parent.height-4}" stretches="both" x="2" y="2"  resource="icons/24x24/process.png" ></view>	
-	</button>	
-	<modaldialog name="settingswindow" width="320" height="210" initstage="late">
-		<simplelayout axis="y" spacing="2"/>
-		<audiosettings name="audiosettings" themic="${classroot.mic}" />
-		<button onclick="parent.close()">Close</button>
-   </modaldialog>
-   
+	
 	<explorerservice name="eService" filedataurl="${classroot.poodllfilelib}"  >
 		<handler name="onActionComplete" args="message">
 			thespinner.hidespinner();

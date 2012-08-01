@@ -1,0 +1,96 @@
+<!-- MP3 player in OpenLaszlo. Please visit http://code.google.com/p/mp3playerinlaszlo/ for more details
+Features basic XSPF playlist support (loads images/generates a link to info url for tracks etc
+
+Author: Prateek Dayal
+Email : prateek@muziboo.com
+
+No warranties whatsoever. This player is quite basic right now and under development. If you find any bugs, 
+please do email. If you wish to help in the development, please do email :)
+-->
+
+<canvas proxied="false">
+
+  <!-- The MP3 player class -->
+  <include href="player.lzx"/>
+ 
+  <!-- User preference xml to set the color etc : optional --> 
+  <dataset name="user_pref" type="http" request="true"></dataset>
+  
+  <!-- Dataset for the playlist. Will be loaded based on a globarVar supplied by browser --> 
+  <dataset name="favorite_list" type="http" request="true"></dataset>  
+
+  <!-- This one always points to the currently playing track. It can be set either by play/next/previous 
+       button or by clicking on the playlist item -->
+  <datapointer id="currenttrack" xpath="favorite_list:/playlist[1]"/>
+
+  <script>
+    favorite_list.setAttribute('src',playlistUrl);     
+  </script>
+
+  <!-- All the player related functionality such as start/stop/pause etc -->
+  <script>
+
+  <!-- Every time a new file is loaded, volume is reset to 100%. This function can be called to fix it -->
+
+	function startTrack() {
+    <![CDATA[
+		view_crnt_track.datapath.setPointer(currenttrack.p); 
+		mp3player.setResource(currenttrack.xpathQuery('location[1]/text()'));
+		author_pic.setAttribute('resource',currenttrack.xpathQuery('image[1]/text()'));
+    if(currenttrack.xpathQuery('info[1]/text()')){
+      info_link.setText("<a href=\""+currenttrack.xpathQuery('info[1]/text()')+"\" target=\"_blank\">More Information</a>");
+    }
+		main.setAttribute('title',currenttrack.xpathQuery('title[1]/text()'));
+	]]>
+		}
+
+	function nextTrack() {
+		if(currenttrack.selectNext()){
+			startTrack();
+		}
+	}
+	
+	function previousTrack() {
+		if(currenttrack.selectPrev()){
+			startTrack();
+		}
+	}
+	
+  </script>      
+      
+  	<window id="main" width="210" height="300" resizable="true" title="Mp3player in Laszlo">
+
+      <!-- Information about the current track -->
+      <view id="track_info" height= "60">
+        <view width="50" height="50" id="author_pic" play="true"/>  
+        <view x="55" id="view_crnt_track" visible="true">
+          <datapath/>
+          <text fontsize="12" datapath="creator/text()"/>                   
+        </view>                           
+        <view x="55" y="${view_crnt_track.height + 10}"><text id="info_link" bgcolor="0xBBBBFF"></text></view>
+    </view>
+                 
+    <player y="${track_info.height}" id="mp3player" width="100%" height="40"/>
+	
+  		
+      <!-- The view for the actual playlist -->
+  		<view y="${mp3player.y + mp3player.height + 10}" width="${main.width-20}" height="${main.height-170}">
+  			<view clip="true">  			
+  			<view>  				
+  				<datapath xpath="favorite_list:/playlist[1]/trackList[1]/track" replication="lazy"/>
+  				<view bgcolor="0xBBBBFF" height="${parent.trackname.height}" width="${main.width}" visible="${this.parent.datapath.p==currenttrack.p}"/>  	  						
+  				<text width="${main.width-20}" name="trackname" datapath="title/text()" onmouseover="this.setBGColor(0xBBBBFF)"
+  					  						  onmouseout="this.setBGColor(null)" >
+  					<handler name="onclick">  	
+              <!-- Set the currenttrack xpointer to point to this track on a click -->
+  						currenttrack.setPointer(this.parent.datapath.p);	
+  						startTrack();
+  					</handler>
+  				</text>  		  				  				  				 		  				  				
+  			</view>
+  			</view>
+  			<vscrollbar bgcolor="0x999999" usemousewheel="true"/>  			
+  		</view>  	
+  		
+  	</window>
+</canvas>

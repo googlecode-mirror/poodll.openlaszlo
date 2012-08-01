@@ -1,0 +1,28 @@
+<canvas proxied="false"  medialoadtimeout="180000">
+
+	<!-- includes : the flv/mp3 player component-->
+	<include href="uniplayerlib.lzx"/>
+
+	<!-- image resources -->
+  <resource name="play_btn" src="icons/MiniPlayIcon32.png"/>
+  <resource name="pause_btn" src="icons/MiniPauseIcon32.png"/>
+  
+  <!-- The URL of the audio file (flv or mp3) -->
+  <attribute name="src" value="lz.Browser.getInitArg('src')" />  
+
+  <!-- the audio Player-->
+  <uniplayer name="uplayer" src="${canvas.src}" /> 
+  
+  <!-- These are the only visible components -->
+  <basebutton name="playBtn" width="100%" height="100%" stretches="both" resource="play_btn" visible="${!canvas.uplayer.now_playing}">
+	<handler name="onclick">
+		canvas.uplayer.playTrack();
+	</handler>
+  </basebutton>
+  <basebutton name="pauseBtn"  width="100%" height="100%" stretches="both" resource="pause_btn" visible="${canvas.uplayer.now_playing}">
+	<handler name="onclick">
+		canvas.uplayer.pauseTrack();
+	</handler>
+  </basebutton>
+
+</canvas>
