@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <library>
-
-
-	<include href="VCLibrary.lzx"/>
 	<include href="../talkback/justinav/flashutils.lzx"/>
 	<include href="../talkback/justinav/audiosettings.lzx" />
 	<include href="../talkback/justinav/mediadevicesettings.lzx" />
 	<include href="explorerservicelib.lzx" />
+	<include href="bytearrayutils.lzx" />
+	<include href="../timers/stopwatchlib.lzx"/>
 	<include href="lz" />
+<class name="poodllmp3recorder" extends="view">
 
-<class name="poodllaudiorecorder" extends="view">
-	
 	<!-- The size of the buttons et al. -->
 	<attribute name="iconsize" />
 	
@@ -38,8 +36,11 @@
 	<attribute name="loopback" value="true" />
 	<attribute name="prefdevice" value="''" />
 	
+	<!-- various status flags -->
 	<attribute name="haveRecorded" value="false" />
+	<attribute name="status" value="'stopped'" />
 	
+	<attribute name="totaltime" value="'00:00:00'" />
 	
 	<!-- A flag to tell us if we should be overwriting files -->
 	<attribute name="overwritefile" />
@@ -52,7 +53,7 @@
 	<attribute name="itemid"  />
 	
 	<!-- Attribute for if we are transcoding to MP4 -->
-	<attribute name="saveformat" value="'flv'" />
+	<attribute name="saveformat" value="'mp3'" />
 	
 	
 
@@ -64,13 +65,9 @@
 	<!-- This is not elegant but it works. The job is to start from courseid, if we have one-->
 	<handler name="onfilename">
 		<![CDATA[
-			Debug.write("course", this.course);
-			Debug.write("red5url", this.red5url);
-			if (this.course!="-1"){
-				this.setAttribute("savefilename", this.course + '/' + this.filename);
-			}else{ 
-				this.setAttribute("savefilename", this.filename);
-			}
+		
+			this.setAttribute("savefilename", this.filename);
+
 			Debug.write("savefilename", this.savefilename);
 		]]>
 	</handler>
@@ -89,185 +86,284 @@
 				lz.Browser.loadJS(somejs);					
 	</method>
 	
-
+	<!-- Our Recording Timer -->
+	<stopwatch name="rtimer"  >
+		<handler name="countevent">
+			classroot.recordinfo.infobar.totaltime.format('%02d:%02d:%02d',this.showhour,this.showmin,this.showsec);
+		</handler>
+		<handler name="oninit">
+			this.resetTimer();
+		</handler>
+		
+	</stopwatch>
 	
-	<!-- The server connection -->
-	<rtmpconnection name="rtmpc" src="${unescape(classroot.red5url)}"  autoconnect="true" debug="false">
-		
-		<!-- reconnect timer delegate -->
-		<attribute name="timerdel" value="null" />
-		
-		<handler name="oninit" >
-			Debug.write("filename:" + classroot.filename);
-			Debug.write("overwritefile:" + classroot.overwritefile);
-			Debug.write("course:" + classroot.course);
-
-			
-			//This is to ensure that the savefilename gets set in onfilename handler
-			if(classroot.course=="-1"){
-				classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".flv");					
-			}else{
-				classroot.setAttribute("filename", "moddata/" + classroot.assigname + "/" + classroot.uid + "/" + Math.floor(Math.random()*1000000000000001) + ".flv");
-			}
-			
-			//initiate reconnect timer
-			this.setAttribute("timerdel", new LzDelegate( this, "confirmconnected" ));
-			 lz.Timer.addTimer(this.timerdel,3000);
-
-		</handler>		   
-		<method name="confirmconnected" args="ignore=null">
-			//if we are in a disconnected state, call connect
-			if(this.stage==0){
-				this.connect();
-			}
-			//Debug.write("timer");
-			lz.Timer.resetTimer(this.timerdel, 3000);
-		</method>
-	</rtmpconnection>
-
-	<!-- The media stream -->
-	<mediastream name="ms" rtmp="${classroot.rtmpc}" type="rtmp" url="${classroot.savefilename}" />
-	<mediastream name="playstream" rtmp="${classroot.rtmpc}" type="rtmp" url="${classroot.savefilename}"/>
-
+	<!-- for manipulating byte arrays -->
+	<bytearrayutils name="butils" poodllfilelib="${classroot.poodllfilelib}" 
+				contextid="${classroot.contextid}" 
+				component="${classroot.component}" 
+				filearea="${classroot.filearea}" 
+				itemid="${classroot.itemid}" >
+				
+		<handler name="onActionComplete" args="message">
+			Debug.write("action complete:" + message);
+		</handler>
+		<handler name="onActionStart" args="message">
+			Debug.write("action Start:" + message);
+		</handler>
+		<handler name="onActionError" args="message">
+			Debug.write("action Error:" + message);
+		</handler>
+	</bytearrayutils>
 
 	<!-- The microphone object -->
-	<!-- The old standard ho hum microphone
-	<microphone name="mic" capturing="false" stream="${classroot.ms}">
-		<handler name="oninit">
-			//this.setAttribute("gain",50);
-			this.setAttribute("rate",22);
-			Debug.write("on init Mike Rate: " + this.rate);
-			//Debug.write("on init Mike Gain: " + this.gain);
-			// getMicrophone().setRate("22");
-		</handler>
-	</microphone>
-	-->
-	<poodllmicrophone name="mic" prefdevice="${classroot.prefdevice}" capturing="false" stream="${classroot.ms}">
+	<!-- This has gotten swollen with all the mp3 stuff, should really refactor -->
+	<poodllmicrophone name="mic" prefdevice="${classroot.prefdevice}" capturing="true">
+		       <passthrough>
+                import flash.media.*;
+                import flash.events.*;
+				import flash.utils.*;
+				import fr.kikko.lab.ShineMP3Encoder;
+            </passthrough>
+		
+		<attribute name="sbytes" />
+		<attribute name="osound" />
+		<attribute name="ochannel" />
+		<attribute name="mp3encoder" />
+		
 		<handler name="oninit">
 			this.setAttribute("gain",classroot.gain);
-			this.setAttribute("rate",classroot.rate);
+			//for Flash Sound object 44 is the req sample rate
+			this.setAttribute("rate","44");
+			
+			//set the standard mic settings for PoodLL
 			this.setAttribute("silencelevel",classroot.silencelevel);
 			this.setAttribute("echosuppression",classroot.echosuppression);
 			this.setAttribute("loopback",classroot.loopback);
+			
+			//init the bytearray that will have our sound data
+			this.setAttribute("sbytes", new ByteArray());
+			this.setAttribute("osound",new Sound());
+			
 			Debug.write("on init Mike Rate: " + this.rate);
-			//Debug.write("on init Mike Gain: " + this.gain);
-			// getMicrophone().setRate("22");
+			
 		</handler>
+		<method name="startRec">
+			this.sbytes.clear();
+			this.getmic().addEventListener(SampleDataEvent.SAMPLE_DATA, this.micSampleDataHandler); 
+			classroot.setAttribute('status', 'recording');
+			classroot.rtimer.resetTimer();
+			classroot.rtimer.startTimer();
+		</method>
+		<method name="stopRec">
+			this.getmic().removeEventListener(SampleDataEvent.SAMPLE_DATA, this.micSampleDataHandler);
+			classroot.setAttribute('status', 'stopped');
+			classroot.rtimer.stopTimer();
+		</method>
+		<method name="playRec">
+			classroot.setAttribute('status', 'playing');
+			this.sbytes.position=0;
+			this.osound.addEventListener(SampleDataEvent.SAMPLE_DATA, this.playbackSampleHandler); 
+			this.ochannel = this.osound.play();
+			this.ochannel.addEventListener( Event.SOUND_COMPLETE, this.playbackComplete ); 
+		</method>
+		<method name="stopPlay">
+			this.osound.stop();
+			this.osound.removeEventListener(SampleDataEvent.SAMPLE_DATA, this.playbackSampleHandler); 
+			classroot.setAttribute('status', 'stopped');
+		</method>
+		
+		<!-- The event which processes playback -->
+		<method name="playbackSampleHandler" args="evt"> 
+			<![CDATA[
+			for (var i:int = 0; i < 8192 && this.sbytes.bytesAvailable > 0; i++) 
+			{ 
+				//trace(sample); 
+				var sample = this.sbytes.readFloat(); 
+				evt.data.writeFloat(sample); 
+				evt.data.writeFloat(sample); 
+			} 
+			]]>
+		</method>
+		
+		<!-- The event signifying playback has finished -->
+		<method name="playbackComplete" args="evt"> 
+			Debug.write("finished playback");
+			classroot.setAttribute('status', 'stopped');
+		</method>
+		
+		<!-- The event which writes bytes when recording -->
+		<method name="micSampleDataHandler" args="evt">
+			while(evt.data.bytesAvailable){ 
+				var sample = evt.data.readFloat(); 
+				this.sbytes.writeFloat(sample); 
+			}	
+		</method>
+		
+		<!-- write bytes into a wav file -->
+		<!--
+		<method name="makeWav" args="bytes:ByteArray , samplerate:int ">
+			
+			Debug.write("rawbytes length" + bytes.length);
+		
+			 var data:ByteArray = new ByteArray();
+			 data.endian = Endian.LITTLE_ENDIAN;
+
+			// soundBytes are 32bit floats, we are storing 16bit integers
+			 var numBytes:uint = bytes.length / 2; 
+			 var numChannels:int = 1;
+			 var bitsPerSample:int = 16;
+
+			 data.writeUTFBytes("RIFF"); // ChunkID
+			 data.writeUnsignedInt(36 + numBytes); // ChunkSize
+			 data.writeUTFBytes("WAVE"); // Format
+			 data.writeUTFBytes("fmt "); // Subchunk1ID
+			 data.writeUnsignedInt(16); // Subchunk1Size // 16 for PCM
+			 data.writeShort(1); // AudioFormat 1 Mono, 2 Stereo (Microphone is mono)
+			 data.writeShort(numChannels); // NumChannels
+			 data.writeUnsignedInt(samplerate); // SampleRate
+			 data.writeUnsignedInt(samplerate * numChannels * bitsPerSample/8); // ByteRate
+			 data.writeShort(numChannels * bitsPerSample/8); // BlockAlign
+			 data.writeShort(bitsPerSample); // BitsPerSample
+			 data.writeUTFBytes("data"); // Subchunk2ID
+			 data.writeUnsignedInt(numBytes); // Subchunk2Size
+
+			 bytes.position = 0;
+			 while(bytes.bytesAvailable > 0) {
+			   var sample:Number = bytes.readFloat(); // The sample is stored as a sine wave, -1 to 1
+			   var val:int = sample * 32768; // Convert to a 16bit integer
+			   data.writeShort(val);
+			 }
+			
+			//I lost about 2 hours of head scratch time by not resetting array to position 0, doh
+			data.position=0;
+			 return data;
+
+		</method>
+		-->
+		<!-- write bytes into a wav file -->
+		<method name="makeMP3" args="wavbytes:ByteArray">
+			//Debug.write("wavbytes length:" + wavbytes.length);
+			this.setAttribute("mp3Encoder", new ShineMP3Encoder(wavbytes));
+			this.mp3Encoder.addEventListener(Event.COMPLETE, this.mp3EncodeComplete);
+			this.mp3Encoder.addEventListener(ProgressEvent.PROGRESS, this.mp3EncodeProgress);
+			this.mp3Encoder.addEventListener(ErrorEvent.ERROR, this.mp3EncodeError);
+			this.mp3Encoder.start();
+		</method>
+		<!-- The event signifying MP3 encoding has finished -->
+		<method name="mp3EncodeComplete" args="evt"> 
+			Debug.write("finished MP3 encode");
+			Debug.write("MP3 encoded bytes:" + this.mp3Encoder.mp3Data.length);
+			var mp3string = classroot.butils.makeBase64String(this.mp3Encoder.mp3Data);
+			Debug.write(mp3string);
+			classroot.butils.sendData(99,"uploadfile","mp3",classroot.context,classroot.component,classroot.filearea,classroot.itemid);
+		</method>
+		<!-- The event signifying MP3 explaining progress -->
+		<method name="mp3EncodeProgress" args="evt"> 
+		//	Debug.write("MP3 encode");
+			classroot.recordinfo.infobar.totaltime.text = "D:" + evt.bytesLoaded + ":" + evt.bytesTotal;
+		</method>
+		<!-- The event signifying MP3 encoding error -->
+		<method name="mp3EncodeError" args="evt"> 
+			Debug.write("MP3 encode error:" + evt.text);
+		</method>
 	</poodllmicrophone>
 	
 	
     <simplelayout inset="10" axis="y" spacing="5"/>
-	 
+	 <!-- The main view with the three big buttons -->
 	 <view name="buttonview" bgcolor="#bdbdbd" valign="middle" width="${parent.width}" height="${this.recordButton.height + 8}">
       <simplelayout axis="x" spacing="5" />    
-        <button name="recordButton" 
+        
+		<!-- Record Button -->
+		<button name="recordButton" 
 			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}"
 			valign="middle" 
-			enabled="${classroot.playstream.playing == false}" 
+			enabled="${classroot.status == 'stopped'}" 
 			onclick="record()">
         	<method name="record">
-				//have recorded
-			
-				//if the user is overwriting files
-				if (classroot.overwritefile == "false" || classroot.filename==""){
-					Debug.write("Reassigning filename.");
-					Debug.write("course:" + classroot.course);
-					//a courseid of -1 indicates Moodle 2, so we don't append all the filepaths
-					if(classroot.course=="-1"){
-						classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".flv");					
-					}else{
-						classroot.setAttribute("filename", "moddata/" + classroot.assigname + "/" + classroot.uid + "/" + Math.floor(Math.random()*1000000000000001) + ".flv");
-					}
-				}
-				if (classroot.ms.url != classroot.savefilename){
-					Debug.write("Resetting url attribute to:", classroot.savefilename);
-					Debug.write("classroot.ms.url:" + classroot.ms.url);
-					classroot.ms.setAttribute("url",classroot.savefilename);
-				}
-				Debug.write("classroot.ms.url:" + classroot.ms.url);
-        		classroot.mic.capturing=true;
-        		classroot.ms.setAttribute("totaltime", 0);
+
+				classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".mp3");					
+	
+        		classroot.mic.startRec();
 				classroot.setAttribute("haveRecorded",true);
-        		classroot.ms.record();
 				
 				//record the url on the html page
 				classroot.updatepage(classroot.filename);
 				
 				
         	</method>
-			<view name="micicon" width="${classroot.iconsize}" height="${classroot.iconsize}" x="5" y="5" opacity="${1 - ((classroot.ms.recording || classroot.playstream.playing ) * 0.8)}" resource="icons/128x128/PlainGreen/RecordNormal.png" ></view>	
+			<view name="micicon" width="${classroot.iconsize}" height="${classroot.iconsize}" x="5" y="5" 
+				opacity="${1 - (parent.enabled ? 0 : 0.8)}" resource="icons/128x128/PlainGreen/RecordNormal.png" ></view>	
         </button>
 		
+	<!-- Play Button -->	
 		<button name="playButton" 
 			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}" 
 			valign="middle" 
-			enabled="${!(classroot.playstream.playing  || classroot.ms.recording || !classroot.haveRecorded)}" 
+			enabled="${(classroot.status=='stopped'  &amp;&amp; classroot.haveRecorded)}" 
 			onclick="playRecording()">
 			<method name="playRecording" args="">
-				if (classroot.playstream.url != classroot.savefilename){
-						classroot.playstream.setAttribute("url",classroot.savefilename);
-				}				
-				Debug.write("classroot.playstream.url:" + classroot.playstream.url);
-				classroot.playstream.setAttribute("paused",false);
-				classroot.playstream.play();
+				classroot.mic.playRec();;
+				Debug.write("playsound");
 			</method>
 			<view name="speakericon" width="${classroot.iconsize}" height="${classroot.iconsize}"  
 				x="5" y="5" opacity="${1 - (parent.enabled ? 0 : 0.8)}" 
 				resource="icons/128x128/CircleBordered/VolumePressed.png" >
 			</view>	
 		</button>	
-
+		
+	<!-- Stop Button -->
 		<button
 			name = "stopButton"
 			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}"
 			valign="middle"
-			enabled="${classroot.playstream.playing || classroot.ms.recording}"
+			enabled="${classroot.status != 'stopped'}"
 		        onclick="stopAll()">
 
        		<method name="stopAll" args="">
-				if (classroot.playstream.playing){
-					classroot.playstream.stop();
-					Debug.write("stopped playing");
-				}else if (classroot.ms.recording){
-					classroot.ms.stop();
-					Debug.write("stopped recording");
-					if(classroot.itemid){
-						if(classroot.saveformat=="mp3"){
-							var usefilename = classroot.filename.substr(0,classroot.filename.length - 3);
-							usefilename = usefilename + "mp3";
-						}else{
-							var usefilename=classroot.filename;
-						}	
-						classroot.eService.moveMedia(classroot.contextid,classroot.itemid,usefilename,classroot.component,classroot.filearea);
-						//classroot.eService.moveMedia(classroot.contextid,classroot.itemid,classroot.filename,"user","draft");
-					}
+				if(classroot.status=="recording"){
+					classroot.mic.stopRec();
+				}else if(classroot.status=="playing"){
+					classroot.mic.stopPlay();
 				}
-       			       			
+				//classroot.eService.moveMedia(classroot.contextid,classroot.itemid,usefilename,classroot.component,classroot.filearea);       			
        		</method>
-			<view name="stopicon" width="${classroot.iconsize}" height="${classroot.iconsize}"  x="5" y="5" opacity="${0.2 + ((classroot.playstream.playing || classroot.ms.recording) ? 0.8 : 0)}" resource="icons/128x128/CircleBordered/Stop1NormalRed.png" ></view>	
+			<view name="stopicon" width="${classroot.iconsize}" height="${classroot.iconsize}"  x="5" y="5"  
+				opacity="${1 - (parent.enabled ? 0 : 0.8)}"  resource="icons/128x128/CircleBordered/Stop1NormalRed.png" ></view>	
         </button>		
+		<button name="exportButton" text="export">
+			<handler name="onclick">
+				Debug.write("making wav");
+				//var wavbytes = classroot.mic.makeWav(classroot.mic.sbytes,44100);
+				var wavbytes = classroot.butils.makeWav(classroot.mic.sbytes,44100);
+				Debug.write("made wav");
+				Debug.write("byte size:" + wavbytes.length);
+				Debug.write("making mp3");
+				classroot.mic.makeMP3(wavbytes);
+			
+			</handler>
 		
+		</button>
 
     </view>
 	
+	<!-- this is the lower bar that tells us volume, talk time etc -->
 	<view name="recordinfo" >
 			<simplelayout axis="y" spacing="2"/>
 			
 			<view name="infobar">
 				<!-- Talktime -->
 				<simplelayout axis="x" spacing="10" />
-				<rtmpstatus rtmpc="${classroot.rtmpc}" />	
 				<!-- Talktime -->
-				<!-- The maths is just to round the number to 1 place, and not throw errors on zero -->
-				<text text="talk time: " /> 
-				<text text="${Math.round(((1 + classroot.ms.totaltime) * 10) / 10)-1}" />
+				<text name="totaltimelabel" text="talk time: " /> 
+				<text name="totaltime"  />
 			</view>
 			
 			<!-- Indicator for microphone level -->
 			<!-- The miclevel loading 1.8is just from trial and error -->			
 			<view width="184" resource="volumemeter.gif" height="12" bgcolor="black">       
 				<!-- To show micvolume always: mic.level * 1.8  -->
-				<view x="${parent.width - this.width}" y="0"  bgcolor="black" width="${parent.width - ( classroot.ms.recording ? classroot.mic.level * 1.8 : 0)}" height="12"/>
+				<view x="${parent.width - this.width}" y="0"  bgcolor="black" width="${parent.width - (classroot.mic.level * 2.5)}" height="12"/>
 			</view>			
 	</view> 
 	<button name="settingsbutton" width="${classroot.recordinfo.height}" height="${classroot.recordinfo.height}" options="ignorelayout" y="${classroot.recordinfo.y}" x="${classroot.width - this.width}">
@@ -276,13 +372,15 @@
 				</handler>
 				<view name="settingsicon" width="${parent.height-4}" height="${parent.height-4}" stretches="both" x="2" y="2"  resource="icons/24x24/process.png" ></view>	
 	</button>	
+	
+	<!-- This is our settings popup dialog -->
 	<modaldialog name="settingswindow" width="320" height="210" initstage="late">
 		<simplelayout axis="y" spacing="2"/>
 		<audiosettings name="audiosettings" themic="${classroot.mic}" />
 		<button onclick="parent.close()">Close</button>
    </modaldialog>
    
-   	
+   	<!-- this service calls the save logic asyncroneously, and checks for results via callback -->
 	<explorerservice name="eService" filedataurl="${classroot.poodllfilelib}"  >
 		<handler name="onActionComplete" args="message">
 			thespinner.hidespinner();

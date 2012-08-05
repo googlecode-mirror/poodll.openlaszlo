@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+
+	<include href="VCLibrary.lzx"/>
+	<include href="../talkback/justinav/flashutils.lzx"/>
+	<include href="../talkback/justinav/audiosettings.lzx" />
+	<include href="../talkback/justinav/mediadevicesettings.lzx" />
+	<include href="explorerservicelib.lzx" />
+	<include href="lz" />
+
+<class name="poodlltimedrecorder" extends="view">
+	
+	<!-- The size of the buttons et al. -->
+	<attribute name="iconsize" />
+	
+	<!-- The URL of the Red5 server -->
+	<attribute name="red5url"  />  	
+
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename" value="''" />
+	
+	<!-- The id of the control on the enclosing HTMLpage to update with the  filename -->
+	<attribute name="updatecontrol"  />
+
+	<!-- UID for ensuring filenames  are unique-->
+	<attribute name="uid" />
+	<attribute name="assigname"  />
+
+	<!-- The course id (parent will pass -1 if there is no course id) -->
+	<attribute name="course"  />
+
+	<!-- Audio settings passed in -->
+	<attribute name="gain" value="50"/>
+	<attribute name="rate" value="22" />
+	<attribute name="silencelevel" value="10" />
+	<attribute name="echosuppression" value="false" />
+	<attribute name="loopback" value="true" />
+	<attribute name="prefdevice" value="''" />
+	
+	
+	<!-- Flag to indicate we have recorded -->
+	<attribute name="haveRecorded" value="false" />
+	<!-- Flag to indicate copying was successful -->
+	<attribute name="haveCopied" value="false" />
+	<!-- UI suspended after timeout -->
+	<attribute name="uisuspended" value="false" />
+	
+	<!-- A flag to tell us if we should be overwriting files -->
+	<attribute name="overwritefile" />
+	
+	<!-- Attributes required for writing directly to Moodle Draft Files Area -->
+	<attribute name="poodllfilelib"  />
+	<attribute name="contextid"  />
+	<attribute name="component"  />
+	<attribute name="filearea"  />
+	<attribute name="itemid"  />
+	
+	<!-- Attribute for if we are transcoding to MP4 -->
+	<attribute name="saveformat" value="'flv'" />
+	
+	
+
+	<!-- The save name of our file. Added Justin 2009/06/12 -->
+	<attribute name="savefilename" value="''" />
+
+	<!-- Justin 2000/06/12-->
+	<!-- Had many problems keeping this logic central and used with constraints-->
+	<!-- This is not elegant but it works. The job is to start from courseid, if we have one-->
+	<handler name="onfilename">
+		<![CDATA[
+			Debug.write("course", this.course);
+			Debug.write("red5url", this.red5url);
+			if (this.course!="-1"){
+				this.setAttribute("savefilename", this.course + '/' + this.filename);
+			}else{ 
+				this.setAttribute("savefilename", this.filename);
+			}
+			Debug.write("savefilename", this.savefilename);
+		]]>
+	</handler>
+
+	<method name="updatepage" args="newfilename">
+			
+				//record the url on the html page,							
+				var somejs='var cbox = parent.document.getElementById(\"' + this.updatecontrol + '\"); ';
+				somejs = somejs + 'cbox.checked=\"true\"; ';
+				if(this.saveformat=="mp3"){
+					var newname = newfilename.substr(0,newfilename.length - 3);
+					newname = newname + "mp3";
+					newfilename = newname;
+				}
+				somejs = somejs + 'cbox.value=\"' + newfilename +'\"; ';	
+										
+				lz.Browser.loadJS(somejs);					
+	</method>
+	<method name="nextpage">
+				//add code to click "next" button
+				var somejs =  'var f=document.getElementById(\"responseform\"); ';
+				somejs = somejs + 'f.next.click(); ';					
+				lz.Browser.loadJS(somejs);	
+	</method>
+
+	
+	<!-- The server connection -->
+	<rtmpconnection name="rtmpc" src="${unescape(classroot.red5url)}"  autoconnect="true" debug="false">
+		
+		<!-- reconnect timer delegate -->
+		<attribute name="timerdel" value="null" />
+		
+		<handler name="oninit" >
+			Debug.write("filename:" + classroot.filename);
+			Debug.write("overwritefile:" + classroot.overwritefile);
+			Debug.write("course:" + classroot.course);
+
+			
+			//This is to ensure that the savefilename gets set in onfilename handler
+			if(classroot.course=="-1"){
+				classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".flv");					
+			}else{
+				classroot.setAttribute("filename", "moddata/" + classroot.assigname + "/" + classroot.uid + "/" + Math.floor(Math.random()*1000000000000001) + ".flv");
+			}
+			
+			//initiate reconnect timer
+			this.setAttribute("timerdel", new LzDelegate( this, "confirmconnected" ));
+			 lz.Timer.addTimer(this.timerdel,3000);
+
+		</handler>		   
+		<method name="confirmconnected" args="ignore=null">
+			//if we are in a disconnected state, call connect
+			if(this.stage==0){
+				this.connect();
+			}
+			//Debug.write("timer");
+			lz.Timer.resetTimer(this.timerdel, 3000);
+		</method>
+	</rtmpconnection>
+
+	<!-- The media stream -->
+	<mediastream name="ms" rtmp="${classroot.rtmpc}" type="rtmp" url="${classroot.savefilename}" />
+	<mediastream name="playstream" rtmp="${classroot.rtmpc}" type="rtmp" url="${classroot.savefilename}"/>
+
+
+	<!-- The microphone object -->
+	<!-- The old standard ho hum microphone
+	<microphone name="mic" capturing="false" stream="${classroot.ms}">
+		<handler name="oninit">
+			//this.setAttribute("gain",50);
+			this.setAttribute("rate",22);
+			Debug.write("on init Mike Rate: " + this.rate);
+			//Debug.write("on init Mike Gain: " + this.gain);
+			// getMicrophone().setRate("22");
+		</handler>
+	</microphone>
+	-->
+	<poodllmicrophone name="mic" prefdevice="${classroot.prefdevice}" capturing="false" stream="${classroot.ms}">
+		<handler name="oninit">
+			this.setAttribute("gain",classroot.gain);
+			this.setAttribute("rate",classroot.rate);
+			this.setAttribute("silencelevel",classroot.silencelevel);
+			this.setAttribute("echosuppression",classroot.echosuppression);
+			this.setAttribute("loopback",classroot.loopback);
+			Debug.write("on init Mike Rate: " + this.rate);
+			//Debug.write("on init Mike Gain: " + this.gain);
+			// getMicrophone().setRate("22");
+		</handler>
+	</poodllmicrophone>
+	
+	
+    <simplelayout inset="10" axis="y" spacing="5"/>
+	 
+	 <view name="buttonview" bgcolor="#bdbdbd" valign="middle" width="${parent.width}" height="${this.recordButton.height + 8}">
+      <!-- simplelayout axis="x" spacing="5" -->    
+        <button name="recordButton" 
+			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}"
+			valign="middle" 
+			x="${(parent.width / 2) - (this.width+20)}"
+			enabled="${!(classroot.playstream.playing || classroot.ms.recording || classroot.uisuspended)}" 
+			onclick="record()">
+        	<method name="record">
+				//have recorded
+			
+				//if the user is overwriting files
+				if (classroot.overwritefile == "false" || classroot.filename==""){
+					Debug.write("Reassigning filename.");
+					Debug.write("course:" + classroot.course);
+					//a courseid of -1 indicates Moodle 2, so we don't append all the filepaths
+					if(classroot.course=="-1"){
+						classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".flv");					
+					}else{
+						classroot.setAttribute("filename", "moddata/" + classroot.assigname + "/" + classroot.uid + "/" + Math.floor(Math.random()*1000000000000001) + ".flv");
+					}
+				}
+				if (classroot.ms.url != classroot.savefilename){
+					Debug.write("Resetting url attribute to:", classroot.savefilename);
+					Debug.write("classroot.ms.url:" + classroot.ms.url);
+					classroot.ms.setAttribute("url",classroot.savefilename);
+				}
+				Debug.write("classroot.ms.url:" + classroot.ms.url);
+        		classroot.mic.capturing=true;
+        		classroot.ms.setAttribute("totaltime", 0);
+				classroot.setAttribute("haveRecorded",true);
+				//flag to indicate that copying is not yet complete for this recording
+				classroot.setAttribute("haveCopied",false);
+        		classroot.ms.record();
+				
+				//record the url on the html page
+				classroot.updatepage(classroot.filename);
+				
+				//classroot.ms.recording || classroot.playstream.playing  || classroot.uisuspended
+				
+        	</method>
+			<view name="micicon" width="${classroot.iconsize}" height="${classroot.iconsize}" x="5" y="5" opacity="${1 - ((parent.enabled ? 0 : 1) * 0.8)}" resource="icons/64x64/PlainGreen/RecordNormal.png" ></view>	
+        </button>
+		
+		<button name="playButton" 
+			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}" 
+			valign="middle" 
+			enabled="${!(classroot.playstream.playing || classroot.uisuspended || classroot.ms.recording || !classroot.haveRecorded)}" 
+			onclick="playRecording()"
+			visible="false">
+			<method name="playRecording" args="">
+				if (classroot.playstream.url != classroot.savefilename){
+						classroot.playstream.setAttribute("url",classroot.savefilename);
+				}				
+				Debug.write("classroot.playstream.url:" + classroot.playstream.url);
+				classroot.playstream.setAttribute("paused",false);
+				classroot.playstream.play();
+			</method>
+			<view name="speakericon" width="${classroot.iconsize}" height="${classroot.iconsize}"  
+				x="5" y="5" opacity="${1 - (parent.enabled ? 0 : 0.8)}" 
+				resource="icons/64x64/CircleBordered/VolumePressed.png" >
+			</view>	
+		</button>	
+
+		<button
+			name = "stopButton"
+			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}"
+			valign="middle"
+			x="${(parent.width / 2) + 20}"
+			enabled="${(classroot.playstream.playing || classroot.ms.recording) &amp;&amp; !classroot.uisuspended}"
+		        onclick="stopAll()">
+
+       		<method name="stopAll" args="">
+				if (classroot.playstream.playing){
+					classroot.playstream.stop();
+					Debug.write("stopped playing");
+				}else if (classroot.ms.recording){
+					classroot.ms.stop();
+					Debug.write("stopped recording");
+					classroot.setAttribute("uisuspended",true);
+					if(classroot.itemid){
+						if(classroot.saveformat=="mp3"){
+							var usefilename = classroot.filename.substr(0,classroot.filename.length - 3);
+							usefilename = usefilename + "mp3";
+						}else{
+							var usefilename=classroot.filename;
+						}	
+						classroot.eService.moveMedia(classroot.contextid,classroot.itemid,usefilename,classroot.component,classroot.filearea);
+						//classroot.eService.moveMedia(classroot.contextid,classroot.itemid,classroot.filename,"user","draft");
+					}
+				}
+       			       			
+       		</method>
+			<view name="stopicon" width="${classroot.iconsize}" height="${classroot.iconsize}"  x="5" y="5" opacity="${0.2 + ((classroot.playstream.playing || classroot.ms.recording) ? 0.8 : 0)}" resource="icons/64x64/CircleBordered/Stop1NormalBlue.png" ></view>	
+        </button>		
+		
+
+    </view>
+	
+	<view name="recordinfo" >
+			<simplelayout axis="y" spacing="2"/>
+			
+			<view name="infobar">
+				<!-- Talktime -->
+				<simplelayout axis="x" spacing="10" />
+				<rtmpstatus rtmpc="${classroot.rtmpc}" />	
+				<!-- Talktime -->
+				<!-- The maths is just to round the number to 1 place, and not throw errors on zero -->
+				<text text="talk time: " /> 
+				<text text="${Math.round(((1 + classroot.ms.totaltime) * 10) / 10)-1}" />
+			</view>
+			
+			<!-- Indicator for microphone level -->
+			<!-- The miclevel loading 1.8is just from trial and error -->			
+			<view width="184" resource="volumemeter.gif" height="12" bgcolor="black">       
+				<!-- To show micvolume always: mic.level * 1.8  -->
+				<view x="${parent.width - this.width}" y="0"  bgcolor="black" width="${parent.width - ( classroot.ms.recording ? classroot.mic.level * 1.8 : 0)}" height="12"/>
+			</view>			
+	</view> 
+	<button name="settingsbutton" width="${classroot.recordinfo.height}" height="${classroot.recordinfo.height}" options="ignorelayout" y="${classroot.recordinfo.y}" x="${classroot.width - this.width}">
+				<handler name="onclick">
+					classroot.settingswindow.open();
+				</handler>
+				<view name="settingsicon" width="${parent.height-4}" height="${parent.height-4}" stretches="both" x="2" y="2"  resource="icons/24x24/process.png" ></view>	
+	</button>	
+	<modaldialog name="settingswindow" width="320" height="210" initstage="late">
+		<simplelayout axis="y" spacing="2"/>
+		<audiosettings name="audiosettings" themic="${classroot.mic}" />
+		<button onclick="parent.close()">Close</button>
+   </modaldialog>
+   
+	<explorerservice name="eService" filedataurl="${classroot.poodllfilelib}"  >
+		<handler name="onActionComplete" args="message">
+			thespinner.hidespinner();
+			classroot.updatepage(message);
+			//set flag to show that copying is complete for this recording
+			classroot.setAttribute("haveCopied",true);
+		</handler>
+		<handler name="onActionError" args="message">
+			thespinner.hidespinner();
+		</handler>
+		<handler name="onActionStart" args="message">
+			thespinner.showspinner();
+		</handler>
+	</explorerservice>
+   
+</class>
+
+</library>

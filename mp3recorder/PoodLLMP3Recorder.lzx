@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+	
+	<include href="../42recorder/PoodLLMP3RecorderLib.lzx"/>
+
+	
+	<!-- The size of the buttons et al. -->
+	<attribute name="iconsize" value="128" />
+
+
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename" value="lz.Browser.getInitArg('filename')" />
+	
+	<!-- The saveforamt of the streamed file. Usually flv unless autotranscoding to MP4  -->
+	<attribute name="saveformat" value="lz.Browser.getInitArg('saveformat')" />
+	
+	<!-- The id of the control on the enclosing HTMLpage to update with the  filename -->
+	<attribute name="updatecontrol" value="lz.Browser.getInitArg('updatecontrol')" />
+
+	<!-- UID for ensuring filenames  are unique-->
+	<attribute name="uid" value="lz.Browser.getInitArg('uid')" />
+
+	
+	<!-- Audio Settings -->
+	<attribute name="gain" value="lz.Browser.getInitArg('gain')" />
+	<attribute name="rate" value="lz.Browser.getInitArg('rate')"  />
+	<attribute name="echosuppression" value="lz.Browser.getInitArg('echosuppression')" />
+	<attribute name="loopback" value="lz.Browser.getInitArg('loopback')" />
+	<attribute name="silencelevel" value="lz.Browser.getInitArg('silencelevel')" />
+	<attribute name="prefdevice" value="lz.Browser.getInitArg('prefdevice')" />
+
+	
+	<!-- A flag to tell us if we should be overwriting files -->
+	<attribute name="overwritefile" value="true"/>
+	
+	<!--Moodle 2 File system info -->
+	<attribute name="poodllfilelib" value="lz.Browser.getInitArg('poodllfilelib')" />
+	<attribute name="contextid" value="lz.Browser.getInitArg('contextid')" />
+	<attribute name="component" value="lz.Browser.getInitArg('component')" />
+	<attribute name="filearea" value="lz.Browser.getInitArg('filearea')" />
+	<attribute name="itemid" value="lz.Browser.getInitArg('itemid')" />
+
+		<poodllmp3recorder 
+		width="600"
+		height="400"
+		name="par"
+		id="par"
+		filename="${canvas.filename}"
+		saveformat="canvas.saveformat"
+		updatecontrol="${canvas.updatecontrol}"
+		uid="${canvas.uid}"
+		iconsize="${canvas.iconsize}"	
+		gain="$once{canvas.gain ? Number(canvas.gain) : 50}"
+		silencelevel="$once{canvas.silencelevel ? Number(canvas.silencelevel) : 10}"		
+		rate="$once{canvas.rate ? Number(canvas.rate) : 22}"
+		echosuppression="$once{canvas.echosuppression ? canvas.echosuppression=='yes' : true}"	
+		loopback="$once{canvas.loopback ? canvas.loopback=='yes' : false}"	
+		prefdevice="$once{canvas.prefdevice}"
+		poodllfilelib="${canvas.poodllfilelib}"
+		contextid="${canvas.contextid}"
+		component="${canvas.component}"
+		filearea="${canvas.filearea}"
+		itemid="${canvas.itemid}"
+		/>
+
+	
+	 
+	 	<view name="thespinner" id="thespinner" resource="spinner2.swf" stretches="both" align="center" options="ignorelayout: true" visible="false" width="$once{0.8*(Math.min(canvas.height,canvas.width))}" height="$once{0.8*(Math.min(canvas.height,canvas.width))}">
+			<method name="hidespinner" args="ignore=null">
+				this.setAttribute("visible",false);
+			</method>
+			<method name="showspinner" args="ignore=null">
+				this.bringToFront();
+				this.setAttribute("visible",true);
+			</method>
+			<handler name="onclick">
+				this.hidespinner();
+			</handler>
+		</view>
+	
+</canvas>

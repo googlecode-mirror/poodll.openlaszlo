@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+<class name="bytearrayutils" extends="view">
+  			<passthrough>
+                import flash.media.*;
+                import flash.events.*;
+				import flash.utils.*;
+            </passthrough>
+          
+          <attribute name="poodllfilelib" /> 
+          <attribute name="contextid"  />
+		<attribute name="component"  />
+		<attribute name="filearea"  />
+		<attribute name="itemid"  /> 
+          <attribute name="BASE64_CHARS" value="'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='" /> 
+
+		
+		<!-- we raise these events when we receive a result from server, after a data req-->
+		<event name="onActionStart"/>
+		<event name="onActionComplete"/>
+		<event name="onActionError"/>
+
+		<!-- write bytes into a wav file -->
+		<method name="makeWav" args="bytes:ByteArray , samplerate:int ">
+			
+			Debug.write("rawbytes length" + bytes.length);
+		
+			 var data:ByteArray = new ByteArray();
+			 data.endian = Endian.LITTLE_ENDIAN;
+
+			// soundBytes are 32bit floats, we are storing 16bit integers
+			 var numBytes:uint = bytes.length / 2; 
+			 var numChannels:int = 1;
+			 var bitsPerSample:int = 16;
+
+			 data.writeUTFBytes("RIFF"); // ChunkID
+			 data.writeUnsignedInt(36 + numBytes); // ChunkSize
+			 data.writeUTFBytes("WAVE"); // Format
+			 data.writeUTFBytes("fmt "); // Subchunk1ID
+			 data.writeUnsignedInt(16); // Subchunk1Size // 16 for PCM
+			 data.writeShort(1); // AudioFormat 1 Mono, 2 Stereo (Microphone is mono)
+			 data.writeShort(numChannels); // NumChannels
+			 data.writeUnsignedInt(samplerate); // SampleRate
+			 data.writeUnsignedInt(samplerate * numChannels * bitsPerSample/8); // ByteRate
+			 data.writeShort(numChannels * bitsPerSample/8); // BlockAlign
+			 data.writeShort(bitsPerSample); // BitsPerSample
+			 data.writeUTFBytes("data"); // Subchunk2ID
+			 data.writeUnsignedInt(numBytes); // Subchunk2Size
+
+			 bytes.position = 0;
+			 while(bytes.bytesAvailable > 0) {
+			   var sample:Number = bytes.readFloat(); // The sample is stored as a sine wave, -1 to 1
+			   var val:int = sample * 32768; // Convert to a 16bit integer
+			   data.writeShort(val);
+			 }
+			
+			//I lost about 2 hours of head scratch time by not resetting array to position 0, doh
+			data.position=0;
+			 return data;
+		</method>
+		<method name="makeBase64String" args="data:ByteArray">
+			<![CDATA[
+			 		// Initialise output
+                        var output:String = "";
+                        
+                        // Create data and output buffers
+                        var dataBuffer:Array;
+                        var outputBuffer:Array = new Array(4);
+                        
+                        // Rewind ByteArray
+                        data.position = 0;
+                        
+                        // while there are still bytes to be processed
+                        while (data.bytesAvailable > 0) {
+                                // Create new data buffer and populate next 3 bytes from data
+                                dataBuffer = new Array();
+                                for (var i:uint = 0; i < 3 && data.bytesAvailable > 0; i++) {
+                                        dataBuffer[i] = data.readUnsignedByte();
+                                }
+                                
+                                // Convert to data buffer Base64 character positions and 
+                                // store in output buffer
+                                outputBuffer[0] = (dataBuffer[0] & 0xfc) >> 2;
+                                outputBuffer[1] = ((dataBuffer[0] & 0x03) << 4) | ((dataBuffer[1]) >> 4);
+                                outputBuffer[2] = ((dataBuffer[1] & 0x0f) << 2) | ((dataBuffer[2]) >> 6);
+                                outputBuffer[3] = dataBuffer[2] & 0x3f;
+                                
+                                // If data buffer was short (i.e not 3 characters) then set
+                                // end character indexes in data buffer to index of '=' symbol.
+                                // This is necessary because Base64 data is always a multiple of
+                                // 4 bytes and is basses with '=' symbols.
+                                for (var j:uint = dataBuffer.length; j < 3; j++) {
+                                        outputBuffer[j + 1] = 64;
+                                }
+                                
+                                // Loop through output buffer and add Base64 characters to 
+                                // encoded data string for each character.
+                                for (var k:uint = 0; k < outputBuffer.length; k++) {
+                                        output += this.BASE64_CHARS.charAt(outputBuffer[k]);
+                                }
+                        }
+                        
+                        // Return encoded data
+                        return output;
+                        ]]>
+		</method>
+		<method name="sendData" args="requestid,action,hash,arg1=null,arg2=null,arg3=null">
+			<![CDATA[
+				Debug.write("sendingdata");
+				
+			 //notify feedback class we are starting, if we registered this action before calling
+			if(this.actions && this.actions[requestid]){
+				this.onActionStart.sendEvent(this.actions[requestid]);
+			 }
+			 
+			  var p=new LzParam(); 
+			  p.addValue("datatype",action, true);                                 
+			  p.addValue("action",action, true);
+			  p.addValue("hash", hash, true);
+			  p.addValue("paramone", arg1, true);
+			  p.addValue("paramtwo", arg2, true);
+			  p.addValue("paramthree", (arg3==null ? '':arg3), true);
+			  p.addValue("requestid", requestid, true);
+			  p.addValue("contextid", classroot.contextid , true);
+			  p.addValue("filearea", classroot.filearea, true);
+			  p.addValue("component", classroot.component , true);
+			  p.addValue("itemid", classroot.itemid , true);
+			  this.dataservice.setQueryString(p);                                 
+			  this.dataservice.doRequest(); 
+			    
+			]]>
+    </method>
+    <!-- The dataset containing info about the filesystem -->
+	<!-- IF we don't set the multirequest to true, pending requests fail ie only one at a time -->
+	<dataset name="dataservice" multirequest="true" type="http" src="${classroot.poodllfilelib}" request="false" >
+		<handler name="ondata">
+			<![CDATA[
+			Debug.write("gotdata to dataservice");
+	
+		
+			var theRequest = classroot.dp.xpathQuery("result/@requestid");
+			
+			if(theRequest && classroot.actions && classroot.actions[theRequest]){
+				if (classroot.dp.xpathQuery("result/text()") == "success") {
+					classroot.onActionComplete.sendEvent(classroot.actions[theRequest]);
+				}else {
+					//var errors = classroot.dp.xpathQuery("result/error/text()");
+					var errors = classroot.dp.xpathQuery("result/error");
+					if(!errors){
+						//shouldn't happen but might. A failure with no error data
+						classroot.onActionError.sendEvent(classroot.actions[theRequest]);
+					}else if(errors instanceof lz.DataElement){
+						//a single error object
+						classroot.onActionError.sendEvent(errors.childNodes[0].data);
+						
+					}else{
+						for (var x=0;x < errors.length; x++){
+							//an array of error objects
+							classroot.onActionError.sendEvent(errors[x].childNodes[0].data);
+						}
+					}
+					
+				}
+			}
+			]]>
+		</handler>
+	</dataset>
+	
+	<!-- we use this datapointer to query the data returned from server-->
+	<datapointer name="dp" xpath="local:dataservice:/" />
+	
+	</class>
+</library>

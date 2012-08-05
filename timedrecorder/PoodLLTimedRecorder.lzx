@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+	<resource name="ding" src="../42recorder/ding.mp3"/>
+	<include href="../42recorder/PoodLLTimedRecorderLib.lzx"/>
+	<include href="../timers/countdownlib.lzx"/>
+	<include href="../utils/kmeixnertimer.lzx"/>	
+	<include href="incubator/roundrect.lzx" />
+	
+	<!-- The size of the buttons et al. -->
+	<attribute name="iconsize" value="64" />
+	
+	<!-- The URL of the Red5 server -->
+	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  
+	
+	<!-- The URL of the MP3 File that acts as audio prompt-->
+	<attribute name="mediaurl" value="lz.Browser.getInitArg('mediaurl')" />  	
+
+	<!-- The filename of the streamed file (must be unique) -->
+	<attribute name="filename" value="lz.Browser.getInitArg('filename')" />
+	
+	<!-- The saveforamt of the streamed file. Usually flv unless autotranscoding to MP4  -->
+	<attribute name="saveformat" value="lz.Browser.getInitArg('saveformat')" />
+	
+	<!-- The id of the control on the enclosing HTMLpage to update with the  filename -->
+	<attribute name="updatecontrol" value="lz.Browser.getInitArg('updatecontrol')" />
+
+	<!-- UID for ensuring filenames  are unique-->
+	<attribute name="uid" value="lz.Browser.getInitArg('uid')" />
+	<attribute name="assigname" value="lz.Browser.getInitArg('assigName')" />
+
+	<attribute name="course" value="lz.Browser.getInitArg('course')" />
+	<!-- The course id (parent will pass -1 if there is no course id) -->
+	
+	<!-- Audio Settings -->
+	<attribute name="gain" value="lz.Browser.getInitArg('gain')" />
+	<attribute name="rate" value="lz.Browser.getInitArg('rate')"  />
+	<attribute name="echosuppression" value="lz.Browser.getInitArg('echosuppression')" />
+	<attribute name="loopback" value="lz.Browser.getInitArg('loopback')" />
+	<attribute name="silencelevel" value="lz.Browser.getInitArg('silencelevel')" />
+	<attribute name="prefdevice" value="lz.Browser.getInitArg('prefdevice')" />
+
+	
+	<!-- A flag to tell us if we should be overwriting files -->
+	<attribute name="overwritefile" value="true"/>
+	
+	<!--Moodle 2 File system info -->
+	<attribute name="poodllfilelib" value="lz.Browser.getInitArg('poodllfilelib')" />
+	<attribute name="contextid" value="lz.Browser.getInitArg('contextid')" />
+	<attribute name="component" value="lz.Browser.getInitArg('component')" />
+	<attribute name="filearea" value="lz.Browser.getInitArg('filearea')" />
+	<attribute name="itemid" value="lz.Browser.getInitArg('itemid')" />
+
+
+	
+	<!-- Timer specific attributes -->
+	<attribute name="usefontheight" value="32" />
+
+	<attribute name="totaltimefontheight" value="14" />
+	<attribute name="preparetime" value="lz.Browser.getInitArg('preparetime')" />
+	<attribute name="recordtime" value="lz.Browser.getInitArg('recordtime')" />
+
+	
+	<!-- UI Labels -->
+	<attribute name="secondslabel" value="lz.Browser.getInitArg('secondslabel')" />
+	<attribute name="minutelabel" value="lz.Browser.getInitArg('minutelabel')" />
+
+	<attribute name="minuteslabel" value="lz.Browser.getInitArg('minuteslabel')" />
+
+	<attribute name="recordlabel" value="lz.Browser.getInitArg('recordlabel')" />
+
+	<attribute name="stoplabel" value="lz.Browser.getInitArg('stoplabel')" />
+	<attribute name="preptimelabel" value="lz.Browser.getInitArg('preptimelabel')" />
+	<attribute name="rectimelabel" value="lz.Browser.getInitArg('rectimelabel')" />
+
+	<attribute name="preptimeleftlabel" value="lz.Browser.getInitArg('preptimeleftlabel')" />
+	<attribute name="rectimeleftlabel" value="lz.Browser.getInitArg('rectimeleftlabel')" />
+
+	
+	
+	<!-- Auto forward to next page in quiz -->
+	<attribute name="autoforward" value="lz.Browser.getInitArg('autoforward')" />
+	
+	<method name="nextpage" args="ignore=null">
+				//add code to click "next" button
+				var somejs =  'var f=document.getElementById(\"responseform\"); ';
+				somejs = somejs + 'f.next.click(); ';					
+				lz.Browser.loadJS(somejs);	
+	</method>
+	
+	
+    <!-- Our Timer -->
+    <countdowntimer name="ltimer" inittime="${canvas.preparetime * 1000}" >
+    	<attribute name="preparestate" value="true" />
+		<handler name="countevent">
+			canvas.displayview.timerview.timeDisplay.format('%02d:%02d',this.showmin,this.showsec);
+		</handler>
+		<handler name="oninit">
+			this.resetTimer();
+			if(!canvas.mediaurl){
+				this.startTimer();
+				//sometimes a user will click record before preparestate set
+				//then we don't want it to change green. doesnt work ...
+				if(canvas.bgcolor !="0xFF0000"){
+					canvas.setAttribute("bgcolor","0xAAFFAA");
+				}
+			}
+		</handler>
+		<handler name="onpreparestate">
+			if(!this.preparestate){
+				canvas.setAttribute("bgcolor","0xFF0000");
+			}
+		</handler>
+		<handler name="ontimer_state">
+			if(par.uisuspended){
+				//the recording has stopped and copying begun, prob by button clicks
+				//so this logic would double things up, just exit
+				return;
+			}
+			if (this.timer_state=='STOPPED'){
+				if(this.preparestate){
+					this.setAttribute("preparestate",false);
+					Debug.write("dinging and recording");
+					canvas.dingview.play();
+					par.buttonview.recordButton.record();
+					this.setAttribute("inittime",canvas.recordtime*1000);
+					this.resetTimer();
+					this.startTimer();
+				}else{
+					//suspend recorder ui, call stop shori, and post copying, forward on
+					//we only want to play the "ding" if the timer, stopped
+					//ie not if they clicked, so thats why we check for suspended ui first
+					if(!par.uisuspended){
+						//par.setAttribute("uisuspended",true);
+											Debug.write("dinging and stopping");
+						canvas.dingview.play();
+						
+						par.buttonview.recordButton.stopAll();
+						if (canvas.autoforward=='true'){
+							canvas.doAutoForward();
+						}
+						
+					}
+					
+				}
+			}
+		</handler>
+	</countdowntimer>
+
+	<!-- self calling method to move on, only after file has been copied -->
+	<method name="doAutoForward" args="ignore=null">
+		if (par.haveCopied){
+				this.nextpage();
+		}else{
+			Debug.write("newtimer");
+				lz.Timer.addTimer( new LzDelegate( this, "doAutoForward" ), 500 );
+		}
+	</method>
+    
+    
+    <simplelayout inset="5" axis="y" spacing="1"/>
+  
+    <roundrect align="center" name="displayview" width="${parent.width}" height="130" 
+				backgroundStartColor="0xEEEEEE"
+				backgroundStopColor="0xDDDDDD"
+				borderColor="#0000FF"
+				borderWidth="3"				
+				>
+			<simplelayout inset="2" axis="y" spacing="1"/>	
+	
+		  <view name="totaltimeview" width="${parent.width /2}" x="0" >
+		   <simplelayout inset="2" axis="y" spacing="2"/>
+			<view name="preptimeview" align="center">
+				 <simplelayout inset="2" axis="x" spacing="3"/>
+				<text name="preptimelabel" fontsize="$once{canvas.totaltimefontheight}" text="$once{canvas.preptimelabel + ':'}" />
+				<text name="preptime" fontsize="$once{canvas.totaltimefontheight}" fgcolor="blue">
+					<handler name="oninit">
+						if(canvas.preparetime > 119){
+							this.format('%02d ' + canvas.minuteslabel + ' %02d ' + canvas.secondslabel, Math.floor(canvas.preparetime / 60),canvas.preparetime % 60);
+						}else if(canvas.preparetime > 59){
+							this.format('%02d ' + canvas.minutelabel + ' %02d ' + canvas.secondslabel, Math.floor(canvas.preparetime / 60),canvas.preparetime % 60);
+						}else{
+							this.format('%02d ' + canvas.secondslabel, canvas.preparetime % 60);
+						}
+					</handler>
+				</text> 
+			</view>
+			<view name="rectimeview" align="center">
+				<simplelayout inset="2" axis="x" spacing="2"/>
+				<text name="rectimelabel" fontsize="$once{canvas.totaltimefontheight}" text="$once{canvas.rectimelabel + ':'}" />
+				<text name="rectime" fontsize="$once{canvas.totaltimefontheight}" fgcolor="blue">
+					<handler name="oninit">
+						if(canvas.recordtime > 119){
+							this.format('%02d ' + canvas.minuteslabel + ' %02d ' + canvas.secondslabel, Math.floor(canvas.recordtime / 60),canvas.recordtime % 60);
+						}else if(canvas.recordtime > 59){
+							this.format('%02d ' + canvas.minutelabel + ' %02d ' + canvas.secondslabel, Math.floor(canvas.recordtime / 60),canvas.recordtime % 60);
+						}else{
+							this.format('%02d ' + canvas.secondslabel, canvas.recordtime % 60);
+						}
+					</handler>
+				</text> 
+			</view>
+		</view>
+		<view name="timerview" width="${parent.width / 2}" x="0">
+			<simplelayout inset="1" axis="y" spacing="0"/>
+		 	<text  name="timeDisplay" fontsize="${canvas.usefontheight}" align="center"  fgcolor="${canvas.ltimer.preparestate ? 0x000000 : 0xFF0000}" />
+			<text name="timestateremaining" text="${(canvas.ltimer.preparestate ? canvas.preptimeleftlabel : canvas.rectimeleftlabel)}" align="center" fgcolor="${canvas.ltimer.preparestate ? 0x000000 : 0xFF0000}" />
+		</view>
+		<poodlltimedrecorder 
+		name="par"
+		id="par"
+		width="${parent.width / 2}" 
+		height="${canvas.iconsize + 18}"
+		filename="${canvas.filename}"
+		saveformat="canvas.saveformat"
+		updatecontrol="${canvas.updatecontrol}"
+		uid="${canvas.uid}"
+		assigname="${canvas.assigname}"
+		red5url="${canvas.red5url}"
+		course="${canvas.course}"
+		overwritefile="${canvas.overwritefile}"	
+		iconsize="${canvas.iconsize}"	
+		gain="$once{canvas.gain ? Number(canvas.gain) : 50}"
+		silencelevel="$once{canvas.silencelevel ? Number(canvas.silencelevel) : 10}"		
+		rate="$once{canvas.rate ? Number(canvas.rate) : 22}"
+		echosuppression="$once{canvas.echosuppression ? canvas.echosuppression=='yes' : true}"	
+		loopback="$once{canvas.loopback ? canvas.loopback=='yes' : false}"	
+		prefdevice="$once{canvas.prefdevice}"
+		poodllfilelib="${canvas.poodllfilelib}"
+		contextid="${canvas.contextid}"
+		component="${canvas.component}"
+		filearea="${canvas.filearea}"
+		itemid="${canvas.itemid}"
+		x="${parent.width / 2}"
+		options="ignorelayout: true"
+		recordlabel="${canvas.recordlabel}"
+		stoplabel="${canvas.stoplabel}"
+		>
+		
+			<handler name="onhaveRecorded" >
+				Debug.write("go to haveRecorded");
+				if(canvas.ltimer.preparestate){
+					canvas.ltimer.setAttribute("inittime",canvas.recordtime*1000);
+					canvas.ltimer.resetTimer();
+					canvas.ltimer.startTimer();
+					canvas.ltimer.setAttribute("preparestate",false);
+				}
+			</handler>
+			<handler name="onhaveCopied" >
+				//originally didn't disable re recording or checking of playback
+				//this and playbutton visibility do that now though. disable this to return to original
+				//check also stopall in recorder, for ui disable
+				//justin 20120615
+				
+				if(this.haveCopied){
+					Debug.write("go to have Copied");
+					//make sure we don't call this twice, so check if recorder didnt stop at aend of timer 
+					if(!canvas.ltimer.preparestate &amp;&amp; canvas.ltimer.timer_state!='STOPPED'){
+						canvas.ltimer.stopTimer();
+						if (canvas.autoforward=='true'){
+							canvas.doAutoForward();
+						}
+					}
+				}
+			</handler>
+		</poodlltimedrecorder>
+	</roundrect>
+	<view name="mp3player"  visible="false">
+		<handler name="oninit">
+			if(canvas.mediaurl){
+				Debug.write('setting source');
+				this.setSource(canvas.mediaurl);
+				Debug.write(canvas.mediaurl);
+			}
+		</handler>
+		<handler name="onload">
+			Debug.write('resource playing');
+			this.play();
+		</handler>
+		<handler name="onstop">
+			//this does not always fire
+        		Debug.write('onlastframe');
+        		//canvas.ltimer.startTimer();
+  		</handler>
+  		<handler name="onlastframe">
+  				Debug.write('onlastframe');
+        		canvas.ltimer.startTimer();
+        		canvas.setAttribute("bgcolor","0xAAFFAA");
+  		</handler>
+  		
+  	
+
+	</view>
+	<view name="dingview" visible="false">
+		<handler name="oninit" >
+			this.setAttribute("resource",'ding');
+			this.stop();
+		</handler>
+	</view>
+	
+	 
+	 	<view name="thespinner" id="thespinner" resource="spinner2.swf" stretches="both" align="center" options="ignorelayout: true" visible="false" width="$once{0.8*(Math.min(canvas.height,canvas.width))}" height="$once{0.8*(Math.min(canvas.height,canvas.width))}">
+			<method name="hidespinner" args="ignore=null">
+				this.setAttribute("visible",false);
+			</method>
+			<method name="showspinner" args="ignore=null">
+				this.bringToFront();
+				this.setAttribute("visible",true);
+			</method>
+			<handler name="onclick">
+				this.hidespinner();
+			</handler>
+		</view>
+	
+</canvas>
