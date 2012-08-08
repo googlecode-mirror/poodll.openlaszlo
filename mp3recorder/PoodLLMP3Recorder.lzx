@@ -11,8 +11,6 @@
 	<!-- The filename of the streamed file (must be unique) -->
 	<attribute name="filename" value="lz.Browser.getInitArg('filename')" />
 	
-	<!-- The saveforamt of the streamed file. Usually flv unless autotranscoding to MP4  -->
-	<attribute name="saveformat" value="lz.Browser.getInitArg('saveformat')" />
 	
 	<!-- The id of the control on the enclosing HTMLpage to update with the  filename -->
 	<attribute name="updatecontrol" value="lz.Browser.getInitArg('updatecontrol')" />
@@ -45,8 +43,6 @@
 		height="400"
 		name="par"
 		id="par"
-		filename="${canvas.filename}"
-		saveformat="canvas.saveformat"
 		updatecontrol="${canvas.updatecontrol}"
 		uid="${canvas.uid}"
 		iconsize="${canvas.iconsize}"	

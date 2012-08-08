@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- X_LZ_COPYRIGHT_BEGIN ************************************************
+* Copyright 2007 Laszlo Systems, Inc.  All Rights Reserved.              *
+* Use is subject to license terms.                                       *
+* X_LZ_COPYRIGHT_END ************************************************** -->
+
+
+<library>
+	
+  <!-- these are indexed 1, 2, 3, 4 and referred to in the frame table -->
+    <resource name="toggle_resource" >
+        <frame src="resources/Gray1.png"/>
+        <frame src="resources/Blue4.png"/>
+        <frame src="resources/Pink2.png"/>
+        <frame src="resources/Green4.png"/>
+    </resource>
+	<resource name="icon_resource" >
+        <frame src="resources/chalk_board.png"/>
+        <frame src="./resources/equalizer.png"/>
+        <frame src="./resources/target.png"/>
+        <frame src="./resources/headphones.png"/>
+		<frame src="./resources/headphones_delete.png"/>
+		<frame src="./resources/television.png"/>
+		<frame src="./resources/artwork.png"/>
+		<frame src="./resources/canvas_holder.png"/>
+		<frame src="./resources/cloud_comment.png"/>
+		<frame src="./resources/card.png"/>
+		<frame src="./resources/games.png"/>
+		<frame src="./resources/process.png"/>
+		<frame src="./resources/up.png"/>
+		<frame src="./resources/music.png"/>
+		<frame src="./resources/interview.png"/>
+		<frame src="./resources/pairsession.png"/>
+		<frame src="resources/back.png"/>
+		<frame src="./resources/rss.png"/>		
+		<frame src="./resources/rss_delete.png"/>
+    </resource>
+	
+	<!-- necessary to do resources and frames in this way, cos seems impossible to pass a resource or src string in -->
+	<class name="consoleiconbutton" extends="view" >
+		<attribute name="iconframe"  />
+		<attribute name="enabled" value="true"  />
+		<attribute name="text" type="string"/>
+		<event name="onclick"/>
+		<button name="thebutton" width="${parent.width -10}" height="${this.width}" >
+			<view  width="${parent.width-10}" height="${this.width}" 
+				x="5" y="5" opacity="${(classroot.enabled * 0.7) + 0.2}"  
+				resource="icon_resource" frame="${classroot.iconframe}" stretches="both" />				
+				<handler name="onclick">
+					if (this.enabled){
+						classroot.onclick.sendEvent();
+					}
+				</handler>
+				
+		</button>
+		<text name="label" text="${parent.text}" fgcolor="$style{'fgcolor'}" y="${parent.thebutton.height}" x="${parent.thebutton.x  + ((parent.thebutton.width - this.width) /2) }" />
+
+	</class>
+
+    <class name="consoletogglebutton" 
+		resource="toggle_resource" frame="${this.frameTable[ (this.over ? 1 : 0) + (this.tracking ? 1 : 0) + (this.engaged ? 3 : 0)]}" extends="view"
+
+    >
+
+
+
+	<attribute name="toplayer" type="string"/>
+
+
+
+
+        <!--- This look-up table maps a state value to a frame index. 
+              Currently 2^3=8 states: 
+              over (2^0=1), tracking (2^1=2) and engaged (2^2=4). -->
+        <attribute name="frameTable" value="$once{
+            [1, 2, 3, 4, 2, 3]}"/>
+
+        <attribute name="over" value="false"/>
+
+        <attribute name="tracking" value="false"/>
+
+        <attribute name="engaged" value="false"/>
+
+        <attribute name="icon" type="string" value=""/>
+
+
+        <handler name="onmouseover"><![CDATA[
+            this.setAttribute('over', true);
+          ]]>
+        </handler>
+
+
+        <handler name="onmouseout"><![CDATA[
+            this.setAttribute('over', false);
+          ]]>
+        </handler>
+
+
+        <handler name="onmousedown"><![CDATA[
+            this.setAttribute('tracking', true);
+          ]]>
+        </handler>
+
+
+        <handler name="onmouseup"><![CDATA[
+            this.setAttribute('tracking', false);
+            if (this.over) {
+                this.trigger();
+            }
+          ]]>
+        </handler>
+
+
+        <method name="trigger"><![CDATA[
+            this.setAttribute("engaged", !this.engaged);
+          ]]>
+        </method>
+
+	<view name="pairlayer" resource="resources/pairs.png" visible="${this.name == parent.toplayer}" />
+	<view name="interviewlayer" resource="resources/interview.png" visible="${this.name == parent.toplayer}" />
+
+
+
+
+    </class>
+
+
+</library>

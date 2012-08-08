@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas width="500" height="500">
+<include href="scribblepalette.lzx" />	
+<include href="scribblecpanel.lzx" />	
+<switch>
+	<unless property="$dhtml">
+	<!-- AS3 import statements -->  
+	   <passthrough>  
+	   import flash.events.*;
+		 import flash.display.*;  
+		 import com.adobe.images.JPGEncoder;
+		 import flash.utils.ByteArray;
+		 import flash.geom.*;  
+		 import flash.media.Camera;	
+		import flash.net.*;		 
+	   </passthrough>  
+		<include href="../interview/sharedObject.lzx" />	
+		<include href="../messaging/MessagingRtmpConnection.lzx" />
+	</unless>
+</switch>
+
+
+	<!-- whiteboard specific stuff -->
+	<attribute name="courseid" value="$once{lz.Browser.getInitArg('courseid')}" />  	
+	<attribute name="boardname" value="$once{lz.Browser.getInitArg('boardname')}" />
+	<attribute name="rooms" value="$once{lz.Browser.getInitArg('rooms')}" />  			
+	<attribute name="imageurl" value="$once{lz.Browser.getInitArg('imageurl')}" />  		
+	<attribute name="headeridtag" value="'scribble01'" />
+
+	<!--dummy rtmp connection, we dont need it for submitting whiteboards -->
+	<view name="rtmpc" />
+	
+	<!-- for submitting via Moodle file system -->
+	<attribute name="poodllfilelib" value="lz.Browser.getInitArg('poodllfilelib')" />
+	<attribute name="contextid" value="lz.Browser.getInitArg('contextid')" />
+	<attribute name="component" value="lz.Browser.getInitArg('component')" />
+	<attribute name="filearea" value="lz.Browser.getInitArg('filearea')" />
+	<attribute name="itemid" value="lz.Browser.getInitArg('itemid')" />	
+	
+<!-- The id of the control on the enclosing HTMLpage to update with the  filename -->
+<attribute name="updatecontrol" value="lz.Browser.getInitArg('updatecontrol')" />
+
+
+<!-- the method called to update page with filename info -->
+<method name="updatepage" args="newfilename">
+		
+			//record the url on the html page,							
+			var somejs='var cbox = parent.document.getElementById(\"' + this.updatecontrol + '\"); ';
+			somejs = somejs + 'cbox.checked=\"true\"; ';
+		
+			somejs = somejs + 'cbox.value=\"' + newfilename +'\"; ';							
+			lz.Browser.loadJS(somejs);					
+</method>
+
+<!--Beginning of scribble view -->
+<view name="scribbleview"  width="${canvas.width}" height="${canvas.height}" bgcolor="green">
+	<simplelayout axis="x" spacing="5" inset="10"/>
+	
+	<!-- This is the control panel -->
+	<scribblecpanel name="scribbleCP" y="10" showsubmitbutton="true" rooms="${canvas.rooms == '' ? null : canvas.rooms}" 
+					width="180" height="${parent.height-20}" 
+					refscribblepalette="${parent.scribble}" >
+		
+		<!-- init handler -->
+		<handler name="oninit">	
+			Debug.write("scribblepanelparent", parent.name);
+			//Debug.write("canvas rooms", "@" + canvas.rooms + "@");
+		</handler>
+		
+		<!-- this is the handler for the cpanel bigbutton that saves the image on server -->
+		<handler name="onclick" reference="this.saveButton">
+			canvas.sendImageToServer(this.parent.scribble);
+		</handler>
+	</scribblecpanel>
+	
+	<!-- This is the scribble pad itself -->
+	<scribblepalette name="scribble" y="10" rtmpc="${canvas.rtmpc}" imageurl="${canvas.imageurl}" width="${parent.width-parent.scribbleCP.width - 25}" height="${parent.height-20}"  >
+		<method name="restart" args="ignore=null">
+			this.api.clear();
+			this.api.connectSO(canvas.boardname);
+			Debug.write("so connecting");
+		</method>
+	</scribblepalette>	
+
+</view>
+
+	<!-- class for manipulating byte arrays -->
+	<bytearrayutils name="butils" poodllfilelib="${canvas.poodllfilelib}" 
+				contextid="${canvas.contextid}" 
+				component="${canvas.component}" 
+				filearea="${canvas.filearea}" 
+				itemid="${canvas.itemid}"
+				  >
+			
+		<handler name="oninit">
+			this.resetActions();
+		</handler>	
+				
+		<!-- in this section we update the filename on page -->		
+		<handler name="onActionComplete" args="message">
+			Debug.write("action complete:" + message);
+			canvas.setAttribute("filename", message);					
+			canvas.updatepage(canvas.filename);
+		</handler>
+		<handler name="onActionStart" args="message">
+			Debug.write("action Start:" + message);
+		</handler>
+		<handler name="onActionError" args="message">
+			Debug.write("action Error:" + message);
+		</handler>
+	</bytearrayutils>
+	
+	<!-- this is where we　make jpg data and send it -->
+		<method name="sendImageToServer" args="scribbleView">
+		<![CDATA[
+	
+			// Take the snapshot movieclip
+			var sketch_mc = scribbleView.getDisplayObject();
+			
+			// Get the image data from that
+			var jpgSource:BitmapData = new BitmapData(sketch_mc.width, sketch_mc.height);
+			jpgSource.draw(sketch_mc);
+			
+			// Create a Jpeg from the image data
+			var jpgEncoder:JPGEncoder = new JPGEncoder(85);
+			var jpgStream:ByteArray = jpgEncoder.encode(jpgSource);
+			Debug.write("jpeg stream created");
+			
+			//create base64string
+			var jpgstring = this.butils.makeBase64String(jpgStream);
+			Debug.write(jpgstring);
+			
+			//submit this to server
+			var action = this.butils.getNewActionKey();
+			this.butils.registerAction(action,"jpg file upload");
+			this.butils.sendData(action,"uploadfile","",jpgstring, "jpg");
+		]]>
+		</method>	
+
+</canvas>

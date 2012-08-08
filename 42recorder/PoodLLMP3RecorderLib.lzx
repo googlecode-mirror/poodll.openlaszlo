@@ -102,10 +102,17 @@
 				contextid="${classroot.contextid}" 
 				component="${classroot.component}" 
 				filearea="${classroot.filearea}" 
-				itemid="${classroot.itemid}" >
+				itemid="${classroot.itemid}"
+				  >
+			
+		<handler name="oninit">
+			this.resetActions();
+		</handler>	
 				
 		<handler name="onActionComplete" args="message">
 			Debug.write("action complete:" + message);
+			classroot.setAttribute("filename", message);					
+			classroot.updatepage(classroot.filename);
 		</handler>
 		<handler name="onActionStart" args="message">
 			Debug.write("action Start:" + message);
@@ -199,47 +206,7 @@
 			}	
 		</method>
 		
-		<!-- write bytes into a wav file -->
-		<!--
-		<method name="makeWav" args="bytes:ByteArray , samplerate:int ">
-			
-			Debug.write("rawbytes length" + bytes.length);
-		
-			 var data:ByteArray = new ByteArray();
-			 data.endian = Endian.LITTLE_ENDIAN;
 
-			// soundBytes are 32bit floats, we are storing 16bit integers
-			 var numBytes:uint = bytes.length / 2; 
-			 var numChannels:int = 1;
-			 var bitsPerSample:int = 16;
-
-			 data.writeUTFBytes("RIFF"); // ChunkID
-			 data.writeUnsignedInt(36 + numBytes); // ChunkSize
-			 data.writeUTFBytes("WAVE"); // Format
-			 data.writeUTFBytes("fmt "); // Subchunk1ID
-			 data.writeUnsignedInt(16); // Subchunk1Size // 16 for PCM
-			 data.writeShort(1); // AudioFormat 1 Mono, 2 Stereo (Microphone is mono)
-			 data.writeShort(numChannels); // NumChannels
-			 data.writeUnsignedInt(samplerate); // SampleRate
-			 data.writeUnsignedInt(samplerate * numChannels * bitsPerSample/8); // ByteRate
-			 data.writeShort(numChannels * bitsPerSample/8); // BlockAlign
-			 data.writeShort(bitsPerSample); // BitsPerSample
-			 data.writeUTFBytes("data"); // Subchunk2ID
-			 data.writeUnsignedInt(numBytes); // Subchunk2Size
-
-			 bytes.position = 0;
-			 while(bytes.bytesAvailable > 0) {
-			   var sample:Number = bytes.readFloat(); // The sample is stored as a sine wave, -1 to 1
-			   var val:int = sample * 32768; // Convert to a 16bit integer
-			   data.writeShort(val);
-			 }
-			
-			//I lost about 2 hours of head scratch time by not resetting array to position 0, doh
-			data.position=0;
-			 return data;
-
-		</method>
-		-->
 		<!-- write bytes into a wav file -->
 		<method name="makeMP3" args="wavbytes:ByteArray">
 			//Debug.write("wavbytes length:" + wavbytes.length);
@@ -255,7 +222,9 @@
 			Debug.write("MP3 encoded bytes:" + this.mp3Encoder.mp3Data.length);
 			var mp3string = classroot.butils.makeBase64String(this.mp3Encoder.mp3Data);
 			Debug.write(mp3string);
-			classroot.butils.sendData(99,"uploadfile","mp3",classroot.context,classroot.component,classroot.filearea,classroot.itemid);
+			var action = classroot.butils.getNewActionKey();
+			classroot.butils.registerAction(action,"mp3 file upload");
+			classroot.butils.sendData(action,"uploadfile","",mp3string, "mp3");
 		</method>
 		<!-- The event signifying MP3 explaining progress -->
 		<method name="mp3EncodeProgress" args="evt"> 
@@ -281,16 +250,8 @@
 			enabled="${classroot.status == 'stopped'}" 
 			onclick="record()">
         	<method name="record">
-
-				classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".mp3");					
-	
         		classroot.mic.startRec();
 				classroot.setAttribute("haveRecorded",true);
-				
-				//record the url on the html page
-				classroot.updatepage(classroot.filename);
-				
-				
         	</method>
 			<view name="micicon" width="${classroot.iconsize}" height="${classroot.iconsize}" x="5" y="5" 
 				opacity="${1 - (parent.enabled ? 0 : 0.8)}" resource="icons/128x128/PlainGreen/RecordNormal.png" ></view>	

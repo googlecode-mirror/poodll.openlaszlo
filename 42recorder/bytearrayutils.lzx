@@ -7,15 +7,16 @@
 				import flash.utils.*;
             </passthrough>
           
-          <attribute name="poodllfilelib" /> 
-          <attribute name="contextid"  />
+        <attribute name="poodllfilelib" /> 
+        <attribute name="contextid"  />
 		<attribute name="component"  />
 		<attribute name="filearea"  />
 		<attribute name="itemid"  /> 
-          <attribute name="BASE64_CHARS" value="'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='" /> 
+        <attribute name="BASE64_CHARS" value="'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='" /> 
 
-		
+	
 		<!-- we raise these events when we receive a result from server, after a data req-->
+		<attribute name="actions" />
 		<event name="onActionStart"/>
 		<event name="onActionComplete"/>
 		<event name="onActionError"/>
@@ -113,23 +114,44 @@
 				this.onActionStart.sendEvent(this.actions[requestid]);
 			 }
 			 
+			 
 			  var p=new LzParam(); 
+			  Debug.write("new lzparam");
 			  p.addValue("datatype",action, true);                                 
 			  p.addValue("action",action, true);
 			  p.addValue("hash", hash, true);
+			  Debug.write("prams");
 			  p.addValue("paramone", arg1, true);
 			  p.addValue("paramtwo", arg2, true);
 			  p.addValue("paramthree", (arg3==null ? '':arg3), true);
+			  Debug.write("reqid");
 			  p.addValue("requestid", requestid, true);
-			  p.addValue("contextid", classroot.contextid , true);
-			  p.addValue("filearea", classroot.filearea, true);
-			  p.addValue("component", classroot.component , true);
-			  p.addValue("itemid", classroot.itemid , true);
-			  this.dataservice.setQueryString(p);                                 
+			  Debug.write("fa");
+			  p.addValue("filearea", this.filearea, true);
+			    Debug.write("cp");
+			  p.addValue("component", this.component , true);
+			    Debug.write("ii");
+			  p.addValue("itemid", this.itemid , true);
+			    Debug.write("cxid");
+			  p.addValue("contextid", this.contextid , true);
+			  Debug.write("dataservice");
+			  this.dataservice.setAttribute('querytype','POST');
+			  this.dataservice.setQueryString(p);  
+				Debug.write("send");
 			  this.dataservice.doRequest(); 
+			  Debug.write("done");
 			    
 			]]>
     </method>
+    <method name="registerAction" args="requestid, description">
+		this.actions[requestid] = description;
+	</method>
+	<method name="resetActions" args="ignore=null">
+		this.actions = new Object();
+	</method>
+   <method name="getNewActionKey">
+   	 return Math.floor(Math.random()*1000000000000001);
+   </method>
     <!-- The dataset containing info about the filesystem -->
 	<!-- IF we don't set the multirequest to true, pending requests fail ie only one at a time -->
 	<dataset name="dataservice" multirequest="true" type="http" src="${classroot.poodllfilelib}" request="false" >
@@ -142,7 +164,10 @@
 			
 			if(theRequest && classroot.actions && classroot.actions[theRequest]){
 				if (classroot.dp.xpathQuery("result/text()") == "success") {
-					classroot.onActionComplete.sendEvent(classroot.actions[theRequest]);
+					var messages = classroot.dp.xpathQuery("result/error");
+					var filename = messages.childNodes[0].data
+					//classroot.onActionComplete.sendEvent(classroot.actions[theRequest]);
+					classroot.onActionComplete.sendEvent(filename);
 				}else {
 					//var errors = classroot.dp.xpathQuery("result/error/text()");
 					var errors = classroot.dp.xpathQuery("result/error");
@@ -151,6 +176,7 @@
 						classroot.onActionError.sendEvent(classroot.actions[theRequest]);
 					}else if(errors instanceof lz.DataElement){
 						//a single error object
+						
 						classroot.onActionError.sendEvent(errors.childNodes[0].data);
 						
 					}else{
