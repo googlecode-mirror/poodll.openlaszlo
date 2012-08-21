@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Creator: CorelDRAW -->
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="99.3656mm" height="167.919mm" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
+viewBox="0 0 660.525 1116.23"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <style type="text/css">
+   <![CDATA[
+    .str2 {stroke:#373435;stroke-width:1.32948}
+    .str4 {stroke:#373435;stroke-width:3.32371}
+    .str1 {stroke:#373435;stroke-width:6.64742}
+    .str3 {stroke:#373435;stroke-width:9.97113}
+    .str0 {stroke:#A45E4D;stroke-width:13.2948}
+    .fil1 {fill:none}
+    .fil5 {fill:#373435}
+    .fil6 {fill:#00A859}
+    .fil0 {fill:#848688}
+    .fil2 {fill:#FDD1A1}
+    .fil7 {fill:url(#id0)}
+    .fil3 {fill:url(#id1)}
+    .fil4 {fill:url(#id2)}
+   ]]>
+  </style>
+  <linearGradient id="id0" gradientUnits="userSpaceOnUse" x1="342.104" y1="287.112" x2="337.941" y2="145.582">
+   <stop offset="0" style="stop-color:#00A859"/>
+   <stop offset="1" style="stop-color:#FEFEFE"/>
+  </linearGradient>
+  <linearGradient id="id1" gradientUnits="userSpaceOnUse" x1="318.767" y1="562.015" x2="344.864" y2="266.259">
+   <stop offset="0" style="stop-color:#ED2F59"/>
+   <stop offset="1" style="stop-color:#FEFEFE"/>
+  </linearGradient>
+  <radialGradient id="id2" gradientUnits="userSpaceOnUse" cx="357.218" cy="592.952" r="90.1895" fx="357.218" fy="592.952">
+   <stop offset="0" style="stop-color:#FEFEFE"/>
+   <stop offset="1" style="stop-color:#FDD1A1"/>
+  </radialGradient>
+ </defs>
+ <g id="Camada_x0020_1">
+  <metadata id="CorelCorpID_0Corel-Layer"/>
+  <g id="_193482736">
+   <ellipse id="_194184016" class="fil0" cx="333.746" cy="1045.87" rx="280.001" ry="70.3516"/>
+   <g>
+    <line id="_193716240" class="fil1 str0" x1="302.464" y1="808.764" x2="303.039" y2= "786.496" />
+    <line id="_193714272" class="fil1 str0" x1="326.451" y1="809.395" x2="325.821" y2= "787.882" />
+    <line id="_193705920" class="fil1 str0" x1="355.487" y1="809.395" x2="351.674" y2= "786.169" />
+    <line id="_193716216" class="fil1 str0" x1="387.681" y1="804.346" x2="381.789" y2= "779.665" />
+    <line id="_193716192" class="fil1 str0" x1="416.086" y1="794.245" x2="407.841" y2= "769.548" />
+    <ellipse id="_193713936" class="fil2 str1" cx="492.465" cy="620.552" rx="17.9898" ry="14.8341"/>
+    <ellipse id="_193716144" class="fil2 str1" cx="166.433" cy="666.948" rx="17.9898" ry="14.8341"/>
+    <polygon id="_193716048" class="fil3 str1" points="224.822,558.058 185.685,491.148 245.653,429.918 166.117,290.415 497.515,270.216 495.621,270.216 433.76,419.187 482.996,464.004 428.71,546.065 "/>
+    <polyline id="_193716336" class="fil1 str1" points="458.463,501.089 589.675,645.168 622.499,660.949 "/>
+    <polyline id="_193715856" class="fil1 str1" points="561.901,696.929 589.675,645.168 638.28,616.763 "/>
+    <polyline id="_193704912" class="fil1 str1" points="635.755,642.012 589.675,645.168 594.725,688.092 "/>
+    <polyline id="_193715712" class="fil1 str1" points="214.706,540.763 80.9004,686.83 48.0761,713.342 "/>
+    <polyline id="_193714944" class="fil1 str1" points="114.987,726.598 80.9004,686.83 41.1329,667.261 "/>
+    <polyline id="_193712712" class="fil1 str1" points="33.5582,687.461 80.9004,686.83 79.6374,725.335 79.6374,724.704 "/>
+    <path id="_193716120" class="fil4 str1" d="M483.628 604.139c52.9527,215.297 -300.117,259.905 -313.092,44.8176 28.1113,-135.65 216.09,-189.527 313.092,-44.8176z"/>
+    <ellipse id="_193715544" class="fil5 str2" cx="320.138" cy="717.13" rx="8.20582" ry="10.0995"/>
+    <ellipse id="_193715520" class="fil5 str2" cx="361.8" cy="712.712" rx="8.20582" ry="10.0995"/>
+    <path id="_193707168" class="fil1 str3" d="M241.234 681.782c14.8962,-151.485 175.861,-150.013 193.158,-5.05004"/>
+    <line id="_193707912" class="fil1 str4" x1="245.653" y1="429.918" x2="300.23" y2= "521.616" />
+    <polyline id="_193715016" class="fil1 str4" points="433.76,419.187 383.472,525.827 382.538,525.538 "/>
+    <polygon id="_193715688" class="fil6 str2" points="255.753,840.852 232.396,797.297 173.692,793.51 203.992,755.004 227.347,802.347 282.895,791.616 "/>
+    <polygon id="_193715736" class="fil6 str2" points="466.585,800.453 416.086,771.417 482.996,748.692 479.944,696.587 532.232,717.762 530.339,717.762 464.06,749.324 "/>
+    <path id="_193711272" class="fil1 str0" d="M268.203 950.652c-35.9386,-36.271 -50.7484,-83.3227 -44.4293,-141.153m0 0c-29.3184,62.3747 -27.5535,120.577 5.29267,174.608"/>
+    <path id="_193715928" class="fil1 str0" d="M220.378 804.56c-36.0988,40.5227 -49.4043,95.9528 -39.9157,166.291"/>
+    <path id="_193715592" class="fil1 str0" d="M155.843 944.971c-2.23353,-76.4839 18.3482,-122.953 61.7452,-139.406"/>
+    <path id="_193715808" class="fil1 str0" d="M529.216 928.767c7.78014,-64.4753 -7.93037,-120.332 -47.1309,-167.569"/>
+    <path id="_193714968" class="fil1 str0" d="M632.738 842.288c-44.9552,-30.5888 -93.5378,-59.1308 -145.747,-85.6267m0 0c37.4828,33.6931 71.7569,72.5459 102.823,116.558"/>
+    <path id="_193716552" class="fil1 str0" d="M645.994 796.209c-55.1569,1.08552 -108.158,-12.097 -159.003,-39.5475"/>
+    <polygon id="_193711296" class="fil7 str1" points="245.666,285.566 186.949,216.563 185.055,215.3 230.504,163.539 359.275,221.613 408.511,147.127 494.99,167.327 437.578,273.869 435.654,272.743 "/>
+    <polyline id="_193716384" class="fil1 str1" points="207.779,189.42 56.283,75.7972 2.72876,152.808 "/>
+    <polyline id="_193704936" class="fil1 str1" points="470.387,161.58 571.369,4.23308 659.128,44.8674 "/>
+    <ellipse id="_192825200" class="fil6 str2" cx="232.397" cy="797.297" rx="16.4116" ry="16.4122"/>
+    <ellipse id="_193171656" class="fil6 str2" cx="474.475" cy="750.27" rx="17.9898" ry="16.7278"/>
+   </g>
+  </g>
+ </g>
+</svg>

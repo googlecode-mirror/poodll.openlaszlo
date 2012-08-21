@@ -1,0 +1,878 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	
+<!-- Contain UI elements, buttons, frames, and related subclasses like "action" -->
+
+<include href="incubator/roundrect.lzx" />
+<include href="../utils/kmeixnertimer.lzx"/>
+
+
+<!-- An action of which a frame may have plural -->
+<class name="action" extends="node">
+	<attribute name="type" />
+	<attribute name="args" />
+</class>
+
+
+
+<!-- The base view that is touchable, to be extended only -->
+<!-- The detatched clone flag and the crap spelling of it are important! -->
+<class name="touchframe" visible="${this.bstate==this.parent.currentstate  &amp;&amp; (!this.isdetatchedclone)}" extends="view">
+	<attribute name="ftext" value="''"/>
+	<attribute name="fsize" value="18"/>
+	<attribute name="fcolor" value="0x000000"/>
+	<attribute name="qholder"/>
+	<attribute name="bstate"/>
+	<attribute name="action"/>
+	<attribute name="args"/>
+	<attribute name="type"/>
+
+	
+	
+	
+	<setter name="width" args="newW">
+		<![CDATA[
+		//SWF10 doesnt recognise this.qholder but dhtml does? so used parent.qholder
+		if(newW=='null'){newW=null;}
+		if(this.parent.qholder!=null){
+			super.setAttribute("width", this.parent.qholder.fetchW(newW));
+			//deebug("x:"  + x + ":" + newX);
+		}else{
+			deebug("qholder:null");
+			super.setAttribute("width", newW);
+		}
+		]]>
+	</setter>
+	<setter name="height" args="newH">
+		<![CDATA[
+		//SWF10 doesnt recognise this.qholder but dhtml does? so used parent.qholder
+		if(newH=='null'){newH=null;}
+		if(this.parent.qholder!=null){
+			super.setAttribute("height", this.parent.qholder.fetchH(newH));
+		}else{
+			deebug("qholder:null");
+			super.setAttribute("height", newH);
+		}
+		]]>
+	</setter>
+	
+	<!-- may be best not to pool actions, we can review later -->
+	<action name="actions" type="$path{'@type'}" args="$path{'@args'}" >
+		<datapath xpath="action" pooling="false" />
+	</action>
+	
+</class>
+
+<!-- A largely useless roundrect button drawn at runtime -->
+<!--  visible="${this.bstate==this.parent.currentstate &amp;&amp; (this.parent.type=='rect')} -->
+<class name="rectframe" extends="touchframe">
+	<attribute name="bgstartcolor"/>
+	<attribute name="bgstopcolor"/>
+	<attribute name="bdcolor"/>	
+	
+
+	<roundrect align="center" name="therect" font="${parent.font}"  width="${this.theText.width * 1.5}" height="${this.theText.height * 2}" 
+				backgroundStartColor="${parent.bgstartcolor}"
+				backgroundStopColor="${parent.bgstopcolor}"
+				borderColor="${parent.bdcolor}"
+				borderWidth="5"	
+				>
+		
+		 <itext align="center" valign="middle" font="${parent.font}"  name="theText" visible="true" fontsize="${!parent.parent.fsize ? 2 : parent.parent.fsize}" text="${parent.parent.ftext}" fgcolor="${parent.parent.fcolor}" />
+
+	</roundrect>
+</class>
+
+<!-- A text to be used as a button  in a toggle button-->
+<class name="textframe" extends="touchframe">		
+		 <itext  align="center" valign="middle" name="theText" font="${parent.font}" visible="true"  fontsize="${!parent.fsize ? 2 : parent.fsize}" text="${parent.ftext}" fgcolor="${parent.fcolor}" />
+</class>
+
+<!-- A single frame of a button state this.picsource-->
+<class name="buttonframe" extends="imageframe">
+	 <itext  align="center"  valign="middle" name="theText"  text="${parent.ftext}" font="${parent.font}" visible="true" fontsize="${!parent.fsize ? 2 : parent.fsize}" fgcolor="${parent.fcolor}"  />
+</class>
+
+<!-- A frame to do the role of button or image to reduce the number of frames to create when creating pooling and resuing-->
+<class name="panframe" extends="touchframe">
+	<attribute name="pic1source"/>
+	<attribute name="pic2source"/>
+	<attribute name="picsources"/>
+	<attribute name="picsourcecount" value="0"/>
+	<attribute name="currentpicsource" value="0"/>
+	<attribute name="picspeed"/>
+	<attribute name="pic1visible" value="true"/>
+	<attribute name="constraintProp" value="''" />
+	
+	<smartimage name="imageone" visible="${parent.type!='text' &amp;&amp; parent.pic1visible}"  sloader="${superloader}" width="${parent.width ? parent.width : null}" height="${parent.height ? parent.height : null}" stretches="both" />
+	<smartimage name="imagetwo" visible="${parent.type=='image'  &amp;&amp; !parent.pic1visible}"  sloader="${superloader}" width="${parent.width ? parent.width : null}" height="${parent.height ? parent.height : null}" stretches="both" />
+	 <itext  align="${parent.type=='text' ? 'left' : 'center' }" visible="${parent.type!='image'}" valign="${parent.type=='text' ? 'top' : 'middle' }" name="theText"  text="${parent.ftext}" font="${parent.font}" fontsize="${!parent.fsize ? 2 : parent.fsize}" fgcolor="${parent.fcolor}"  />
+
+	<handler name="oninit">
+		<![CDATA[
+		this.setupImage();
+		]]>
+	</handler>
+	<handler name="loopevent" reference="this.qholder.thegameloop" args="thespeed">
+		<![CDATA[
+		//trying swapping this image toggling out for src toggling Justin 20110607
+		if(this.picsourcecount > 0){
+			if (thespeed == this.picspeed && this.parent.islive){
+					//first toggle visibility from buffered to visible, check first that we have a buffered image
+					if (this.imagetwo.smartsrc && this.imagetwo.smartsrc !=''){ 
+						this.setAttribute("pic1visible", !this.pic1visible);
+					}
+					
+					//update our image index
+					if(this.currentpicsource < this.picsourcecount -1){
+						this.setAttribute("currentpicsource",this.currentpicsource+1);
+					}else{
+						this.setAttribute("currentpicsource",0);
+					}
+					
+					//then load next image into buffer
+					if(this.pic1visible){
+						this.imagetwo.setAttribute("smartsrc", this.picsources[this.currentpicsource]);
+					}else{
+						this.imageone.setAttribute("smartsrc", this.picsources[this.currentpicsource]);
+					}
+					
+					
+			}
+		}
+		
+		/*
+		if(this.pic2source){
+			if (thespeed == this.picspeed){
+				this.setAttribute("pic1visible", !this.pic1visible);
+			}
+		}
+		*/
+		]]>
+	</handler>
+	<handler name="ondata">
+		<![CDATA[
+		this.setupImage();
+			]]>
+	</handler>
+	<method name="setupImage" args="ignore=null">
+			<![CDATA[
+			
+				/*
+				
+				Be aware that this method ,ay be called twice, from oninit and ondata, v hard to pin down
+				
+				This is a little complex because we need to add a constraint and property
+				getting code, if the image url is actually a property call. We only bother to do this for image1		
+				We may have to get more tricky because the constraint will not recognise change in settings property
+				only settings object itself I think ...	
+				
+			
+				//if we had a constraint before, we would like to remove that now
+				if(this.constraintProp != ''){
+					this.releaseConstraintMethod("doConstraint");
+					this.setAttribute("constraintProp",'');
+				}
+				*/
+			
+				//if the pic1source passed in is reall a system or temp property name
+				//then we try and replace with the value of that property
+				//We ZA naming convention as a temp property (not saved to storage) and XA as system property		
+				if(this.pic1source && typeof this.pic1source=='string' && ( this.pic1source.indexOf('ZA') == 0 || this.pic1source.indexOf('XA') == 0)){
+					this.applyConstraintMethod("doConstraint", [settings,this.pic1source]);					
+					//this.applyConstraintMethod("doConstraint", [settings,this.pic1source]);
+					this.setAttribute("constraintProp",this.pic1source);
+					this.pic1source = settings.getProperty(this.pic1source);
+				}
+				
+				//This is the standard setting of url to our images
+				if (this.pic1source && this.pic1source!='0' && this.pic1source!='false'){
+					this.imageone.setAttribute('smartsrc', this.pic1source);
+					//pooling rmnants may see this set to false at init of button so hwere we set to true
+					//this.imageone.setAttribute('visible',true);
+					this.setAttribute("pic1visible",true);
+				}
+				
+				//managing picsources if animating images
+				if(this.pic2source){
+					//removeD image toggling in favour or src toggling, this linebecame defunct justin 20110607
+					//this.imagetwo.setAttribute('smartsrc',this.pic2source);
+					
+					this.setAttribute("picsources",(this.pic1source + "," + this.pic2source).split(','));
+					this.setAttribute("picsourcecount",this.picsources.length);
+					this.setAttribute("currentpicsource",0);
+				}else{
+					this.setAttribute("picsources",null);
+					this.setAttribute("picsourcecount",0);
+				}
+				//deebug("this.picsourcecount:" + this.picsourcecount);
+				]]>
+	</method>
+				
+		<!-- The constraint method that gets called when the setings -->		
+		<method name="doConstraint" args="ignore" >
+		<![CDATA[
+			//if we have a constraint prop
+			if(this.constraintProp != ''){
+				//and if it looks like a property
+				if(this.constraintProp.indexOf('ZA') == 0 || this.constraintProp.indexOf('XA') == 0){
+					deebug("showing contraint:" + this.constraintProp);
+					//fetch value and set it to our image
+					var thesrc = settings.getProperty(this.constraintProp);
+					if (thesrc!='0' && thesrc != 'false'){
+						this.imageone.setAttribute('smartsrc', thesrc );
+					}
+				}
+			}	
+	]]>			
+		</method>
+				
+				
+				
+</class>
+
+<!-- A single frame of a button state this.picsource-->
+<!-- specify an alternative image and speed to have gif style animation
+ set the alt image source to 'blank' to have a hide the first image effect-->
+<class name="imageframe" extends="touchframe">
+	<attribute name="pic1source"/>
+	<attribute name="pic2source"/>
+	<attribute name="picspeed"/>
+	<attribute name="pic1visible" value="true"/>
+	<attribute name="constraintProp" value="''" />
+	<smartimage name="imageone" sloader="${superloader}" width="${parent.width ? parent.width : null}" height="${parent.height ? parent.height : null}" stretches="both" visible="true"/>
+	<smartimage name="imagetwo" sloader="${superloader}" width="${parent.width ? parent.width : null}" height="${parent.height ? parent.height : null}" stretches="both" visible="${!parent.imageone.visible}" />
+	<handler name="oninit">
+		<![CDATA[
+		this.setupImage();
+		]]>
+	</handler>
+	<handler name="loopevent" reference="this.qholder.thegameloop" args="thespeed">
+		if(this.pic2source){
+			if (thespeed == this.picspeed){
+				this.setAttribute("pic1visible", !this.pic1visible);
+			}
+		}
+	</handler>
+	<handler name="ondata">
+		<![CDATA[
+		this.setupImage();
+			]]>
+	</handler>
+	<method name="setupImage" args="ignore=null">
+			<![CDATA[
+			
+				/*This is a little complex because we need to add a constraint and property
+				getting code, if the image url is actually a property call. We only bother to do this for image1		
+				We may have to get more tricky because the constraint will not recognise change in settings property
+				only settings object itself I think ...	
+				
+			
+				//if we had a constraint before, we would like to remove that now
+				if(this.constraintProp != ''){
+					this.releaseConstraintMethod("doConstraint");
+					this.setAttribute("constraintProp",'');
+				}
+				*/
+			
+				//if the pic1source passed in is reall a system or temp property name
+				//then we try and replace with the value of that property
+				//We ZA naming convention as a temp property (not saved to storage) and XA as system property		
+				if(this.pic1source && typeof this.pic1source=='string' && ( this.pic1source.indexOf('ZA') == 0 || this.pic1source.indexOf('XA') == 0)){
+					this.applyConstraintMethod("doConstraint", [settings,this.pic1source]);					
+					//this.applyConstraintMethod("doConstraint", [settings,this.pic1source]);
+					this.setAttribute("constraintProp",this.pic1source);
+					this.pic1source = settings.getProperty(this.pic1source);
+				}
+				
+				//This is the standard setting of url to our images
+				if (this.pic1source && this.pic1source!='0' && this.pic1source!='false'){
+					this.imageone.setAttribute('smartsrc', this.pic1source);
+					//pooling rmnants may see this set to false at init of button so hwere we set to true
+					this.imageone.setAttribute('visible',true);
+				}
+				if(this.pic2source ){
+					this.imagetwo.setAttribute('smartsrc',this.pic2source);
+				}
+				]]>
+	</method>
+				
+		<!-- The constraint method that gets called when the setings -->		
+		<method name="doConstraint" args="ignore" >
+		<![CDATA[
+			//if we have a constraint prop
+			if(this.constraintProp != ''){
+				//and if it looks like a property
+				if(this.constraintProp.indexOf('ZA') == 0 || this.constraintProp.indexOf('XA') == 0){
+					deebug("showing contraint:" + this.constraintProp);
+					//fetch value and set it to our image
+					var thesrc = settings.getProperty(this.constraintProp);
+					if (thesrc!='0' && thesrc != 'false'){
+						this.imageone.setAttribute('smartsrc', thesrc );
+					}
+				}
+			}	
+	]]>			
+		</method>
+				
+				
+				
+</class>
+
+<!-- A button whose visible state alters on clicked -->
+<!-- opacity="${this.enabled ? 1.0 : 0.6}" bgcolor="${this.enabled ? null: '0x000000'}"   -->
+<class name="actionbutton" extends="transitionview">
+	<attribute name="currentstate" value="0" />
+	<attribute name="title" value="null" />
+	<attribute name="framecount" value="0" />
+	<attribute name="audpath" value="null"/>
+	<attribute name="timer" value="null" />
+	<attribute name="qholder" value="null" />
+	<attribute name="islive" type="boolean" />
+	<attribute name="bumpDel" />
+	<attribute name="qname" />
+	
+	<!-- this is a type -->
+	<attribute name="type" value="null" />
+	
+	<attribute name="cantoggle" value="'no'" />
+	<attribute name="systemproperty"  />
+
+	<attribute name="slot" value="false" />
+	
+	<attribute name="animTime" value="0"/>
+	<attribute name="endX" />
+	<attribute name="endY" />
+	<attribute name="startX" />
+	<attribute name="startY" />
+	
+	<attribute name="intX" />
+	<attribute name="intY" />
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+	
+	<!-- we need the intermediate x and y because otherwise the animator will increment the translated coords, not the % coords -->
+	<handler name="onintX">
+		this.setAttribute("x",intX);
+	</handler>
+	<handler name="onintY">
+		this.setAttribute("y",intY);
+	</handler>
+	
+	<setter name="x" args="newX">
+		<![CDATA[
+		//SWF10 doesnt recognise this.qholder but dhtml does? so used parent.qholder
+		if(newX!=null && parent.qholder!=null && !this.absolute){
+			super.setAttribute("x", parent.qholder.fetchX(newX));
+			//deebug("x:"  + x + ":" + newX);
+		}else{
+
+			super.setAttribute("x", newX);
+		}
+		]]>
+	</setter>
+	<setter name="y" args="newY">
+		<![CDATA[
+		//SWF10 doesnt recognise this.qholder but dhtml does? so used parent.qholder
+		if (newY!=null && parent.qholder!=null && !this.absolute){
+			super.setAttribute("y", parent.qholder.fetchY(newY));
+			//if (y==0){deebug("y:0:" + newY);}
+		}else{
+			super.setAttribute("y", newY);
+		}
+		]]>
+	</setter>
+
+	
+	
+	<!-- Set up the sound on click -->
+	<!-- simpleaudionode is too unstable. canned it.
+	-->
+	<!-- audionode name="audioclick" useresources="$once{superloader.useresources}" audiosrc="${parent.audpath}" autoplay="false" loopplay="false" mute="${classroot.qholder.settings.XAplaysoundfx!='yes'}" -->
+	<simpleaudionode name="audioclick" useresources="$once{superloader.useresources}" audiosrc="${parent.audpath}" autoplay="false" loopplay="false" mute="${classroot.qholder.settings.XAplaysoundfx!='yes'}" />	
+	
+	<!-- When data arrives, reset the current state -->	
+	<handler name="ondata">
+		<![CDATA[
+		//we do this because otherwise it may retain the previous questions state
+		this.setAttribute("currentstate", 0);
+		//Debug.write("currentstate reset:",this.name);
+					
+		]]>
+	</handler>
+	
+	<!-- The onstarted and the onstopped events are generated by the question! -->
+	<!-- They are not animation events. They are "question went live/not live" notifications -->
+	<handler name="onstarted" reference="this.parent">
+	<![CDATA[
+			
+			//If the button exists but is not live due to being unneeded in this pooling round
+			//then we want to just exit quietly
+			if(this.isdetatchedclone){
+				//deebug(this.title + " detclone start: animTime:" + this.animTime);
+				return;
+			}
+			
+			//set our islive flag
+			this.setAttribute("islive",true);
+			
+			//set up our delegate for handling auto frame jumps if timer attribute is set
+			if (this.timer !=null && this.timer != 'undefined'){
+				lz.Timer.addTimer( this.bumpDel, this.timer);		
+			}
+			
+			//here we determine the initial button state
+			//--1--
+			//this is for syncing the initial state of a system property button with its system property
+			//assumes if system property is set, bstate:0  = property:yes, bstate:1 = property:no
+			//because will apply bstate to system property if clicked. 
+			//So if it says "yes" then click should make it no. Hence the bstate of the yes button is 0 and no button is 1
+			if (this.systemproperty){
+				deebug("systemproperty:" + this.systemproperty);
+				var usestate = this.qholder.settings.getProperty(this.systemproperty);
+				deebug("usestate:" + usestate);
+				if(usestate == 'no'){
+					if (this.currentstate != 1){
+						this.setAttribute("currentstate",1);
+						//deebug("set button:" + this.systemproperty + ":" + this.currentstate);
+					}
+				}else{
+					if (this.currentstate != 0){
+						this.setAttribute("currentstate",0);
+						//deebug("set button:" + this.systemproperty + ":" + this.currentstate);
+					}
+				}
+			//if not a system propertty ..
+			//--2--
+			// evaluate the frame to show depending on conds 99=disabled 50=hidden
+			//else reset to zero incase a pooling remnant has it at non zero
+			}else if(this.slot){
+				//deebug("thecond:" + this.slot);
+				var propvalue=this.qholder.evalCondition(this.slot)
+				//deebug("thepropvalue:" + propvalue);
+				this.setAttribute("currentstate",propvalue);
+			}else{
+				this.setAttribute("currentstate",0);
+			}
+			
+			
+			//if we are animating do that now
+			if(this.animTime && this.animTime>0){
+				if(!this.animTime){this.animTime=0;}
+					this.setAttribute("transdur",this.animTime);
+					this.setTranslateAttr(this.endX,this.endY);
+				
+			//we have strange translate remnant problems, mainly on non anims 
+			//overwritting anims. here we try to deal with that 
+			}else{
+				this.forceZeroTranslate();
+			}
+			]]>
+	</handler>
+	
+	<!-- The onstarted and the onstopped events are generated by the question! -->
+	<!-- They are not animation events. They are "question went live/not live" notifications -->
+	<handler name="onstopped" reference="this.parent">
+		<![CDATA[
+		
+		
+			//set our islive flag
+			this.setAttribute("islive",false);
+		
+			//If the button exists but is not live due to being unneeded in this pooling round
+			//then we want to just exit quietly
+			if(this.isdetatchedclone){
+				return;
+			}
+			
+		
+			//if we have already animated in, lets reset in case they come back ..
+			if(this.animTime && this.animTime>0){
+				///deebug(this.title + " :resetting startx:" + this.x + ":" + this.startX);
+				//deebug(this.title + " :resetting starty:" + this.x + ":" + this.startY);
+				this.resetTranslateAttr(this.startX,this.startY);
+				
+				
+			}
+		]]>
+	</handler>
+	
+	<!-- When data arrives, reset the current state -->	
+	<handler name="oninit">
+		//Debug.write("question view inited");
+		if( typeof this.bumpDel == "undefined" )  {
+			this.bumpDel = new lz.Delegate( this, "bumpState"); 
+		}
+		//Add a tap event to this 
+		//lz.Browser.loadJS("document.getElementByName('" + this.id + "').addEventListener('touchstart'," + this.id + ".touchStart,false);");
+	</handler>
+	
+	<!-- Handle a user tap ie do action and play sound -->	
+	<!-- plays sound onmousedown(event arrives twice .. but not onclick .?! -->	
+	<!-- onmouseover works best for phone, but onclick for flash and safari -->	
+	<switch>
+	 <when property="$dhtml">								
+		<handler name="onclick" >
+			<![CDATA[
+				this.doTap();
+			]]>	
+		</handler>
+	 </when>
+	 <otherwise>
+		<handler name="onclick" >			
+			<![CDATA[
+				this.doTap();
+			]]>		
+		</handler>
+	 </otherwise>
+	</switch>
+	
+	<!-- Method to be called from delegate to bump up a state -->
+	<method name="bumpState" args="ignore=null">
+		<![CDATA[
+		//disabled the currentstate=0 requirement
+		//if (this.currentstate==0){
+			//play sound 
+			this.dosound();		
+			//Debug.write("currentstate", this.currentstate);	
+						
+			//alter frame if that option is available			
+			if(this.currentstate < (this.framecount)){
+				this.setAttribute("currentstate",this.currentstate +1);
+			}else if(this.cantoggle=="yes"){
+				this.setAttribute("currentstate",0);
+			}
+			]]>
+
+	</method>
+	
+	<!-- Handle a user tap ie do action and play sound -->	
+	<method name="doTap">
+			<![CDATA[	
+			//printtime("dotap");
+			//play sound 
+			//right now a subsequent click or next action will negate this
+			//return if we are in a non click state
+			
+			//20110721 removed the currentstate restriction for more flexibility
+			//if(!parent.canclick || this.currentstate>50)return;
+			if(!parent.canclick)return;
+			
+			//started calling bumpstate so disabled the soundcall here Jan21st
+			//this.dosound();
+			//this.bumpState();		
+	
+			
+			//fetch the current frame before we bump it up
+			//parent.doaction(this.subviews[this.currentstate + 1].action,this.subviews[this.currentstate + 1].args);
+			var theframe = this.searchSubviews('bstate',this.currentstate);
+			
+			//bump to next frame if required, currentstate will change here
+			this.bumpState();
+			
+			//determine action and go
+			if(theframe){
+				//this will give us any actiondescribed in attribute 'action'
+				if (theframe.action){
+					//deebug("action:" + theframe.action);
+					parent.doaction(theframe.action,theframe.args);
+				}
+				
+				//this will do all the actions described in action tags
+				if(theframe.actions.clones){
+					//if multiple actions described
+					var iAction;
+					for (iAction in theframe.actions.clones){
+						//deebug("doing action:" + theframe.actions.clones[iAction].type);
+						parent.doaction(theframe.actions.clones[iAction].type,theframe.actions.clones[iAction].args);
+						//Debug.inspect(theframe.actions.clones[iAction]);
+					} 			
+				}else if(theframe.actions.type){
+					//if a singular action described
+					parent.doaction(theframe.actions.type,theframe.actions.args);
+					//Debug.inspect(theframe.actions);
+				}
+			}
+			
+			//alter frame if that option is available
+			//changed this to call  bumpstate  from above action stuff :Jan 21st
+			/*			
+			if(this.currentstate < (this.framecount)){
+				this.setAttribute("currentstate",this.currentstate +1);
+			}else if(this.cantoggle=="yes"){
+				this.setAttribute("currentstate",0);
+			}
+			*/
+	
+			]]>	
+	 </method> 
+	
+	<!-- We play the sound -->
+	<method name="dosound" >	
+	<![CDATA[
+	//printtime("dosound");
+		//Debug.write("playing sound");
+		/* canned local playing of audio to minimize crashes. 
+		* For local level audio us this. Its faster, slightly
+		*/
+		if(this.audioclick != null){
+			//deebug("audpath:" + this.audpath);
+			//deebug("audiosrc:" + this.audioclick.audiosrc);
+			if (this.audpath != this.audioclick.audiosrc){
+					//deebug("setting audiosrc:");
+					this.audioclick.setAttribute("audiosrc",this.audpath);
+			}
+			this.audioclick.play();
+		}
+		
+		/* For top level audio, use this, ie if you get crashes or disappearing text
+		if(this.audpath != null && this.audpath != ''){
+			this.qholder.soundfxaudio.setAttribute("audiosrc",this.audpath);
+			this.qholder.soundfxaudio.play();
+		}
+		*/
+		]]>
+	</method>			
+	
+	
+
+	<!-- 
+   <animatorgroup name="animIn" start="false" process="simultaneous">
+		<animator attribute="intX" from="${classroot.startX}" to="${classroot.endX}" duration="${classroot.animTime}" motion="easeout"/>
+		<animator attribute="intY" from="${classroot.startY}" to="${classroot.endY}" duration="${classroot.animTime}" motion="easeout"/>
+  </animatorgroup>
+  -->
+
+
+
+</class>
+
+<!-- An item like a button but which doesnt respond to a click -->
+<class name="staticelement" extends="actionbutton">
+	<!-- Handle a user tap. In this case do nothing -->	
+	<method name="doTap">
+			<![CDATA[	
+				deebug("do nothing");
+			]]>
+	</method>
+</class>
+
+
+
+<!-- An alternative textbox for the default which fails on the iphone ondata -->	
+<class name="itext" extends="view" >
+		<attribute name="innertext"  value="null"/>	
+		<!-- we call this qholder, but it is really one up sometiomes ..don't rely on it! -->
+		<!-- the timing thing screwed countdown text so we used one up -->
+		<attribute name="text" value="''" />
+		<attribute name="constraintProp" value="''" />
+		<attribute name="restoretext" value="''" />
+		<inputtext name="theText"  align="center" textalign="center" font="${parent.font ? parent.font : 'sans'}" fontsize="${parent.fontsize ? parent.fontsize : 8}" fontstyle="${parent.fontstyle ? parent.fontstyle : 'plain'}" fgcolor="${parent.fgcolor ? parent.fgcolor : 0}" enabled="true" resize="true" />		
+		<view name="clickfetcher" x="${parent.theText.x}" y="${parent.theText.y}"
+			height="${parent.theText.height}" width="${parent.theText.width}" onclick="classroot.parent.onclick.sendEvent()" >
+			<handler name="onclick">
+				if(classroot.parent.parent instanceof lz.actionbutton){
+						//deebug("actionbutton instanceo");
+						classroot.parent.parent.doTap();
+					}else if(classroot.parent.parent.parent instanceof lz.actionbutton){
+						classroot.parent.parent.parent.doTap();
+					}
+			</handler>
+		</view>
+		<setter name="width" args="newW">
+			<![CDATA[
+				super.setAttribute("width", this.fetchW(newW));
+			]]>
+		</setter>
+		<setter name="fontsize" args="newvalue">
+			super.setAttribute("fontsize",fetchF(newvalue));
+		</setter>
+		<setter name="fgcolor" args="newvalue">
+			newvalue = Number(newvalue);
+			if(!newvalue) newvalue=0;
+			super.setAttribute("fgcolor",newvalue);
+		</setter>
+		<!-- Fetch Width -->
+		<method name="fetchW" args="rawW">
+			<![CDATA[
+			if(!rawW || rawW == 0){
+				return null;
+			}else{
+				return (Math.round(rawW / 100 * mainpanel.width));
+			}
+			]]>
+		</method>
+		<!-- Fetch Fontsize -->
+		<method name="fetchF" args="rawF">
+			<![CDATA[
+			if(!rawF ) return 16;
+			if(mainpanel){
+				var theheight = mainpanel.height;
+			}else{
+				var theheight = canvas.height;
+			}
+			
+			//iphone 320
+			if (theheight < 500){
+				switch(Number(rawF)){
+					case 1: return 8;
+							break;
+					case 2: return 16;
+							break;
+					case 3: return 24;
+							break;
+					case 4: return 28;
+							break;
+					case 5: return 32;
+							break;
+					case 6: return 36;
+							break;
+					case 7: return 40;
+							break;
+					case 8: return 44;
+							break;
+					case 9: return 48;
+							break;
+					default: return 28;	
+					}
+			//ipad 768	
+			}else if(theheight < 800){
+				switch(Number(rawF)){
+					case 1: return 16;
+							break;
+					case 2: return 28;
+							break;
+					case 3: return 48;
+							break;
+					case 4: return 64;
+							break;
+					case 5: return 76;
+							break;
+					case 6: return 84;
+							break;
+					case 7: return 92;
+							break;
+					case 8: return 100;
+							break;
+					case 9: return 108;
+							break;
+					default: return 28;	
+				}
+			
+			
+			//desktop 1024
+			}else{
+				switch(Number(rawF)){
+					case 1: return 32;
+							break;
+					case 2: return 48;
+							break;
+					case 3: return 64;
+							break;
+					case 4: return 76;
+							break;
+					case 5: return 84;
+							break;
+					case 6: return 92;
+							break;
+					case 7: return 100;
+							break;
+					case 8: return 108;
+							break;
+					case 9: return 116;
+							break;
+					default: return 28;	
+				}
+
+			}
+			
+			
+			]]>
+		</method>
+
+		
+
+		
+		<!-- Here we pretend to be a textbox so we can call applyData -->
+		<handler name="ontext">
+			<![CDATA[
+			var sometext = this.text;
+			if(sometext && typeof sometext=='string' &&( sometext.indexOf('ZA') == 0 || sometext.indexOf('XA') == 0)){
+				deebug("constrainting it:" + this.text);
+				this.applyPropertyConstraint(sometext);
+			}else{
+				this.theText.setAttribute("text",sometext);
+			}
+			]]>
+		</handler>
+		
+		<!-- we override applyData to chek for and handle special data(ie constraints)-->
+		<method  name="applyData" args="v">
+			<![CDATA[
+				if (!v)return;
+				var sometext = v;
+				if(sometext && typeof sometext=='string' &&( sometext.indexOf('ZA') == 0 || sometext.indexOf('XA') == 0)){
+					deebug("constrainting it:" + this.text);
+					this.applyPropertyConstraint(sometext);
+				}else{
+					this.theText.setAttribute("text",sometext);
+					this.setAttribute("text",sometext);
+				}
+			]]>
+		</method>
+		<!-- consraints can be applied to this text box from outside sources incl. canvas and data settings -->
+		<method  name="applyPropertyConstraint" args="daproperty">
+		<![CDATA[
+				//if we are already listening to this constraint, just bail
+				if(this.constraintProp == daproperty ){
+					return;
+				}
+				
+				//if we had a constraint before, we would like to remove that now
+				if(this.constraintProp != '' ){
+					this.releaseConstraintMethod("doConstraint");
+					this.setAttribute("constraintProp",'');
+				}
+			
+				
+				//if the text passed in is reall a system or temp property name
+				//then we try and replace the text the with the value of that property
+				//We ZA naming convention as a temp property (not saved to storage) and XA as system property
+				//we also need to apply a constraint so timers and realtime changes are propagated	
+					//deebug("daproperty:" + daproperty);
+				if(typeof daproperty=='string' &&( daproperty.indexOf('ZA') == 0 || daproperty.indexOf('XA') == 0)){
+					//deebug("got a property at itext:" + daproperty);					
+					this.applyConstraintMethod("doConstraint", [settings,daproperty]);
+					this.setAttribute("constraintProp",daproperty);
+					var davalue = settings.getProperty(daproperty);
+					
+					//set it to the text box				
+					this.theText.setAttribute("text",davalue);
+					
+					//set it to this values text, for app read purposes
+					this.setAttribute("text",davalue);
+					
+					deebug("setvalue:" + davalue);
+ 				}else{
+					//no constraint just set the text to the textbox
+					this.theText.setAttribute("text",daproperty);
+					this.setAttribute("text",daproperty);
+					deebug("settext:" + daproperty);
+				}
+				
+			]]>
+		</method>
+		<method name="doConstraint" args="ignore" >
+			//if we have a constraint prop
+			if(this.constraintProp != ''){
+				//and if it looks like a property
+				if(this.constraintProp.indexOf('ZA') == 0 || this.constraintProp.indexOf('XA') == 0){
+					//fetch value and set it to our text box
+					this.theText.setAttribute("text", settings.getProperty(this.constraintProp));
+				}
+			}			
+		</method>
+	
+</class>
+
+
+</library>

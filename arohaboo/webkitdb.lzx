@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<node id="dbnode">
+		<attribute name="dbname" value="'adatabase'" />
+		<attribute name="dbsize" value="'200000'" />
+		<attribute name="dbversion" value="'1.0'" />
+		<attribute name="db" />
+
+		<!-- Variables set after a transaction completes -->
+		<attribute name="rowsaffected" />
+		<attribute name="rowsid" />
+		<attribute name="rowset" />
+		<attribute name="rowcount" />
+		<attribute name="tempsql" />
+		
+		<!--events we pass back to app -->
+		<event name="querydone" />
+		<event name="transactiondone" />
+		
+		<switch>
+			<when property="$dhtml">
+				<handler name="oninit">
+				if(window){
+					if(window.plugins){
+						deebug("opening DB");
+						window.openDatabase(this.dbname, this.dbversion, this.dbname, this.dbsize);
+					}
+				}
+				</handler>
+				<method name="executeSQL" args="somesql">
+					//store sql for use by doExec
+					this.tempsql=somesql;
+					
+					//Clear the results of prev operations
+					this.rowsaffected = 0;
+					this.rowsid = null;
+					this.rowcount = 0;
+					this.rows=null;
+					
+					db.transaction(dbnode.doExecute,dbnode.execError, dbnode.execSuccess);
+				</method>
+				<method name="querySQL" args="ignore=null">
+					//store sql for use by doQuery
+					this.tempsql=somesql;
+					
+					//Clear the results of prev operations
+					this.rowsaffected = 0;
+					this.rowsid = null;
+					this.rowcount = 0;
+					this.rows=null;
+					
+					db.transaction(dbnode.doQuery,dbnode.execError, dbnode.execSuccess);
+				</method>
+				
+				<!-- this is the callback method for a set of sql statements that make a transaction -->
+				<!-- We put the sql to be executed into tempsql when we called the callback. 
+						tempsql is an array of statements -->
+				<method name="doExecute" args="tx">
+					if(tempsql){
+						for (asql in tempsql){
+							tx.executeSql(tempsql[asql]);
+						}
+					}else{
+						deebug("WARNING: no sql in tempsql");
+					}
+				</method>
+				<method name="doQuery" args="tx">
+					 tx.executeSql(tempsql, [], dbnode.querySuccess, dbnode.execError);
+				
+				</method>
+				
+				<!-- These store the results of the exec/query and notify app of completion -->
+				<method name="querySuccess" args="tx,results">
+					 this.rowcount = results.rows.length();
+					 this.rows=results.rows;
+					 this.transactiondone.sendEvent();
+					 this.querydone.sendEvent();
+				</method>
+				<method name="execSuccess" args="tx,results">
+					this.rowsaffected = results.rowAffected;
+					this.rowsid = results.insertId;
+					this.transactiondone.sendEvent();
+				</method>
+			</when>
+			<!-- For SWF sqllite is unavailable: We just provide stubs -->
+			<otherwise>
+				<method name="executeSql" args="ignore=null">
+						deebug("swf executeSql Called");
+				</method>
+				<method name="querySql" args="ignore=null">
+						deebug("swf querySql Called");
+				</method>
+			</otherwise>
+		</switch>
+	 
+	 
+	 </node>
+

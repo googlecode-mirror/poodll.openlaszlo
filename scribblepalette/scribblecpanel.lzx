@@ -20,6 +20,7 @@
 <attribute name="buttonheight" value="90" />
 <attribute name="showsubmitbutton" value="false" />
 
+
 	
 <!--The layout -->	
 <simplelayout axis="y" spacing="5" />
@@ -98,13 +99,16 @@
 				}
 			</handler>
 </poodllbigbutton>
+<attribute name="adjustsize" value="0"/>
+ <animator name="sizeanimate" attribute="adjustsize" from="-4" to="4" duration="1500" repeat="Infinity" start="false" /> 
 <poodllbigbutton name="saveButton" 
+				fontheight="20"
 				text="Save" 
 				visible="${classroot.showsubmitbutton}"
-				height="40"
+				height="${40 +  (parent.adjustsize * parent.adjustsize)}"
 				enabled="true"
 				resourcename="save_button"
-				width="${parent.thecolorpalette.width}" 
+				width="${parent.thecolorpalette.width + (parent.adjustsize * parent.adjustsize)}" 
 				x="${(parent.width - this.width) /2}"
 				y="${(parent.height - this.height)}"
 				options="ignorelayout">

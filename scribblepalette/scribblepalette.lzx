@@ -49,6 +49,10 @@
 <!-- the rtmpc we use to connect to server -->	
 <attribute name="rtmpc" value="null" />
 
+<!-- attribute to indicate we have saved or not -->	
+<attribute name="saved" value="true" />
+
+
 <!-- the dataset that will hold all the points. Gets big! -->	
 <!-- a single point looks like this -->	
 <!-- line a="29" b="44" x="29" y="150" color="0xFF0000" linewidth="5" -->

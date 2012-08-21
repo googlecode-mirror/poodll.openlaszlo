@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<canvas>
+		
+		<include href="lz"/>
+		<include href="incubator/roundrect.lzx" />
+		<!-- includes : the flv/mp3 player component-->
+		<include href="uniplayerlib.lzx"/>
+		
+		<!-- The border color -->
+		<attribute name="playerbordercolor" value="0x0000FF" />
+
+		<!-- The border width -->
+		<attribute name="playerborderwidth" value="1" />
+		
+		<!-- The border width -->
+		<attribute name="autoplay" value="$once{lz.Browser.getInitArg('autoplay')=='true'}" />
+		
+		<!-- The background color -->
+		<attribute name="playerbackcolor" value="0x9abce5" />
+		
+		<!-- The font color -->
+		<attribute name="playerfontcolor" value="0x550000" />
+				
+		<!-- Have started -->
+		<attribute name="havestarted" value="false" />
+		<attribute name="havefinished" value="false" />
+		
+		<!-- The URL of the audio file (flv or mp3) -->
+		<attribute name="src" value="lz.Browser.getInitArg('src')" />  
+		
+		
+
+	<roundrect align="center" name="maincontainer" width="${parent.width -10}" height="${parent.height - 10}" 
+					backgroundStartColor="0xEEEEEE"
+					backgroundStopColor="0xDDDDDD"
+					borderColor="#0000FF"
+					borderWidth="5"					
+					>	
+				<simplelayout axis="y" spacing="5" />
+
+					<text align="center"  fontsize="${canvas.height * 0.2}" fgcolor="${canvas.havestarted ? '0x0000FF' : '0xFF0000'}" name="instruction" text="${canvas.havestarted ? (canvas.havefinished ? 'Finished' : 'Playing') : 'Click to Start'}" >
+						<handler name="onclick">
+								if(!canvas.havestarted){
+									parent.uplayer.playTrack();
+									canvas.setAttribute("havestarted",true);
+								}
+						</handler>
+					</text>
+					<!-- text align="center" fontsize="${canvas.height * 0.08}" fgcolor="0x0000FF" name="currentfile" text="${canvas.currentfilename}" -->
+					<!--
+					<view name="volumeview" align="center" bgcolor="0xCCCCCC" >
+						<simplelayout axis="x" />
+						<text name="volumelabel" valign="middle" text="Volume: " />
+						<slider name="volumebutton" 
+							enabled="${canvas.currentindex!=0}"
+							valign="middle"
+							width="40" 
+							value="5" 
+							maxvalue="10" 
+							minvalue="0" 
+							showrange="false"
+							showvalue="false" 
+							showfill="true" >
+							<handler name="onvalue">
+								parent.parent.audioplayer.vslider.setAttribute("volume",this.value);
+							</handler>
+						</slider>
+					</view>
+					-->
+
+			<!-- the audio Player-->
+			<uniplayer name="uplayer" src="${canvas.src}" >
+				<handler name="onnow_playing">
+					if(this.now_playing){
+						canvas.setAttribute("havestarted",true);
+					}else if(canvas.havestarted){
+						canvas.setAttribute("havefinished",true);
+					}
+				</handler>
+			</uniplayer>
+		</roundrect>
+
+    
+</canvas>
+<!-- * X_LZ_COPYRIGHT_BEGIN ***************************************************
+* Copyright 2006 Laszlo Systems, Inc. All Rights Reserved.                    *
+* Use is subject to license terms.                                            *
+* X_LZ_COPYRIGHT_END ****************************************************** -->
+<!-- @LZX_VERSION@                                                         -->
+

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templateset>
+		 <question template="TL1" qname="@name@" topbgimage="eiken2a1/resources/atexture.jpg"  entryanim="left" qback="start" bgimage="eiken2a1/resources/atexture.jpg" hinttext="Don't do that again">
+            <prompt promptaudio="/audio/eiken2a1/@name@.mp3" prompttext="@prompt@" fcolor="0xFFFFFF" y="0" fsize="2" width="100" bcolor="0x00" />
+            <button name="abutton" clicksound="button9" framecount="0" starty="5" startx="5">
+                  <frame type="text"  fsize="5" fcolor="0xFF00" ftext="@a@" bstate="0" >
+						<action type="back" />
+                  </frame>
+            </button>
+            <button name="bbutton" clicksound="button9" framecount="0" starty="25" startx="5">
+                  <frame type="text"  fsize="5" fcolor="0xFF" ftext="@b@" bstate="0" >
+						<action type="back" />
+                  </frame>
+            </button>
+            <button name="cbutton" clicksound="button9" framecount="0" starty="45" startx="5">
+                  <frame type="text"  fsize="5" fcolor="0x330033" ftext="@c@" bstate="0" >
+						<action type="back" />
+                  </frame>
+            </button>
+            <button name="dbutton" clicksound="button9" framecount="0" starty="65" startx="5">
+                  <frame type="text" fsize="5" fcolor="0xFF0222" ftext="@d@" bstate="0">
+                        <action type="back" />
+                  </frame>
+            </button>
+			 <button name="Zbutton" clicksound="button9" framecount="0" starty="55" startx="12">
+				<frame type="text"  fsize="5" fcolor="0xFF" ftext="@Z@" bstate="0" >
+						<action type="pausenext" args="200" />
+                </frame>                  
+            </button>
+			
+      </question>
+
+</templateset>

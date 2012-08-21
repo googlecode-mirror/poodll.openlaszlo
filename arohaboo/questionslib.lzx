@@ -1,0 +1,953 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	
+<!-- The Single Question and the Question Cache Classes-->
+
+
+<class name="questioncache" >
+		<attribute name="cachesize" value="10" />
+		<attribute name="qholder" />
+		<attribute name="stickyquestions" />
+		<event name="onloadcomplete" />
+		
+		<method name="initCache">
+			if( typeof this.qCache == "undefined" )  {
+				this.qCache = new Array();					
+			}		
+		</method>
+		
+		<method name="pushCache" args="aquestion">
+			if( typeof this.qCache != "undefined" )  {
+				this.qCache.push(aquestion);				
+			}		
+		</method>
+
+		<method name="getCacheIndex" args="qname">
+			var foundIt = false;
+			for (var key in this.qCache) {
+				if (this.qCache[key].qname == qname) {
+					//deebug("found qname:" + qname + ":" + key);
+					foundIt=true;
+					break;
+				}
+			}
+			if(foundIt) {		
+				return key;
+			}else{
+				return -1;
+			}
+		</method>
+			
+
+		<method name="unsetQuestion" args="qname">
+		<![CDATA[
+			//remove a question from the cached questions
+			var key = this.getCacheIndex(qname);
+			if(key ==-1){
+				return null
+			}else{
+				
+				return this.qCache.splice(key, 1)[0];
+			}
+
+			]]>
+		</method>
+		
+		<method name="setQuestion" args="qname">
+		<![CDATA[
+			var newQ = fetchQuestion(qname);
+			//deebug("newQ:next:" + newQ.qnext); 
+			//add a question to the cached questions
+			if(newQ)  {
+				//deebug("preloaded " + qname);
+				//deebug(typeof newQ);
+				this.qCache.push(newQ);
+				return newQ;
+			}else{
+				return null;
+			}
+			]]>
+		</method>
+		<method name="getQuestion" args="qname">
+		<![CDATA[
+			//get a question from the cached questions
+			var key = this.getCacheIndex(qname);
+			if(key ==-1){
+				return setQuestion(qname);
+			}else{
+				return this.qCache[key];
+			}
+			]]>
+		</method>
+		<method name="removeDuplicates" args="thearray">
+			<![CDATA[
+
+				  var i;
+				  var len=thearray.length;
+				  var out=[];
+				  var obj={};
+
+				  for (i=0;i<len;i++) {
+					obj[thearray[i]]=0;
+				  }
+				  for (i in obj) {
+					out.push(i);
+				  }
+				  return out;
+
+			]]>
+		</method>
+		
+		<method name="loadQuestions" args="preloads,currentqname,prevqname">
+		
+		<![CDATA[
+			//It is wise to have some sticky questions preloaded, for options, start etc, 
+			//we don't want to overwrite and remake them all the time
+			if (this.stickyquestions != null){
+					var stickyArray = this.stickyquestions.split(",");
+				}else{
+					var stickyArray= new Array();
+			}
+			
+			//Add stickyqs and any preload qs to our preload array
+			if (!preloads || preloads=='none'){
+				var preloadArray=stickyArray;
+			}else{
+				var preloadArray = preloads.split(",");	
+				preloadArray = preloadArray.concat(stickyArray);
+			}
+			
+			//add currentqname and prevqname
+			if(currentqname && currentqname!='none'){
+				preloadArray.push(currentqname);
+			}
+			if(prevqname && prevqname!='none'){
+				preloadArray.push(prevqname);
+			}
+			
+			//remove any duplicates which there quite possibly will be
+			preloadArray=removeDuplicates(preloadArray);
+			
+			/*
+			deebug("preloadarray count:" + preloadArray.length); 
+			for (var lkey in preloadArray){
+				deebug("peloadkeys:" + lkey + ":" + preloadArray[lkey]);
+			}
+			*/
+			
+			var loadKeysArray = new Array();
+			var qtempArray = new Array();
+			
+			/*
+			deebug("ONE qCache count:" + this.qCache.length); 
+			for (var lkey in this.qCache){
+				deebug("qCache:" + lkey + ":" + this.qCache[lkey].qname);
+			}
+			*/
+			
+			//if we already have a question in cache that doesn't need preloading, shift it to temp
+			//else record the real need to preload
+			for (var key in preloadArray){
+				var cIndex = this.getCacheIndex(preloadArray[key]);
+				if (cIndex > -1){
+					//deebug("stashing for reuuse:" + preloadArray[key]);
+					qtempArray.push(unsetQuestion(preloadArray[key]));
+				}else{
+					loadKeysArray.push(preloadArray[key]);
+				}
+			}
+			/*
+			deebug("TWO qCache count:" + this.qCache.length); 
+			for (var lkey in this.qCache){
+				deebug("qCache:" + lkey + ":" + this.qCache[lkey].qname);
+			}
+			*/
+		/*
+			deebug("temparray count:" + qtempArray.length); 
+			for (var lkey in qtempArray){
+				deebug("tempkeys:" + lkey + ":" + qtempArray[lkey].qname);
+			}
+			
+			deebug("loadKeysArray count:" + loadKeysArray.length); 
+			for (var lkey in loadKeysArray){
+				deebug("lkeys:" + lkey + ":" + loadKeysArray[lkey]);
+			}
+			
+			deebug("qCache count:" + this.qCache.length); 
+			for (var lkey in this.qCache){
+				deebug("qCache:" + lkey + ":" + this.qCache[lkey].qname);
+			}
+			*/
+			//go through the cache reassigning questions xpaths to preload xpaths. If we run out of questions, create new ones.
+			for (var lkey in loadKeysArray){
+				//deebug("preloading:"  + loadKeysArray[lkey]);
+				//if profiling enable this
+				//var startD = Number(new Date().getTime());
+				
+				if(lkey < this.qCache.length){
+					//printtime("x start:" + loadKeysArray[lkey]);
+					//deebug("loading " + loadKeysArray[lkey] + " over " + this.qCache[lkey].qname);
+					//this.qCache[lkey].datapath.setXPath("local:qholder.parent.questions:/questionset/question[@qname='" + loadKeysArray[lkey] + "']/text()");
+					this.qCache[lkey].datapath.setXPath("questions:/questionset/question[@qname='" + loadKeysArray[lkey] + "']/text()");
+					//printtime("x end:" + loadKeysArray[lkey]);
+				}else{
+					//printtime("s start:" + loadKeysArray[lkey]);
+					//deebug("creating new  " + loadKeysArray[lkey]);
+					setQuestion(loadKeysArray[lkey] );
+					//printtime("s end:" + loadKeysArray[lkey]);
+				}
+				
+				//If profiling enable this
+				/*
+				var endD = Number(new Date().getTime());
+				var diff = (endD - startD);
+				deebug( loadKeysArray[lkey] + " loadtime:" + diff); 
+				*/
+			}
+
+			//put the questions we shifted to temp, back into main array
+			while(qtempArray.length > 0){
+			 //deebug("replacing:"  + qtempArray[qtempArray.length-1].qname);
+			 this.qCache.push(qtempArray.pop());
+			}
+			
+			//deebug("qCache count:" + this.qCache.length);
+			
+			//Raise event to alert the current question that it has started
+			//the questions delegate was set in switch question
+			//this is to make the caching and q starting/animation sequential
+			//if superloader never loaded cos all cached, force an alert
+			this.onloadcomplete.sendEvent();
+			if(superloader.loading.length==0){
+				superloader.alertEmpty();
+			}		
+			
+			]]>
+		
+		
+		</method>
+		
+	
+		
+		<method name="fetchQuestion" args="qname">
+			<![CDATA[
+			deebug("qname:" + qname);
+			var newQ = new lz.singlequestion(this.qholder,{
+				"y" :0,
+				"width": parent.width,
+				"height": parent.height,
+				"qholder": classroot.qholder,
+				"visible": false,
+				"font": classroot.qholder.font,
+				"fgcolor": classroot.usefontcolor,
+				"datapath": "questions:/questionset/question[@qname='" + qname + "']/text()"				
+			});
+		
+			
+	
+			if(newQ){
+				newQ.datapath.setAttribute("pooling",classroot.qholder.pooling);			
+			}else{
+				deebug("couldn't make question:" + qname);
+			}
+			
+
+			return newQ;
+			]]>
+		</method>
+
+
+</class>
+
+
+
+		<!--The visible part of a question, contains buttons, prompts text etc -->
+		<class name="singlequestion"  visible="false" extends="transitionview" >
+			
+				<!--the current next and fallback questions names in the dataset -->
+				<attribute name="qname" value="$path{'@qname'}" />
+				<attribute name="qnext" value="$path{'@qnext'}" />
+				<attribute name="qback" value="$path{'@qback'}" />
+				<attribute name="preload" value="$path{'@preload'}" />
+				<attribute name="backcolor" value="$path{'@bgcolor'}" />
+				<attribute name="backimage" value="$path{'@bgimage'}" />
+				<attribute name="hinttext" value="$path{'@hinttext'}" />
+				
+				<!-- added two new properties 20110515 nextsound and backsound -->
+				<!-- to simplify game type success/fail sounds -->
+				<attribute name="nextsound" value="$path{'@nextsound'}" />
+				<attribute name="backsound" value="$path{'@backsound'}" />
+				
+				<!--Are x and y coords abs or percentage based -->
+				<attribute name="absolute" value="false" />
+				
+				<!--if set, sets the top back image, ie behind this question, to the image specified -->
+				<attribute name="topbackimage" value="$path{'@topbgimage'}" />
+				
+				<!-- This matches with action button slot as a key for enablign disabling menu buttons-->
+				<attribute name="slot" value="$path{'@slot'}"/>
+				
+				<!-- A flag to tell use which "next" question we put into the question cache at preloading -->
+				<!-- Only necessary if we intend to do semi random nextquestioning -->
+				<attribute name="cachedqnext" value="''" />
+				
+				<!--A handle on the question container -->
+				<attribute name="qholder" value="null" />
+				
+				<!--Delegate we use to begin audio -->
+				<attribute name="audioPromptDel" />
+				
+				<!--Flag to allow/diallow click events -->
+				<attribute name="canclick" value="false" />
+				
+				<!-- Delegate we use to start off the question -->
+				<attribute name="startQuestionDel" />"
+				<attribute name="stopQuestionDel" />"
+
+				
+				<!--Delegate we use to perform "next" and "back to start" action -->
+				<attribute name="nextDel" />
+				<attribute name="backDel" />
+				
+				<!--Timer info to handle timed actions -->
+				<attribute name="timer" value="$path{'@timer'}" />
+				<attribute name="timerarg" value="$path{'@timerarg'}" />
+				<attribute name="hidetimer" value="$path{'@hidetimer'}" />
+				<attribute name="promptaudiopath" value="$path{'prompt/@promptaudio'}" />
+				
+				<!-- Entry animation  values = in left right up none-->
+				<attribute name="entryanim" value="$path{'@entryanim'}" />
+				<!--The animation duration time(ms)  -->
+				<attribute name="transdur" value="0"/>
+				<attribute name="useTransDur" value="400"/>
+				
+				<!--Attribute to validate a question against button state -->
+				<attribute name="validateIndex" value="0"/>
+				
+				<!--The time(ms) to wait after determination, for the transition -->
+				<attribute name="transitionTime" value="0"/>
+
+				
+				<!-- event to show listeners we have started the question. -->
+				<event name="onstarted" />
+				<event name="onstopped" />
+				
+				<setter name="x" args="newX">
+						<![CDATA[
+						//SWF10 doesnt recognise this.qholder but dhtml does? so used parent.qholder
+						if(newX!=null && this.qholder!=null && !this.absolute){
+							super.setAttribute("x", this.qholder.fetchX(newX));
+							//deebug("x:"  + x + ":" + newX);
+						}else{
+
+							super.setAttribute("x", newX);
+						}
+						]]>
+				</setter>
+				<setter name="y" args="newY">
+						<![CDATA[
+						//SWF10 doesnt recognise this.qholder but dhtml does? so used parent.qholder
+						if (newY!=null && this.qholder!=null  && !this.absolute){
+							super.setAttribute("y", this.qholder.fetchY(newY));
+							//if (y==0){deebug("y:0:" + newY);}
+						}else{
+							super.setAttribute("y", newY);
+						}
+						]]>
+				</setter>
+				
+				
+				
+				<!-- attribute name="prompttexttext" value="$path{'prompt/@prompttext'}" -->
+			
+				
+				<!--The background image : should be able to change this from dataset data really.-->
+				<!-- added the visible condition, cos flash did not renullify a null bg if it has alreqdy been set as a prev q -->	
+				<smartimage name="backgroundimage" smartsrc="${parent.backimage}" sloader="${superloader}"  visible="${this.smartsrc != null}" bgcolor="${parent.backcolor ? Number(parent.backcolor) : null}" stretches="both" width="${parent.width}" oninit="this.sendToBack()" height="${parent.height}" />
+				
+				<!-- Prepare Audio prompt if we have one  -->
+				<!-- audionode name="promptaudio"  audiosrc="${parent.promptaudiopath}" autoplay="false" loopplay="false" mute="${classroot.qholder.settings.XAplayaudioprompt != 'yes'}" -->
+				
+				<!-- Prepare Text prompt if we have one ading a fot here is dodgey font="${parent.font}" -->
+				<itext name="prompttext" datapath="prompt/@prompttext" font="${parent.font}" restoretext="$path{'@prompttext'}" fgcolor="$path{'@fcolor'}" width="$path{'@width'}" bgcolor="$path{'@bcolor'}" fontsize="$path{'@fsize'}" fontstyle="bold" y="$path{'@y'}" visible="${classroot.qholder.settings.XAshowtextprompt=='yes'}"  />
+
+				<!-- Show the option button(s)  -->
+				<!-- Added a type to button so that pooling remnants not required, are also not displayed 
+				ie a text button, sometimes will show the image of a reused image button, if we dont do this -->
+				<!-- added a pic1visible=true so that it is always initialised, otherwise the pic2 image can be displayed as a pooling remnant --> 
+				<actionbutton  title="$path{'@name'}"  type="$path{'frame[1]/@type'}" font="${parent.font}"  slot="$path{'@slot'}" framecount="$path{'@framecount'}" timer="$path{'@timer'}" qholder="${classroot.qholder}" cantoggle="$path{'@cantoggle'}" systemproperty="$path{'@systemproperty'}" audpath="$path{'@clicksound'}" x="${this.startX}" y="${this.startY}" startX="$path{'@startx'}" startY="$path{'@starty'}" endX="$path{'@endx'}" endY="$path{'@endy'}" animTime="$path{'@animtime'}" >
+					<datapath xpath="button" pooling="true" />
+					<panframe type="$path{'@type'}" pic1source="$path{'@src'}" pic1visible="true" pic2source="$path{'@src2'}" picspeed="$path{'@picspeed'}"  width="$path{'@width'}"  height="$path{'@height'}" font="${parent.font}"  ftext="$path{'@ftext'}" fsize="$path{'@fsize'}" fcolor="$path{'@fcolor'}" bstate="$path{'@bstate'}" action="$path{'@action'}" args="$path{'@args'}" qholder="${classroot.qholder}" >
+						<datapath xpath="frame" pooling="true"  />
+					</panframe>
+					
+				</actionbutton>
+				<!-- Show any static elements  -->
+				<staticelement  title="$path{'@name'}" type="$path{'frame[1]/@type'}"  font="${parent.font}"  framecount="$path{'@framecount'}" timer="$path{'@timer'}" qholder="${classroot.qholder}" x="${this.startX}" y="${this.startY}" startX="$path{'@startx'}" startY="$path{'@starty'}" endX="$path{'@endx'}" endY="$path{'@endy'}" animTime="$path{'@animtime'}" >
+					<datapath xpath="static" pooling="true"   />
+					<panframe type="$path{'@type'}" pic1source="$path{'@src'}"  pic1visible="true" pic2source="$path{'@src2'}" picspeed="$path{'@picspeed'}"  width="$path{'@width'}"  height="$path{'@height'}" font="${parent.font}"  ftext="$path{'@ftext'}" fsize="$path{'@fsize'}" fcolor="$path{'@fcolor'}" bstate="$path{'@bstate'}" action="$path{'@action'}" args="$path{'@args'}" qholder="${classroot.qholder}" >
+						<datapath xpath="frame" pooling="true"  />
+					</panframe>
+					
+				</staticelement>
+				<alert name="hintbox" minwidth="250" maxtextwidth="200" fgcolor="0x000000">dont kid me that buttons have a meaning mortals cant fathom</alert>
+
+				<switch>
+					<when property="$dhtml">
+
+						<method name="iap_restore">
+							iapnode.executeRestore();
+						</method>
+						<method name="iap_prodreq" args="productid">
+							var prodinfo = settings.getProperty("ZA" + productid);
+							
+							if(prodinfo == '0'){
+								deebug("actioning prodreq:" + productid);
+								iapnode.executeProdReq(productid);
+							}else{
+								prodinfo = prodinfo.split('|');
+								var title= prodinfo[0];
+								var description = prodinfo[1];
+								deebug("ZAblahblahblah:" + title + ':' + description);
+								deebug("actioning confirm:" + productid);
+								iapnode.executeConfirm(productid,title, description);
+							}
+							
+						</method>					
+					</when>
+					<otherwise>
+
+						<method name="iap_prodreq" args="productid">
+							deebug('iapprodreq_action:' + productid);
+						</method>
+						<method name="iap_restore" >
+							deebug('iaprestore_action:');
+						</method>
+					</otherwise>
+				</switch>
+				
+				<!-- The main action procedure  -->
+				<method name="doaction" args="theaction,args">
+				<![CDATA[
+					//printtime("doaction");
+					switch (theaction){
+						case 'none': return;
+									break;
+									
+						case 'condition': 
+									var next= this.qholder.evalCondition(args);
+									this.qholder.switchQuestion(next,this.transitionTime);
+									if (this.nextsound){
+												this.qholder.nextbackaudio.setAttribute("audiosrc", this.nextsound);
+												this.qholder.nextbackaudio.play();
+									}
+									break;
+								
+						case 'playback': 
+									if (this.backsound){
+												this.qholder.nextbackaudio.setAttribute("audiosrc", this.backsound);
+												this.qholder.nextbackaudio.play();
+									}
+									break;
+						
+						case 'playnext': 
+									if (this.nextsound){
+												this.qholder.nextbackaudio.setAttribute("audiosrc", this.nextsound);
+												this.qholder.nextbackaudio.play();
+									}
+									break;
+						
+						case 'pngproperty': 
+									this.qholder.settings.setProperty(args + "png","resources/" + this.qholder.settings.getProperty(args) + ".png",false);
+									deebug(args + " " + this.qholder.settings.getProperty("args"));
+									break;
+						
+						case 'incproperty': 
+									this.qholder.settings.setProperty(args,Number(this.qholder.settings.getProperty(args))+ 1,false);
+									deebug(args + " " + this.qholder.settings.getProperty("args"));
+									break;
+									
+						case 'decproperty': 
+									this.qholder.settings.setProperty(args,(Number(this.qholder.settings.getProperty(args)) - 1),false);
+									break;
+						
+						case 'systemproperty': 
+									var propdata= args.split(':');
+									//deebug("propdata[0]:" + propdata[0]);
+									//deebug("propdata[1]:" + propdata[1]);
+									this.qholder.settings.setProperty(propdata[0],propdata[1],true);
+									break;
+						
+						case 'tempproperty': 
+									var propdata= args.split(':');
+									//deebug("propdata[0]:" + propdata[0]);
+									//deebug("propdata[1]:" + propdata[1]);
+									this.qholder.settings.setProperty(propdata[0],propdata[1],false);
+									break;
+									
+						case 'systemcommand': 
+									var propdata= args.split(':');
+									//deebug("propdata[0]:" + propdata[0]);
+									//deebug("propdata[1]:" + propdata[1]);
+									switch(propdata[0]){
+										case 'clearall': this.qholder.settings.ld.clear();
+														break;
+										case 'default': break;									
+									}
+									
+						case 'showhint':
+								Debug.write(this.qholder.prevquestion.hinttext);
+								if (lz.Browser.getOS().indexOf('iP')<0){
+									this.hintbox.alerttext.setAttribute("text", this.qholder.prevquestion.hinttext);
+									this.hintbox.open();
+								}else{
+									navigator.notification.alert(this.qholder.prevquestion.hinttext);
+									
+								}
+								
+								break;
+									
+						case 'next': 									
+									this.doNext();
+									break;
+									
+						case 'startbigtimer': 									
+									this.qholder.bigtimer.resetTimer();
+									this.qholder.bigtimer.setAttribute("inittime", args);
+									this.qholder.bigtimer.startTimer();
+									break;
+									
+						case 'resetbigtimer': 									
+									this.qholder.bigtimer.resetTimer();
+									break;
+									
+						case 'loader': 
+									this.qholder.setAttribute("postloaderqname",args);
+									this.qholder.switchQuestion('loader',this.transitionTime);
+									break;
+									
+						case 'prompttext': 
+									this.prompttext.setAttribute("text",args);
+									break;
+						
+						case 'playprompt': 
+									this.beginAudioPrompt();
+									break;
+									
+						case 'promptaudio': 
+									this.setAttribute("promptaudiopath",args);
+									this.prepareAudioPrompt();
+									break;
+									
+						case 'bumpAnother': 
+									var theStatic = this.searchSubviews('title',args);
+									if(theStatic){
+										theStatic.bumpState();
+									}
+									break;
+									
+						case 'pausenext': this.qholder.switchQuestion(this.getNext(),args);
+									if (this.nextsound){
+										deebug("playing next");
+										this.qholder.nextbackaudio.setAttribute("audiosrc", this.nextsound);
+										this.qholder.nextbackaudio.play();
+									}
+									break;
+									
+						case 'iap_prodreq': 
+									this.iap_prodreq(args);
+									break;
+						
+									
+						case 'iap_restore': 
+									this.iap_restore();
+									break;
+									
+						case 'shuffle': 
+									this.qholder.shuffle(args);
+									break;
+															
+						case 'previous': this.doPrev();
+									break;
+									
+						case 'start': this.qholder.switchQuestion("start",this.transitionTime);
+									break;
+						
+						case 'back': this.doBack();
+									break;
+									
+									
+						case 'jump': this.qholder.switchQuestion(args,this.transitionTime);
+									break;
+									
+						case 'seqvalidate': if (this.validateIndex<args){
+											doBack();
+										}else{
+											this.setAttribute("validateIndex",args+1);
+										}
+									break;
+									
+						case 'seqvalidatenext': 
+										//deebug("valindex:args:" + this.validateIndex + ":" + args);
+										if (this.validateIndex<args){
+											this.doBack();
+										}else{
+											this.doNext();
+										}
+									break;
+						case 'grpvalidate': 
+										//deebug("valindex:" + this.validateIndex + ":" + args );
+										if (this.validateIndex<args){
+											this.setAttribute("validateIndex",this.validateIndex+1);
+										}else if(this.validateIndex==args){
+											this.doNext();
+										}else{
+											//presumably we bust, so we got to get out
+											this.doBack();
+										}
+									break;
+						case 'grpvalidatepause': 
+										//deebug("valindex:" + this.validateIndex + ":" + args );
+										if (this.validateIndex<args){
+											this.setAttribute("validateIndex",this.validateIndex+1);
+										}else if(this.validateIndex==args){
+											this.qholder.switchQuestion(this.getNext(),800);
+											if (this.nextsound){
+												this.qholder.nextbackaudio.setAttribute("audiosrc", this.nextsound);
+												this.qholder.nextbackaudio.play();
+											}
+										}else{
+											//presumably we bust, so we got to get out
+											this.doBack();
+										}
+									break;
+						
+						//The default heads up to canvas. though this wont happen often
+						//It is to provide app specific actions.
+						default: canvas.doaction(theaction,args);
+								break;
+						
+					};
+					]]>
+				</method>
+				
+				<!-- Determines the next question. -->
+				<!-- This gets complicated when we cache questions -->
+				<!-- we do this when we are randmosing the next question, so that the question that gets cached
+					is the same one that gets called as the new nowquestion later 
+					because it is important that it doesn't persist as a pooling remnant, we clear it a number of points.					
+				-->
+				<method name="getNext">
+					var usenext='';
+						
+					//if we have a qnext we use it, else we try to determine it.	
+					if(this.qnext){
+							//if the qnext is a list of random options
+							if(this.qnext.indexOf('random:')==0){
+								var optstring = this.qnext.substring(7);
+								var optarray=optstring.split(",");
+								
+								//check if our cachedquestion exists
+								if(this.cachedqnext !=''){
+									for (var akey in optarray){
+										if(optarray[akey]==this.cachedqnext){
+											usenext=this.cachedqnext;
+											this.setAttribute('cachedqnext','');
+											break;
+										}
+									}
+								}else{								
+									//select the next randomly, and cache it, because we are probably preloading now, and want to load same later
+									usenext = optarray[Math.floor(Math.random()* optarray.length)];
+									this.setAttribute('cachedqnext',usenext);
+								}
+									
+							//if the qnext is listerally the next q name
+							}else{
+								usenext=this.qnext;
+							}
+					//if nothign specified we just work it out based on sequence in the xml file	
+					}else{
+							var dp = this.datapath.dupePointer();
+							if(dp.selectNext()){
+								usenext= dp.getNodeAttribute("qname");							
+							
+							}
+					}
+					//deebug("figuredoutqnext:" + usenext);
+					return usenext;
+				</method>
+				
+				<!-- These two are convenience methods to call from delegates and the action procedure  -->
+				<method name="doNext" args="pausetime=0">
+						//sometimes had a strange value come in at pausetime, never passed in anyway
+						//so removed it from switchQuestion call, replaced with transition time
+						this.qholder.switchQuestion(this.getNext(),this.transitionTime);
+						if (this.nextsound){
+								this.qholder.nextbackaudio.setAttribute("audiosrc", this.nextsound);
+								this.qholder.nextbackaudio.play();
+						}
+				</method>
+				<method name="doBack" args="pausetime=0">
+						//sometimes had a strange value come in at pausetime, never passed in anyway
+						//so removed it from switchQuestion call, replaced with transition time
+						this.qholder.switchQuestion(this.qback, this.transitionTime);
+						if (this.backsound){
+								this.qholder.nextbackaudio.setAttribute("audiosrc", this.backsound);
+								this.qholder.nextbackaudio.play();
+						}
+				</method>
+				<method name="doPrev" args="pausetime=0">
+						//sometimes had a strange value come in at pausetime, never passed in anyway
+						//so removed it from switchQuestion call, replaced with transition time
+						this.qholder.switchQuestion(this.qholder.prevactiontarget, this.transitionTime);
+						
+				</method>
+				
+				<method name="startTimer">
+					<![CDATA[
+						//deebug("timer:"+ this.timer);
+						//deebug("timer:"+this.timerarg);
+						if (this.timer !=null && this.timerarg !=null && !this.qholder.parent.disabletimer ){
+							switch(this.timerarg){
+							
+								case 'next':
+										lz.Timer.addTimer( this.nextDel, this.timer);
+										break;
+								case 'back':
+										lz.Timer.addTimer( this.backDel, this.timer);
+										break;
+								case 'previous':
+										lz.Timer.addTimer( this.prevDel, this.timer);
+										break;
+								
+							}
+							
+							//kick off our visible timer.
+							//We could probably combine the functions of the two ...
+							this.qholder.littletimer.resetTimer();
+							this.qholder.littletimer.setAttribute("inittime", this.timer);
+							this.qholder.littletimer.startTimer();
+							//deebug('kickedofftimer');
+		
+						}
+						
+						
+						
+					]]>
+				</method>
+				<method name="prepareAudioPrompt">
+					lz.Timer.addTimer( this.audioPromptDel, 200);
+				</method>
+				<method name="beginAudioPrompt" args="ignore=null">
+						//play from top level
+						//deebug("promptaudiopath:" +  this.promptaudiopath);
+						if (this.promptaudiopath){
+							this.qholder.promptaudio.setAttribute("audiosrc", this.promptaudiopath);
+							this.qholder.promptaudio.play();
+							//deebug("started playing:" +  this.promptaudiopath);
+						}
+						
+					
+						
+				</method>
+				
+				<!-- The StartQuestion method is designed to be called from a delegate
+						to prevent overloading iphone during caching but it could be called manually.
+					-->
+				<method name="startQuestion" args="ignore=null">
+							<![CDATA[		
+					//ensure our menu buton is enabled if we have one and we arrived here (by merit) so we can come back from menu
+					if (this.slot){
+						var propvalue = this.qholder.settings.getProperty(this.slot);
+						if (propvalue=='false'){
+							this.qholder.settings.setProperty(this.slot,'true');
+							deebug("enabled slot:" + this.slot);
+						}
+						
+					}
+					
+					//if we preloaded and flagged the cachedqnext attribute with the name of the next q
+					//in a previous incarnation (ie a pooling remnant) lets clear it here. 
+					//This depends on preload being called AFTER startQuestion. Otherwise we would clear it before we use it at switchquestion
+					this.setAttribute("cachedqnext",'');
+					
+					
+					
+					//If the prompttext was changed via an action previously restore it
+					//deebug("restoretext:" + this.prompttext.restoretext);
+					if(this.prompttext.restoretext && this.prompttext.restoretext !=  this.prompttext.text){
+						this.prompttext.applyData(this.prompttext.restoretext);
+					}
+					
+					//deebug("starting:" +  this.qname);
+					this.onstarted.sendEvent();				
+					this.bringToFront();
+					
+					//If we have a background picture for the top level then lets set that now
+					//This will occur only on the head question in a set.
+					if (this.topbackimage){
+						if (this.qholder.backgroundimage.smartsrc != this.topbackimage){
+							//deebug("changing top bbg image:" + this.topbackimage);
+							this.qholder.backgroundimage.setAttribute("smartsrc", this.topbackimage);
+						}
+					}	
+		
+					
+					//Begin any animations we need
+					//first clear upany animation remnants
+					this.resetTransAttr("x",0);
+					this.resetTransAttr("y",0);
+					this.resetTransAttr("opacity",1);
+
+					
+					if(!this.entryanim){this.setAttribute("entryanim",'none');}
+					switch(this.entryanim){
+				
+						case 'none':this.setAttribute("visible",true);
+									break;
+									
+						case 'in':	
+									this.resetTransAttr("opacity",0);
+									this.setAttribute("visible",true);
+									this.setAttribute("transdur",this.useTransDur);
+									this.setTransAttr("opacity",1);									
+									break;
+									
+						case 'left': 
+									this.setAttribute("visible",true);
+									this.resetTransAttr("x",100);					
+									this.setAttribute("transdur",this.useTransDur);
+									this.setTransAttr("x",0);
+									break;
+									
+						case 'right': 										
+									this.setAttribute("visible",true);
+									this.resetTransAttr("x",-100);
+									this.setAttribute("transdur",this.useTransDur);
+									this.setTransAttr("x",0);																		
+									break;
+									
+						case 'up': this.resetTransAttr("y",100);									
+									this.setAttribute("visible",true);
+									this.setAttribute("transdur",this.useTransDur);
+									this.setTransAttr("y",0);
+									break;
+					
+					}
+					//set flag to allow click events
+					this.setAttribute("canclick",true);
+					
+					this.prepareAudioPrompt();
+					this.startTimer();	
+					]]>			
+				</method>
+				
+				<!-- The StopQuestion method is designed to be called from a delegate
+						in conjunction with start question but it could be called manually.
+					-->
+				<method name="stopQuestion" args="exitanim=null">
+					if( typeof this.startQuestionDel != "undefined" )  {
+						this.startQuestionDel.unregisterAll();
+					}
+					
+					
+					if(exitanim){
+	
+	
+							switch(exitanim){
+								case 'none':
+										//this.setAttribute("visible",false);
+										this.hideQuestion();
+										break;
+								case 'in':
+										this.setAttribute("transdur",this.useTransDur);
+										this.hideQuestionDel.register(this, "transitionover");
+										this.setTransAttr("opacity",0);									
+										break;
+								case 'left': 
+										this.setAttribute("transdur",this.useTransDur);
+										this.hideQuestionDel.register(this, "transitionover");
+										this.setTransAttr("x",-100);									
+										break;
+								case 'right': 
+										this.setAttribute("transdur",this.useTransDur);
+										this.hideQuestionDel.register(this, "transitionover");
+										this.setTransAttr("x",100);										
+										break;
+								case 'up': 		
+										this.setAttribute("transdur",this.useTransDur);
+										this.hideQuestionDel.register(this, "transitionover");
+										this.setTransAttr("y",-100);								
+										break;
+								default: //this.setAttribute("visible",false);
+										this.hideQuestion();
+							
+					
+							}
+							
+							
+							
+					}else{
+						//deebug("no exit anim");
+						this.hideQuestion();
+					}
+					
+					
+					
+					//we raise the onstopped event to reset button positions
+					//if we are transitioning, we want to do that after the question is off screen
+					//so we move this call to the hideQuestion Justin 20110515
+					//this.onstopped.sendEvent();	
+					
+					//This is important, probably no harm in moving it to hideQuestion too
+					//but wait and see    Justin 20110515
+					this.setAttribute("validateIndex",0);					
+				</method>
+				
+				<method name="hideQuestion" args="ignore=null">
+					//deebug("tranny over: hiding question");
+					this.setAttribute("visible",false);
+					this.onstopped.sendEvent();
+					this.hideQuestionDel.unregisterAll();
+					
+				</method>
+
+				<handler name="oninit">
+					//Debug.write("question view inited");
+		
+					if( typeof this.audioPromptDel == "undefined" )  {
+						this.audioPromptDel = new lz.Delegate( this, "beginAudioPrompt"); 
+					}
+					if( typeof this.nextDel == "undefined" )  {
+						this.nextDel = new lz.Delegate( this, "doNext"); 
+					}
+					if( typeof this.backDel == "undefined" )  {
+						this.backDel = new lz.Delegate( this, "doBack"); 
+					}
+					if( typeof this.prevDel == "undefined" )  {
+						this.prevDel = new lz.Delegate( this, "doPrev"); 
+					}
+					if( typeof this.startQuestionDel == "undefined" )  {
+						this.startQuestionDel = new lz.Delegate( this, "startQuestion");
+					}
+					if( typeof this.hideQuestionDel == "undefined" )  {
+						this.hideQuestionDel = new LzDelegate( this, "hideQuestion" );
+					}
+
+					
+					if( typeof this.stopQuestionDel == "undefined" )  {
+						this.stopQuestionDel = new lz.Delegate( this, "stopQuestion");
+					}
+
+					
+
+					
+				</handler>
+		
+				
+</class>
+
+
+
+</library>

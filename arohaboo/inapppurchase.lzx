@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<node id="iapnode">
+		<attribute name="currentproduct" value="''" />
+		
+		
+		<switch>
+			<when property="$dhtml">
+				<handler name="oninit">
+				if(window){
+					if(window.plugins){
+						deebug("registering plugins iapnode");
+						window.plugins.inAppPurchaseManager.onPurchased = iapnode.iap_onPurchased;
+						window.plugins.inAppPurchaseManager.onRestored = iapnode.iap_onRestored;
+						window.plugins.inAppPurchaseManager.onFailed = iapnode.iap_onFailed;
+					}
+				}
+				</handler>
+			</when>
+		</switch>
+		
+		<method name="iap_onPurchased" args="transactionIdentifier=null, productId=null, transactionReceipt=null">
+			deebug("iap_onpurchased:" + productId);
+			//deebug("settings:" + 'XA' + productId);
+			//deebug("settings:" + settings.getProperty('XA' + productId));
+			settings.setProperty('XA' + productId,'true',true);
+			mainpanel.qholder.switchQuestion('start',0);
+			//deebug("settings:" + settings.getProperty('XA' + productId));
+		</method>
+		<method name="iap_onRestored" args="origTransactionIdentifier=null, productId=null, origTransactionReceipt=null">
+			settings.setProperty('XA' + productId,'true',true);
+			mainpanel.qholder.switchQuestion('start',0);
+		</method>
+		<method name="iap_onFailed" args="errorCode=null, errorText=null">
+			deebug("iap_onfailed");
+		</method>
+		<method name="iap_requestProductDataFail" args="productId=null">
+			deebug("productId failed:" + productId);
+			//hide spinner
+			navigator.notification.loadingStop();
+		</method>
+		<method name="iap_requestProductDataSuccess" args="productId=null, title=null, description=null, price=null">
+			deebug("productId :" + productId + " title:" + title + " descr:" + description + " price:" + price);
+			//hide spinner
+			navigator.notification.loadingStop(); 
+			
+			settings.setProperty("ZA" + productId, title + '|' + description + ' (' + price + ')',false);  
+			
+			iapnode.executeConfirm(productId,title, description + ' (' + price + ')');
+
+		</method>
+		<switch>
+			<when property="$dhtml">
+				<method name="executePurchase" args="buttonindex">
+					
+					if(buttonindex==1){
+						deebug("execute purchase BUY:" + canvas.currentproduct);
+						window.plugins.inAppPurchaseManager.makePurchase(canvas.currentproduct, 1);
+					}else{
+						deebug("execute purchase CANCEL:" + canvas.currentproduct);
+					}
+				</method>
+				
+				
+				<method name="executeProdReq" args="productid">
+					deebug("execute prodreq:" + productid);
+							if(window){
+								if(window.plugins){
+									window.plugins.inAppPurchaseManager.requestProductData(productid, 
+													iapnode.iap_requestProductDataSuccess, 
+													iapnode.iap_requestProductDataFail);
+									//show spinner				
+									navigator.notification.loadingStart();
+								}
+							}
+							
+							
+				</method>
+				
+				<method name="executeRestore">
+					deebug("execute restore:");
+							if(window){
+								if(window.plugins){
+									window.plugins.inAppPurchaseManager.restoreCompletedTransactions();
+
+								}
+							}
+							
+							
+				</method>
+					
+				
+				<method name="executeConfirm" args="productid, title, description">
+				deebug("execute confirm:" + productid);
+
+					// The product data has arrived, we show it to user and request a purchase
+					canvas.setAttribute("currentproduct", productid);
+
+					navigator.notification.confirm(
+						description,  
+						iapnode.executePurchase,              
+						title,           
+						'Cancel,Buy' 
+					);
+							
+							
+				</method>
+				
+			</when>
+			<otherwise>
+				<method name="executePurchase" args="buttonindex">
+					//purchase(buttonindex=1)
+					if(buttonindex==1){
+						deebug("execute purchase BUY:" + canvas.currentproduct);
+					//cancel (buttonindex=0)
+					}else{
+						deebug("execute purchase CANCEL:" + canvas.currentproduct);
+					}
+				</method>
+				<method name="executeConfirm" args="buttonindex">
+	
+						deebug("confirming");
+				
+				</method>
+				<method name="executeProdReq" args="productid">
+					deebug("execute purchase prodreq:" + productid);
+
+						
+				</method>
+			</otherwise>
+		</switch>
+	 
+	 
+	 </node>
+

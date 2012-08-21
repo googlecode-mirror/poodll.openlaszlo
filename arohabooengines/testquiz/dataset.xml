@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<questionset font="Impact" fontcolor="0xFFFFFF" bgcolor="0x000033" bgimage="./testquiz/resources/blacksquare.png" bgsound="testquiz/resources/backloop">
+			<question qname="start" entryanim="in"  qback="start" bgimage="./testquiz/resources/previewsplash.png">
+				<prompt prompttext=" go go freddy " fcolor="0xFFFFFF" y="0" fsize="2" width="100" bcolor="0x00" />
+				<button name="gobutton" clicksound="button9" framecount="0" starty="73" startx="10">
+					  <frame type="button" src="./testquiz/resources/borderred.png" width="40" fcolor="0x0000FF" height="20" bstate="0" fsize="3" action="jump" args="200901satLq1" ftext="yowza" />
+				</button>
+			</question>
+			
+			 <question qname="loader"  entryanim="none" timer="2000" bgimage="testquiz/resources/blacksquare.png" timerarg="next" qnext="start" hidetimer="true" qback="fail1">
+				<prompt fsize="2" width="100" fcolor="0xFFFFFF" y="0" prompttext=" " bcolor="0x000000" />
+				<static name="yesbutton" framecount="0" starty="40" startx="40">
+					  <frame type="text" action="next" fsize="6" fcolor="0x00FF00" ftext="Loading" bstate="0" />
+				</static>
+			</question>
+</questionset>

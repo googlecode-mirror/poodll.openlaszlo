@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<questionset bgimage="resources/graph_paper.gif" bgsound="resources/backloop.mp3" font="Marker Felt" fontcolor="0x000000">
+
+<!-- start and home -->
+<question qname="start" qnext="atextquestion" qback="start" >
+	<prompt type="text" x="50" y="10" prompttext="The quiz begins again" fsize="16" fcolor="0x000000"  />
+	<button name="startbutton" startx="40" starty="40"  framecount="0" clicksound="button-9.wav">
+		<buttonframe ftext="Start" fsize="48" fcolor="0x000000" src="resources/goldbutton.png" action="next" bstate="0"  />		
+	</button>
+</question>
+
+<!-- a text question -->
+<question qname="atextquestion" qnext="angrycats" qback="start" >
+	<prompt type="text" x="50" y="10" prompttext="Choose wisely .." fsize="16" fcolor="0x000000"  />
+	<button name="successbutton" startx="-100" starty="60" endx="40" endy="60" animtime="500" framecount="0" clicksound="button-9.wav">
+		<textframe ftext="Success" fsize="28" fcolor="0x00FF00" action="next" bstate="0"  />		
+	</button>
+	<button name="failurebutton" startx="420" starty="60"  endx="150" endy="60"  animtime="500" framecount="0" clicksound="button-9.wav">
+		<textframe ftext="Failure" fsize="48" fcolor="0xFF0000" action="back" bstate="0"  />		
+	</button>
+</question>
+
+<!-- angry cats -->
+<question qname="angrycats" qnext="vanishingcats" qback="atextquestion" >
+	<prompt type="text" x="50" y="10" prompttext="Quick. Touch the angry cats, yellow, blue, green then red" fsize="16" fcolor="0x000000"  />
+	<button name="angrycatblue" startx="400" starty="250" endx="20" endy="60" animtime="2000" framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/angrycatblueeyes.png" src2="resources/angrycatredeyes.png" picspeed="1" action="seqvalidate" args="1" bstate="0"  />			
+	</button>
+	<button name="angrycatred" startx="140" starty="60" framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/angrycatredeyes.png" src2="resources/angrycatblueeyes.png" picspeed="2" action="seqvalidatenext" args="3" bstate="0"  />			
+	</button>
+	<button name="angrycatgreen" startx="20" starty="180" framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/angrycatgreeneyes.png" src2="resources/angrycatyelloweyes.png" picspeed="3" action="seqvalidate" args="2" bstate="0"  />			
+	</button>
+	<button name="angrycatyellow" startx="140" starty="180" framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/angrycatyelloweyes.png" src2="resources/angrycatgreeneyes.png" picspeed="4" action="seqvalidate" args="0" bstate="0"  />			
+	</button>
+</question>
+
+<!-- vanishingcats -->
+<question qname="vanishingcats" qnext="bluecats" qback="start"  >
+	<prompt type="text" x="50" y="10" prompttext="Quick. Touch the angry cats, yellow, blue, green then red" fsize="16" fcolor="0x000000"  />
+	<button name="angrycatblue" startx="20" starty="60" framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/angrycatblueeyes.png" src2="blank" picspeed="1" action="seqvalidate" args="1" bstate="0"  />			
+	</button>
+	<button name="angrycatred" startx="140" starty="60" framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/angrycatredeyes.png" src2="blank" picspeed="2" action="seqvalidatenext" args="3" bstate="0"  />			
+	</button>
+	<button name="angrycatgreen" startx="20" starty="180" framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/angrycatgreeneyes.png" src2="blank" picspeed="3" action="seqvalidate" args="2" bstate="0"  />			
+	</button>
+	<button name="angrycatyellow" startx="140" starty="180" framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/angrycatyelloweyes.png" src2="blank" picspeed="4" action="seqvalidate" args="0" bstate="0"  />			
+	</button>
+</question>
+
+<!-- Bluecats -->
+<question qname="bluecats" qnext="pigmonkey" qback="start"  >
+	<prompt type="text" x="50" y="10" prompttext="Touch all the blue cats" fsize="16" fcolor="0x000000"  />
+	<button name="angrycatblue" startx="20" starty="60" framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/angrycatblueeyes.png" action="grpvalidate" args="2" bstate="0"  />			
+	</button>
+	<button name="angrycatred" startx="140" starty="60" framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/angrycatredeyes.png" action="start" args="3" bstate="0"  />			
+	</button>
+	<button name="angrycatgreen" startx="20" starty="180" framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/angrycatblueeyes.png" action="grpvalidate" args="2" bstate="0"  />			
+	</button>
+	<button name="angrycatyellow" startx="140" starty="180" framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/angrycatblueeyes.png" action="grpvalidate" args="2" bstate="0"  />			
+	</button>
+</question>
+
+<!-- Pig Monkey -->
+<question qname="pigmonkey" qnext="donttouch1" qback="start" >
+	<prompt type="text" x="50" y="10" prompttext="Touch the pig then the monkey" fsize="16" fcolor="0x000000"  />
+	<button name="smallchicken" startx="40" starty="80"  framecount="1" clicksound="button-9.wav">
+		<buttonframe ftext="Pig" src="resources/goldbutton.png" fsize="28" fcolor="0x00000" bgstartcolor="0xEEEEEE" bgstopcolor="0xDDDDDD" bdcolor="0x0000FF" action="none" bstate="0"  />
+		<buttonframe ftext="Monkey" src="resources/goldbutton.png" fsize="28" fcolor="0x00000" bgstartcolor="0xEEEEEE" bgstopcolor="0xDDDDDD" bdcolor="0x0000FF" action="next" bstate="1"  />
+	</button>	
+</question>
+
+<!-- Don't touch I -->
+<question qname="donttouch1"  qnext="donttouch2" qback="start" timer="3000" timerarg="next">
+	<prompt type="text" x="50" y="10" prompttext="Don't touch anything" fsize="16" fcolor="0x000000"  />
+	<button name="smallchicken" startx="40" starty="80"  framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/Folder.png" action="start" bstate="0"  />
+		<imageframe src="resources/Folder2.png" action="next" bstate="1"  />
+	</button>	
+</question>
+
+<!-- Don't touch II -->
+<question qname="donttouch2"  qnext="touchfuton" qback="start"   timer="3000" timerarg="next" >
+	<prompt type="text" x="50" y="10" prompttext="Still don't touch anything" fsize="16" fcolor="0x000000"  />
+	<button name="leftegg" startx="40" starty="40"  framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/Hinokiburo.png" action="start" bstate="0" />			
+		<imageframe src="resources/Kinchaku.png" action="next"  bstate="1" />
+		<timer time="5000" action="bstate" args="1" />
+	</button>
+</question>
+
+<!-- Click the Futon -->
+<question qname="touchfuton"  qnext="clockwise" qback="start"   >
+	<prompt x="50" y="10" prompttext="Wait till the pics change then touch till the last futon."  fsize="16" fcolor="0x000000"  />
+	<button name="leftegg" startx="40" starty="80"  timer="2000" framecount="5" clicksound="button-9.wav">
+		<imageframe src="resources/Folder.png" action="none" bstate="0" />			
+		<imageframe src="resources/Folder2.png" action="none" bstate="1" />
+		<imageframe src="resources/Garden.png" action="none" bstate="2" />
+		<imageframe src="resources/Chabitsu.png" action="none" bstate="3" />
+		<imageframe src="resources/Kanban.png" action="none" bstate="4" />
+		<imageframe src="resources/Futon.png" action="next" bstate="5" />
+	</button>
+	<button name="rightegg" startx="180" starty="80" timer="4000" framecount="5" clicksound="button-9.wav">
+		<imageframe src="resources/Futon.png" action="none" bstate="0" />			
+		<imageframe src="resources/Kanban.png" action="none" bstate="1" />
+		<imageframe src="resources/Garden.png" action="none" bstate="2" />
+		<imageframe src="resources/Chabitsu.png" action="none" bstate="3" />
+		<imageframe src="resources/Folder2.png" action="none" bstate="4" />
+		<imageframe src="resources/Folder.png" action="start" bstate="5" />
+	</button>
+</question>
+
+<!-- Clockwise -->
+<question qname="clockwise"  qnext="touchleft" qback="donttouch1"   >
+	<prompt type="text" x="50" y="10" prompttext="Touch em clockwise from top left." promptaudio="resources/aquestion.mp3" fsize="16" fcolor="0x000000"  />
+	<timer time="10000" action="start" />
+	<button name="lefttopegg" startx="40" starty="40" framecount="2" clicksound="button-9.wav">
+		<imageframe src="resources/Folder.png" action="seqvalidate" args="0" bstate="0" />			
+		<imageframe src="resources/Folder2.png" action="start" bstate="1" />
+	</button>
+	<button name="righttopegg" startx="180" starty="40" framecount="2" clicksound="button-9.wav">
+		<imageframe src="resources/Folder.png" action="seqvalidate" args="1" bstate="0" />			
+		<imageframe src="resources/Folder2.png" action="start" bstate="1" />
+	</button>
+	<button name="leftbottomegg" startx="180" starty="180" framecount="2" clicksound="button-9.wav">
+		<imageframe src="resources/Folder.png" action="seqvalidate" args="2" bstate="0" />			
+		<imageframe src="resources/Folder2.png" action="start" bstate="1" />
+	</button>
+	<button name="rightbottomegg" startx="40" starty="180" framecount="2" clicksound="button-9.wav">
+		<imageframe src="resources/Folder.png" action="seqvalidatenext" args="3" bstate="0" />			
+		<imageframe src="resources/Folder2.png" action="next" bstate="1" />
+	</button>
+</question>
+
+<!-- Touchleft -->
+<question qname="touchleft" qnext="endpage" qback="start"   >
+	<prompt type="text" x="49" y="10" prompttext="Touch the left icon ..." fsize="16" fcolor="0x000000"  />
+	<button name="resources/Hinokiburo.png" startx="40" starty="80"   framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/Andon.png" action="next" args="500" bstate="0"  />			
+	</button>
+	<button name="smallchicken" startx="180" starty="80" framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/Kinchaku.png" action="start" args="300" bstate="0"  />			
+	</button>
+</question>
+
+<!-- End Page -->
+<question qname="endpage"  qnext="start" qback="start"   >
+	<prompt type="text" x="50" y="10" prompttext="You Succeeded Valiant Knight!" fsize="16" fcolor="0x000000"  />
+	<button name="smallchicken" startx="40" starty="40"  framecount="1" clicksound="button-9.wav">
+		<imageframe src="resources/Furoisu.png" action="start" args="300" bstate="0"  />			
+	</button>
+</question>
+</questionset>

@@ -1,0 +1,3695 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	
+<!-- The Stylesheet: Good for customising -->
+<!-- stylesheet src="../poodllheader/poodll.css" -->
+
+<include href="incubator/roundrect.lzx" />
+<include href="../utils/kmeixnertimer.lzx"/>
+
+
+<class name="transitionview" extends="view">
+	
+	<!-- transition attributes -->
+	<attribute name="transdur" value="0" />
+	<attribute name="transeffect" value="'linear'" />
+	
+	<!-- important event for managing CSS internal and OL states -->
+	<event name="transitionover" />
+	
+	<!-- convert incoming % coords to abs coords -->
+	<method name="absX" args="percentX">
+		<![CDATA[
+		var proc = Math.round((this.parent.width * percentX) / 100);
+		return proc;
+		]]>
+	</method>
+	<method name="absY" args="percentY">
+		return Math.round((this.parent.height * percentY) / 100);
+	</method>
+	
+	<!-- convert incoming abs coords to percent coords -->
+	<method name="percentX" args="absX">
+	<![CDATA[
+		var usewidth = this.parent.width;
+		
+		//we protect ourselves from a div by zero error
+		//it does occur, its weird ..
+		if(usewidth==0){
+			deebug("got a 0 at percentX");
+			return 0;
+		}else{
+			return (absX / usewidth) * 100;
+		}
+		/* use this to debug the source of the parent.width = 0
+		var proc = (absX / this.parent.width) * 100;
+		if(isNaN(proc)){
+			deebug("NAN:" + absX + ":" + this.parent.width + ":" + proc);
+			Debug.inspect(this);
+		}
+		return proc;
+		*/
+		]]>
+	</method>
+	<method name="percentY" args="absY">
+		var useheight = this.parent.height;
+		
+		//we protect ourselves from a div by zero error
+		//it does occur, its weird ..
+		if(useheight==0){
+			deebug("got a 0 at percentY");
+			return 0;
+		}else{
+			return (absY / useheight) * 100;
+		}
+	</method>
+	
+	
+	<switch>
+			<when property="$dhtml">
+			
+				<attribute name="tempVal" value="''" />
+				<attribute name="tempX" value="''" />
+				<attribute name="tempY" value="''" />
+				<attribute name="tempO" value="''" />
+				
+				<handler name="oninit">
+					this.sprite.__LZdiv.style["webkitTransitionProperty"]= "webkitTransform, opacity";
+					this.sprite.__LZdiv.style["webkitTransitionTimingFunction"]= this.transeffect;
+					
+					//delegates used internally to tidy up and notify OL after a webkit transform transition
+					this.resyncxDel = new LzDelegate(this,"resyncX");
+					this.resyncyDel = new LzDelegate(this,"resyncY");
+					this.resyncxyDel = new LzDelegate(this,"resyncXY");
+			
+					
+					//set up a way to notify clients (incl. this class) that a webkit transition is over
+					var daview = this;
+					this.sprite.__LZdiv.addEventListener('webkitTransitionEnd', function(e) {
+							daview.transitionover.sendEvent();
+							//deebug("tranny over");
+						}, false);
+						
+				</handler>
+		
+				<method name="resetTransAttr" args="prop, val">
+					//at times we do not want transition to occur, here set property and value
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]="0s";
+					
+					if(prop=='opacity'){
+							this.sprite.__LZdiv.style["opacity"]=val;
+					}else{
+					
+						 
+						switch(prop){
+							case 'x': 
+								var newX = absX(val);
+								this.setAttribute(prop,val);
+								doResyncX(newX);
+								break;
+							case 'y':
+								var newY = absY(val);
+								this.setAttribute(prop,val);
+								doResyncY(newY);
+								break;
+						}
+					}
+					
+				</method>
+				<method name="setTransAttr" args="prop, val">
+					//You can't just reset a transition and start it again straight away don't you know. 
+					//You need to call a timer in the middle or rely on a callback function. grrr
+					//(otherwise the reset just seems to get overwritten)
+					
+					//If we have had a reset then add the timer delay
+					if(this.sprite.__LZdiv.style["webkitTransitionDuration"]!=this.transdur + "ms"){
+						switch (prop){
+							case 'x':
+									var newX = val;
+									this.setAttribute("tempX",newX);
+									lz.Timer.addTimer( new LzDelegate( this, "completeTransitionX" ), 50);
+									break;
+							case 'y':
+									var newY = val;
+									this.setAttribute("tempY",newY);
+									lz.Timer.addTimer( new LzDelegate( this, "completeTransitionY" ), 50);
+									break;
+							case 'opacity':this.setAttribute("tempO",val);
+									lz.Timer.addTimer( new LzDelegate( this, "completeTransitionO" ), 50);
+									break;
+						}
+
+					//If we are coming back from a timer delay, or there was no reset, just set our transitions	
+					}else{
+						//deebug("setting after timer prop:val:" + prop + ":" + val);
+						if(prop=='opacity'){
+							this.sprite.__LZdiv.style["opacity"]=val;
+						//}else if(prop){
+						//	this.setAttribute(prop,val);
+							
+						//The translate transitions are hardware accelerated, but we need to integrate them with laszlo
+						//which gets confused by where things are. After the transition if we call simlar code to that in 
+						//lzSprite.setX .setY we can probably do it. Code is messy and delicate, but works ... be careful altering it.
+						}else if(prop=='x'){
+							this.sprite.__LZdiv.style["webkitTransform"]="translate(" + (absX(val) -this.x) + "px,0px)";
+							//after transition need to tidy up
+							this.setAttribute("tempX",val);
+							this.resyncxDel.register(this,"transitionover");
+						}else if(prop=='y'){
+							this.sprite.__LZdiv.style["webkitTransform"]="translate(0px," + (absY(val) -this.y)  + "px)";
+							//after transition need to tidy up
+							this.setAttribute("tempY",val);
+							this.resyncyDel.register(this,"transitionover");
+						}else{
+							
+							this.setAttribute(prop,val);
+						}
+					}
+				</method>
+				
+			
+				
+				
+				<method name="resetTranslateAttr" args="valX, valY">
+						//we want to ensure animation does not occur when resetting
+						//this.resyncxyDel.register(this,"transitionover");
+						
+						this.sprite.__LZdiv.style["webkitTransitionDuration"]="0s";
+						
+						
+						var newX = absX(valX);
+						
+						this.setAttribute("x",valX);
+						/*
+						if(this.title=="onionbutton"){
+							deebug("resetTranslateAttr:" + valX + ":" + this.x);
+						}
+						*/
+						//untoggle these synvcs if you have cant click etc poroblems
+						//doResyncX(newX);
+
+				
+						var newY = absY(valY);
+						this.setAttribute("y",valY);
+						//untoggle these synvcs if you have cant click etc poroblems
+						//doResyncY(newY);
+							
+					
+					
+				</method>
+				
+		
+				<method name="setTranslateAttr" args="valX, valY">
+					//broswer check
+					if(true){
+						
+					
+							//You can't just reset a transition and start it again straight away don't you know. 
+							//You need to call a timer in the middle or rely on a callback function. grrr
+							//(otherwise the reset just seems to get overwritten)
+							
+							//If we have had a reset then add the timer delay
+							if(this.sprite.__LZdiv.style["webkitTransitionDuration"]!=this.transdur + "ms"){
+						
+							
+							
+								this.setAttribute("tempX",valX);
+								this.setAttribute("tempY",valY);
+								lz.Timer.addTimer( new LzDelegate( this, "completeTransitionTranslate" ), 50);
+								
+
+							//If we are coming back from a timer delay, or there was no reset, just set our transitions	
+							}else{
+								//deebug("setting after timer prop:val:" + valX + ":" + valY);
+									//we set all these vals to abs (not percent)
+								    valY = absY(valY);
+								    valX = absX(valX);
+									
+									this.sprite.__LZdiv.style["webkitTransform"]="translate(" + (valX -this.x) + "px," + (valY -this.y) + "px)";
+									//after transition need to tidy up
+									this.setAttribute("tempX",valX);
+									this.setAttribute("tempY",valY);
+									this.resyncxyDel.register(this,"transitionover");
+							 }
+					
+					
+					
+					}else{
+						setTransAttr("x",valX);
+						setTransAttr("y",valY);
+					}
+				
+				</method>
+				
+				
+				<!-- to sync the webkit transform translated x coord with OL -->
+				<!-- you see webkit leaves the original left as is and combines it
+					with the translate to make a use coord. But OL expects the "left" to rep x -->
+				<method name="resyncX" args="ignore=null">
+					<![CDATA[
+					//deebug("resyncing x");
+					//first of all clear the transition over event registration
+					this.resyncxDel.unregisterAll();
+					
+					//We wil be restting some stuff but we don't want it to be visible
+					//so lets set our trans duration back to 0
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]="0s";
+					
+					
+					
+					this.__poscacheid = -1;
+					this.sprite._xoffset = this.sprite.xoffset;
+					var x= this.tempX;
+					
+					
+					
+					//here we reset the translate and the left coords
+					this.sprite.__LZdiv.style["webkitTransform"]="translate(0px,0px)";
+					
+					//not sure which of these is stable J 20110513
+					//convert abs back to percent
+					this.setAttribute("x", percentX(tempX));
+					
+				
+					
+					
+					
+			]]>
+				</method>
+				<method name="doResyncX" args="newX">
+					<![CDATA[
+					if(this.sprite._x !=  newX){this.sprite._x=newX;}
+					
+					if(this.sprite.__LZclickcontainerdiv && this.sprite.__LZclickcontainerdiv.style ){
+						if(this.sprite.__LZclickcontainerdiv.style.left !=  newX){this.sprite.__LZclickcontainerdiv.style.left=newX;}
+					}
+					
+					if(this.sprite.__LZcontextcontainerdiv && this.sprite.__LZcontextcontainerdiv.style){
+						if(this.sprite.__LZcontextcontainerdiv.style.left !=  newX){this.sprite.__LZcontextcontainerdiv.style.left=newX;}
+					}
+					]]>
+				</method>
+				
+				
+				<!-- to sync the webkit transform translated y coord with OL -->
+				<method name="resyncY" args="ignore=null">
+					<![CDATA[
+					//deebug("resyncing y");
+					//first of all clear the transition over event registration
+					this.resyncyDel.unregisterAll();
+					
+					//We wil be resetting some stuff but we don't want it to be visible
+					//so lets set our trans duration back to 0
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]="0s";
+					
+					
+					
+					this.__poscacheid = -1;
+					this.sprite._yoffset = this.sprite.yoffset;
+					var y= this.tempY;
+					
+					//here we reset the translate and the left coords
+					this.sprite.__LZdiv.style["webkitTransform"]="translate(0px,0px)";
+					
+					//not sure which of these is stable .. ja 20110513
+					//convert absolute back to percent
+					this.setAttribute("y", percentY(tempY));
+					
+					//this.sprite.__LZdiv.style.top=y;
+					//doResyncY(y);
+					
+					
+					
+					]]>
+					
+				</method>
+				<method name="doResyncY" args="newY">
+					<![CDATA[
+					if(this.sprite._y !=  newY){this.sprite._y=newY;}
+					if(this.sprite.__LZclickcontainerdiv && this.sprite.__LZclickcontainerdiv.style ){
+						if(this.sprite.__LZclickcontainerdiv.style.top !=  newY){this.sprite.__LZclickcontainerdiv.style.top=newY;}
+					}
+					if(this.sprite.__LZcontextcontainerdiv && this.sprite.__LZcontextcontainerdiv.style){
+						if(this.sprite.__LZcontextcontainerdiv.style.top !=  newY){this.sprite.__LZcontextcontainerdiv.style.top=newY;}
+					}
+					]]>
+				</method>
+						<!-- to sync the webkit transform translated x coord with OL -->
+				<!-- you see webkit leaves the original left as is and combines it
+					with the translate to make a use coord. But OL expects the "left" to rep x -->
+				<method name="resyncXY" args="ignore=null">
+					<![CDATA[
+					//deebug("resyncing xy");
+					//first of all clear the transition over event registration
+					this.resyncxyDel.unregisterAll();
+					
+					//We wil be restting some stuff but we don't want it to be visible
+					//so lets set our trans duration back to 0
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]="0s";
+					
+					
+					
+					this.__poscacheid = -1;
+					var x= this.tempX;
+					var y= this.tempY;
+					
+					
+					
+					//here we reset the translate and the left coords
+					this.sprite.__LZdiv.style["webkitTransform"]="translate(0px,0px)";
+				
+					//convert absolutes back to percents
+					this.setAttribute("x", percentX(tempX));
+					this.setAttribute("y", percentY(tempY));
+					
+					
+					
+					
+			]]>
+				</method>
+				
+				
+				<!-- timer delegate callback functions to separate reset and set of anim coords by a short interval 
+					can fail if you don't do this.
+				-->
+				<method name="completeTransitionTranslate" args="ignore=null">
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]=this.transdur + "ms";
+					this.setTranslateAttr(tempX,tempY);	
+						
+				</method>
+				<method name="completeTransitionX" args="ignore=null">
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]=this.transdur + "ms";
+					this.setTransAttr("x",tempX);		
+				</method>
+				<method name="completeTransitionY" args="ignore=null">
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]=this.transdur + "ms";
+					this.setTransAttr("y",tempY);		
+				</method>
+				<method name="completeTransitionO" args="ignore=null">
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]=this.transdur + "ms";
+					this.setTransAttr("opacity",tempO);		
+				</method>
+				
+				<!-- this is required because dhtml pooling remnants sometimes 
+				require us to force a zero translate when there should already be one
+				Very hard to fathom, hacky I know. -->
+				<method name="forceZeroTranslate" args="ignore=null">
+					this.sprite.__LZdiv.style["webkitTransform"]="translate(0px,0px)";
+				</method>
+				
+				
+			</when>
+			
+			
+			<!--  The flash transition code. much much simpler. --> 
+			<otherwise>			
+				<method name="setTranslateAttr" args="valX, valY">
+					//set the transition
+					var tstring = "x " + (this.transdur/1000) + "s " + this.transeffect + ",y " + (this.transdur/1000) + "s " + this.transeffect; 
+					//deebug("setTransition:" + tstring);
+					this.setAttribute("transition",tstring);
+					
+					//set the x and y coords (set abs to true to accept abs values)
+					this.setAttribute("absolute",true);
+					this.setAttribute("x",absX(valX));
+					this.setAttribute("y",absY(valY));
+					lz.Timer.addTimer( new LzDelegate( this, "removeTransition" ), this.transdur + 50);
+				</method>
+				<method name="resetTranslateAttr" args="valX, valY">
+					//clear the transition
+					//deebug("resetTranslateAttr:title" + this.title + ":" + valX + ":" + valY);
+					var tstring = "x 0s, y 0s "; 
+					this.setAttribute("transition",tstring);
+					
+					//set the x and y coords. (clear abs, so can accept relative values)
+					this.setAttribute("absolute",false);
+					this.setAttribute("x",valX);
+					this.setAttribute("y",valY);
+				</method>
+				<method name="resetTransAttr" args="prop, val">
+					
+					//Set the transition string
+					//deebug("resetTransAttr:" + prop + ":" + val);
+					var tstring = prop + " 0s "; 
+					this.setAttribute("transition",tstring);
+					
+					//Set the property. for x and y we reset the absolute flag to false
+					switch (prop){
+							case 'x':
+									this.setAttribute("absolute",false);
+									this.setAttribute("x",val);		
+									break;
+							case 'y':
+									this.setAttribute("absolute",false);
+									this.setAttribute("y",val);
+									break;
+							case 'opacity':
+									this.setAttribute("opacity",val);
+					}
+					
+				</method>
+				<method name="setTransAttr" args="prop, val">
+					//deebug("setTransition:" + prop + " " + this.transdur + "ms " + this.transeffect);
+					//deebug("setTransAttr:" + prop + " : " + val);
+					this.setAttribute("transition", prop + " " + (this.transdur / 1000) + "s " + this.transeffect);
+					
+					//For X and Y we toggle the view's absolute property and pass an absolute value
+					//other wise flash will recursively absolutify the already absolute value in th view's overridden x y setters 
+					//we have to remove this and the transition at some point, currently do it during resetTransAttr
+					switch (prop){
+							case 'x':
+									this.setAttribute("absolute",true);
+									this.setAttribute("x",absX(val));
+									break;
+							case 'y':
+									this.setAttribute("absolute",true);
+									this.setAttribute("y",absY(val));
+									break;
+							case 'opacity':
+									this.setAttribute("opacity",val);
+					}
+					//deebug("trandur + 50:" + (this.transdur + 50));
+					lz.Timer.addTimer( new LzDelegate( this, "removeTransition" ), this.transdur + 50);
+				</method>
+				
+				<method name="removeTransition" args="ignore=null" >
+					//deebug("removing transition");
+					this.setAttribute("absolute",false);
+					this.setAttribute("transition","");
+					transitionover.sendEvent();
+				</method>
+				<method name="forceZeroTranslate" args="ignore=null">
+					//no action required for flash
+					return;
+				</method>
+			
+			
+			</otherwise>
+	</switch>
+	
+	
+	
+	
+</class>
+<!--The main game panel -->
+<class  name="arohabooview" extends="view" >                    
+	
+	<!-- Dummy object to get past compiler, objections. Should never be accessed my flash or non ios runtime -->
+	<switch>
+		<unless property="$dhtml">			
+			<node id="navigator" />
+		</unless>
+	</switch>
+	
+	<!-- kick of the questions once initialised -->
+	<handler name="oninit">
+		this.startquestions();
+	</handler>
+			
+	
+	<method name="startquestions" args="ignore=null">	
+				//deebug("got some data");
+				//parent.pathview.setAttribute("visible",false);
+				if(this.initmerge){
+					this.mergedata();
+				}
+				
+				//to enable or disable phonegap
+				if(lz.Browser.getInitArg('disablephonegap')=='true'){
+					settings.setProperty("ZAdisablephonegap","true");
+				}else{
+					settings.setProperty("ZAdisablephonegap","false");
+				}
+			
+				//var dp = this.questions.getPointer();
+				var dp = canvas.questions.getPointer();
+				dp.setXPath("/questionset");
+				this.setAttribute("usefont", dp.getNodeAttribute("font"));
+				this.setAttribute("usefontcolor", dp.getNodeAttribute("fontcolor"));
+				this.setAttribute("backsound", dp.getNodeAttribute("bgsound"));
+				this.setAttribute("backimage", dp.getNodeAttribute("bgimage"));
+				this.setAttribute("backcolor",dp.getNodeAttribute("bgcolor"));
+				this.setAttribute("stickyquestions",dp.getNodeAttribute("stickyquestions"));
+				//deebug("usefont:" + this.usefont);
+				//deebug("backsound:" + this.backsound);
+				//deebug("backcolor:" + this.backcolor);	
+				
+				
+				
+				this.qholder.completeInstantiation();
+	</method>
+	
+	<!-- Merge Data if required -->
+	<method name="mergedata">
+		<![CDATA[
+
+		var pptr=canvas.datasets.questions.getPointer();  
+		pptr.selectChild();
+
+		var tpptr = canvas.datasets.templates.getPointer();
+		tpptr.selectChild();
+
+		var mpptr = canvas.datasets.merges.getPointer();
+		mpptr.selectChild();
+		mpptr.selectChild();
+
+		do {
+			var usetemplate=mpptr.getNodeAttribute("template");
+			if(usetemplate){
+				var query = "question[@template='" + usetemplate + "']";
+				var thetemp =  tpptr.xpathQuery(query);
+				if (thetemp){
+					var stringnode = thetemp.serialize();
+					var nodeAttrs = mpptr.getNodeAttributes();
+					
+					//make sure our answer template gets fixed
+					var answerbutton = mpptr.getNodeAttribute("answer");
+					//deebug("answerbutton:" + answerbutton);
+					//if(answerbutton){
+					//	deebug("answerbutton:" + answerbutton + " is recognised");
+					//	}
+					
+					//replace all variables from template
+					if(nodeAttrs){
+							for( var na in nodeAttrs){
+								//stringnode = stringnode.replace('/@' + na + '@/g', nodeAttrs[na]);
+								//e.g a="house" a_color="red" na->a or a_color nodeAttrs[na]=house or red
+								//stringnode = stringnode.replace('@' + na + '@', nodeAttrs[na]);
+								//stringnode = stringnode.replace('@' + na + '@', nodeAttrs[na]);
+								//stringnode = stringnode.replace('/@' + na + '@/g', nodeAttrs[na]);
+								stringnode = stringnode.split('@' + na + '@').join(nodeAttrs[na]);
+								
+								//if the attribute key we are changing starts with what is specified in answerbutton, it will change that part
+								//to Z and then replace that too. This is so that anything set to say @c@ or @c_args@ will also get set to @Z@ or @Z_args@
+								//for keeping answer key in line with template of answer button 
+								if(answerbutton && na.indexOf(answerbutton)==0){
+									stringnode = stringnode.replace('@' + na.replace(answerbutton,'Z') + '@', nodeAttrs[na]);
+								}
+							}
+					}
+					//deebug("new stringnode:" + stringnode);
+					var newQNode = pptr.p.appendChild(lz.DataElement.stringToLzData(stringnode));	
+
+					//if an answerbutton was specified, we need to do some replacing
+					if(answerbutton){
+					
+							//this rest of this is just making sure the right stuff is applied to correct answer	
+							var correctNode = newQNode.getLastChild();
+				
+							//fix up the correct answer
+							var tempDP = pptr.dupePointer();	
+							var qCount = tempDP.getNodeCount();					
+							tempDP.selectChild();
+							tempDP.selectNext(qCount-1);
+							//deebug("got temppointer");
+							//deebug("pointing:" + tempDP.p.serialize());	
+							
+							if(tempDP.setXPath("button[@name='" + answerbutton + "button']")){
+								//deebug("set xpath temppointer");
+
+								if(tempDP.p.hasAttr("endx")){
+									correctNode.setAttr("endx", tempDP.p.getAttr("endx"));
+								}
+								if(tempDP.p.hasAttr("endy")){
+									correctNode.setAttr("endy", tempDP.p.getAttr("endy"));
+								}
+								correctNode.setAttr("startx", tempDP.p.getAttr("startx"));
+								correctNode.setAttr("starty", tempDP.p.getAttr("starty"));
+								
+							
+								newQNode.removeChild(tempDP.p);	
+							}
+					
+					//}else{
+						//deebug(stringnode);
+					}
+				}
+			}	
+			
+		}while(mpptr.selectNext());
+	
+		]]>
+	</method>
+	
+	<!-- merge data from templates into main questions dataset if required-->
+	<attribute  name="initmerge" value="false" />
+	
+	<!-- to tell if we use pooling or not. -->
+	<attribute  name="pooling" value="true" />
+
+	<!-- settings to set initially for app, defaults I guess  -->
+	<attribute name="initsettings" type="string"/>
+	
+	<!-- to tell if we embed resources or not. -->
+	<attribute  name="embedres" value="false" />
+	
+	
+	
+	<!-- the top reference to our game settings object  xprop:xvalue|yprop:yvalue -->
+	<gamesettings id="settings" name="settings" initsettings="${parent.initsettings}" />
+
+	<attribute name="backimage" />
+	<attribute name="backsound" />
+	<attribute name="stickyquestions" />
+	<attribute name="disabletimer" />
+	<attribute name="backcolor" value="0x000000"/>
+	
+	 <!-- This is the smart loader which regulates the loading of images -->
+	<!-- adjust throttle size to tune it to your site -->
+	<!-- set useresources to true to "compile in" resources (deploy time) -->
+	<smartloader id="superloader" imageprofiling="false" loadprofiling="false" useresources="$once{this.parent.embedres}" throttlesize="50" />
+	
+
+
+	<!-- view name="qholder"  -->
+	<!-- view name="qholder"   width="${parent.width}" height="${parent.height}" clickable="true" -->
+	<!-- view name="qholder"  initstage="defer" font="${parent.usefont}" fgcolor="${parent.usefontcolor}" width="${parent.width}" height="${parent.height}" clickable="true" -->
+	<view name="qholder"  initstage="defer" font="${parent.usefont}" fgcolor="${parent.usefontcolor ? Number(parent.usefontcolor) : 0}" width="${parent.width}" height="${parent.height}" clickable="true" >
+	
+		<!-- qholder reference to gamesettings. -->
+		<attribute  name="settings" value="${classroot.settings}" />
+		
+		<!-- to tell if we use pooling or not. -->
+		<attribute  name="pooling" value="${classroot.pooling}" />
+		
+		<!--  a timer done event for the canvas to use -->
+		<event name="bigtimerdone" />
+		
+		
+		
+		<!-- Play background Audio -->
+		<audionode name="backgroundaudio" useresources="$once{superloader.useresources}" audiosrc="${classroot.backsound}" autoplay="false" loopplay="true" mute="${classroot.settings.XAplaybacksound != 'yes'}"/>
+		<handler name="onXAplaybacksound" reference="this.settings">
+			deebug("seting playsound");
+			switch (this.settings.XAplaybacksound){
+				case 'yes':	this.backgroundaudio.play();
+							break;
+				default:	this.backgroundaudio.stop();
+							break;
+			}
+		</handler>
+		
+		<!-- Initialise our question cache -->
+		<questioncache name="qcache" qholder="${this}" stickyquestions="${classroot.stickyquestions}"/>
+		
+		
+		<!-- Audio Prompt Audio -->
+		<audionode name="promptaudio" useresources="$once{superloader.useresources}" autoplay="false" loopplay="false" mute="${classroot.settings.XAplayaudioprompt != 'yes'}"/>
+
+		<!-- Next Audio / Back Audio -->
+		<simpleaudionode name="nextbackaudio" useresources="$once{superloader.useresources}" autoplay="false" loopplay="false" mute="${classroot.settings.XAplaysoundfx != 'yes'}"/>
+		
+		<!--Button Click Audio -->
+		<!--Reinstate this if stability from button clicks is an issue -->
+		<!-- audionode name="soundfxaudio" autoplay="false" loopplay="false" mute="false" -->
+		
+		<!--This is the main game loop. it fires a loopevent every 500ms. 
+			Use this event for animations and non specific interval checking
+		  -->
+		<gameloop name="thegameloop" timer_resolution="500" oninit="this.startTimer()"/>
+	
+		<!-- This is a countdown timer for countdown type individual questions -->
+		<countdowntimer name="littletimer" inittime="0" >
+			<handler name="countevent">
+				//Debug.write(this.showsec);
+				settings.setProperty("ZAlittletimer",this.showsec);
+		
+			</handler>
+			<handler name="oninit">
+				this.resetTimer();
+			</handler>
+			<handler name="ontimer_state">
+				switch (this.timer_state){
+				
+					case "STOPPED":	//classroot.displayview.doorbell.play();
+									//Debug.write("Timer is stopped");					
+									break;
+					case "PAUSED":	//Debug.write("Timer is paused");					
+									break;
+					case "COUNTING"://	Debug.write("Timer is counting");					
+									break;
+					case "READY":	//Debug.write("Timer is ready");					
+									break;
+				
+				}
+				
+			</handler>
+		</countdowntimer>
+		
+		<!-- This is a countdown timer for countdown type individual questions -->
+		<countdowntimer name="bigtimer" inittime="0" >
+			<handler name="countevent">
+				//Debug.write(this.showsec);
+				//classroot.displayview.timeDisplay.format('%02d:%02d:%02d',this.showhour,this.showmin,this.showsec);
+				//classroot.displayview.milliDisplay.format('%03d',this.showmilli);
+				settings.setProperty("ZAbigtimer",this.showsec);
+				//parent.ltimer.showsec &lt; 10 ? '0' + parent.ltimer.showsec : parent.ltimer.showsec
+			</handler>
+			<handler name="oninit">
+				this.resetTimer();
+			</handler>
+			<handler name="ontimer_state">
+				switch (this.timer_state){
+				
+					case "STOPPED": parent.bigtimerdone.sendEvent();						
+									break;
+					default: break;
+				
+				}
+			</handler>
+			
+		</countdowntimer>
+
+		<!--The background image : should be able to change this from dataset data really.-->	
+		<smartimage name="backgroundimage" smartsrc="$once{parent.parent.backimage}" sloader="${superloader}" bgcolor="${parent.parent.backcolor ? Number(parent.parent.backcolor) : null}" stretches="both" width="${parent.width}" oninit="this.sendToBack()" height="${parent.height}" />
+		
+		<!--Handle for the current question -->
+		<attribute name="nowquestion" />
+		<attribute name="prevquestion" />
+		<!-- handle for the previous acction call. may not be the same as prevquestion 
+			cos if loader we'd keep coming back again.-->
+		<attribute name="prevactiontarget" value="'start'"/>
+		
+		<!--The name of the current question -->
+		<!-- for the standalone flash demo we use a splash screen as first show -->
+		
+		<!-- attribute name="currentqname" value="'previewsplash'" -->
+		<attribute name="currentqname" value="$once{classroot.embedres ? 'previewsplash' : 'loader'}" />
+		
+		<!-- This is a holder to tell loader question its next question -->
+		<!-- I know this is a hacky way to pass the data around ... -->
+		<attribute name="postloaderqname" value="'start'"/>
+		
+		
+		<!--Delegates we call to switch over questions -->
+		<attribute name="switchDel" />
+		<attribute name="handoverDel" />
+		
+		<!--
+			Evaluated a cond string XAprop1:cond1:result1|XAprop2:cond2:result2|default 
+		
+		-->
+		<method name="evalCondition" args="args">
+			var conditions= args.split('|');
+			for (var key in conditions) {
+				var parts = conditions[key].split(':');
+				if (parts.length > 2){
+					if(settings.getProperty(parts[0])==parts[1]){
+						return parts[2];
+					}
+				}else{
+					return parts[0];
+				}
+			}
+			
+		</method>
+		
+		<!--Methods we call to proportion sizes -->
+		<!-- used for x and width calls -->
+		<method name="fetchX" args="rawX">
+		<![CDATA[
+			if(rawX != null && rawX != 'undefined'){
+				//return (Math.round(rawX * 0.01 * this.width));
+				return Math.round((rawX *  this.width) / 100);
+			}else{
+				return null;
+			}
+			]]>
+		</method>
+		<method name="fetchW" args="rawW">
+			<![CDATA[
+			if(!rawW || rawW == 0){
+				return null;
+			}else{
+				//return (Math.round(rawW * 0.01 * this.width));
+				return Math.round((rawW *  this.width) / 100);
+			}
+			]]>
+		</method>
+		
+		<!--Methods we call to proportion sizes -->
+		<!-- used for y and height calls -->
+		<method name="fetchY" args="rawY">
+		<![CDATA[
+			if(rawY != null && rawY != 'undefined'){
+				return Math.round((rawY *  this.height) / 100);
+			}else{
+				return null;
+			}
+			]]>
+		</method>
+		<method name="fetchH" args="rawH">
+			<![CDATA[
+			if(!rawH || rawH == 0){
+				return null;
+			}else{
+				return Math.round((rawH *  this.height) / 100);
+			}
+			]]>
+		</method>	
+		
+		<method name="shuffle" args="shuffleargs">
+			<![CDATA[
+				var pptr=canvas.datasets.questions.getPointer();  
+				var pptrend=canvas.datasets.questions.getPointer();  
+				var shuffleptr=canvas.datasets.questions.getPointer();
+			
+				//get the names of the beginning and end nodes between which to shuffle
+				var shuffleArg=shuffleargs.split('|');;
+				
+				//fetch the end node before which we will shuffle
+				pptrend.setXPath("questions:/questionset/question[@qname='" + shuffleArg[1] + "']/text()");
+				var endnode = pptrend.p;
+				
+				
+				//fetch the start node after which we will shuffle
+				pptr.setXPath("questions:/questionset/question[@qname='" + shuffleArg[0] + "']/text()");				
+		
+
+				//add a "shuffle" node as a temp workspace
+				shuffleptr.setXPath("questions:/questionset/text()");
+				var shufflenode =  shuffleptr.addNode("shuffle");
+				shuffleptr.setPointer(shufflenode);
+				
+			
+				//remove all the nodes and add to temp "shuffle" subnode
+				pptr.selectNext();
+				while ( pptr.p && !pptr.comparePointer(pptrend)){
+					//deebug("moving:" + pptr.p.getAttr("qname"));
+					shuffleptr.addNodeFromPointer(pptr);
+					pptr.deleteNode();
+				}
+			
+				//Initially tried here to sort the subnodes and before moving them back up a level
+				//but laszlo got screwed trying to find after that in removeChild.
+				// so used a randmozise further down.
+				//shufflenode.childNodes.sort(function() {return (Math.random() > 0.5) ? 1  : -1});
+				//shufflenode.childNodes.sort();
+				
+				//Set pptr to one level up from the end location of the shuffled nodes
+				pptr.setXPath("questions:/questionset/text()");
+				//init our result value
+				var result= true;
+				while(result && shufflenode.hasChildNodes()){
+					var achild = shufflenode.childNodes[Math.floor(Math.random() * shufflenode.childNodes.length)];
+					//deebug("replacing:" + achild.getAttr("qname"));
+					result = pptr.p.insertBefore(shufflenode.removeChild(achild),endnode);
+				}
+				
+				
+				//remove the shufflenode we added
+				pptr.setPointer(shufflenode);
+				pptr.deleteNode();
+				]]>
+				
+			
+		</method>
+	
+		
+		<!--method that is called to switch the active question, via the new questions index -->
+		<method name="switchQuestion" args="newqname,pausetime">
+			<![CDATA[
+				this.setAttribute("currentqname", newqname);
+				//deebug("pausetime:" + pausetime);
+				if(pausetime==0){
+					//we need to pass an argument(0) here, but we don't use it
+					this.switchDel.execute(0);
+				}else{
+					lz.Timer.addTimer(this.switchDel, pausetime);
+				}
+			]]>
+		</method>
+		
+		<!-- here we do the actual switch  and the admin stuff before we jump -->
+		<method name="doSwitch" args="ignore=null">
+		<![CDATA[
+				
+			//var preload='none';
+			//var preload='set';
+			var preload='nextonly';
+			
+			
+				//if we somehow have two timer delegates going, lets cancel the second or we will jump two questions
+				lz.Timer.removeTimer(this.switchDel);
+				if(this.nowquestion){
+				lz.Timer.removeTimer(this.nowquestion.nextDel);
+				lz.Timer.removeTimer(this.nowquestion.backDel);
+				lz.Timer.removeTimer(this.nowquestion.prevDel);
+				lz.Timer.removeTimer(this.nowquestion.audioPromptDel);
+				}
+				//printtime("removetimers");
+				
+				//Lets also stop our visible timer if we have one
+				this.littletimer.resetTimer();
+
+				//if we are playing our audio prompt we should quit it
+				//if(this.nowquestion){this.nowquestion.promptaudio.stop();}
+				this.promptaudio.stop();
+
+			
+			//Set up  the new question and rehandle the old one	
+			this.setAttribute("prevquestion",this.nowquestion);
+			if(this.prevquestion && this.prevquestion.qname !='loader'){
+				//save an entry to jump to via the "previous" action
+				this.prevactiontarget = this.prevquestion.qname;	
+			}
+
+			//If the new question is not cached, swith to loader
+			//otherwise set it to the now question
+			if(this.currentqname!='loader' && this.qcache.getCacheIndex(this.currentqname)==-1){
+				this.setAttribute('postloaderqname', this.currentqname);
+				this.setAttribute('currentqname', 'loader');
+			}
+			this.setAttribute("nowquestion",this.qcache.getQuestion(this.currentqname));
+			
+	
+		
+			//If the next question is loader,we need to set its next question attribute
+			if(this.currentqname=='loader'){
+				this.nowquestion.setAttribute('qnext', this.postloaderqname);
+			}
+			
+			
+			//This logic starts question AFTER preloading
+			//++++++++++++++++++++++++++++
+			if(this.prevquestion){
+				//disallow clicking since we are transitioning
+				this.prevquestion.setAttribute("canclick",false);
+			}
+			
+			
+			
+			//if we have preloads or we are goin in for first time, lets preload
+			if(preload=='set' && (this.nowquestion.preload || !(this.prevquestion))){
+				if(!this.handoverDel){this.handoverDel = new lz.Delegate(this,"performHandover")};
+				//this.handoverDel.register(this.qcache, "onloadcomplete");
+				this.handoverDel.register(superloader, "emptyevent");
+				deebug("registered startQ del");	
+				
+				//preload any questions we need as jumps from this question
+				preloadQuestions();
+			
+		
+				
+			}else if(preload=='nextonly'){
+					if(!this.handoverDel){this.handoverDel = new lz.Delegate(this,"performHandover")};
+					
+					// Old preload next shori
+					//this.handoverDel.register(superloader, "emptyevent");
+					//preloadNext();
+					
+					//new preload next. This is more stable
+					//begins preload 500ms after question has loaded, roughly allowing animations to finish.
+					//and final sound of prev q toplay out. 
+					this.performHandover();
+					if(this.currentqname=='loader'){
+						this.loadPreloadNext(200);
+					}else{
+						this.loadPreloadNext(500);
+					}
+					
+			}else if(preload=='none'){
+					this.performHandover();
+						
+			}else{
+				//regular questions are probably safe to not pause
+				//preloaded questions need a 500 or so pause before starting, hence the timer dlegate loadhandover
+				//if need to can do that here also bu toggling the comment on the calls below
+				this.performHandover();
+				//this.loadHandover();
+			}
+			//++++++++++++++++++++++++++++
+						
+			
+			
+			
+
+		
+		]]>
+		</method>
+		
+		
+		
+		<!-- Perform Handover -->
+		<method name="performHandover" args="ignore=null" >
+			this.handoverDel.unregisterAll();
+			if(this.prevquestion){
+				//deebug("stopping" + this.prevquestion.qname);
+				//we also pass in the "animate out" to use
+				this.prevquestion.stopQuestion(this.nowquestion.entryanim);
+			}
+			//deebug("starting" + this.nowquestion.qname);
+			this.nowquestion.startQuestion();
+			
+		</method>
+		<method name="loadHandover" args="ignore=null" >
+			lz.Timer.addTimer( new lz.Delegate(this,"performHandover"), 500);
+		</method>
+		<method name="loadPreloadNext" args="pausetime" >
+			lz.Timer.addTimer( new lz.Delegate(this,"preloadNext"), pausetime);
+		</method>
+	
+		
+		<!-- preloading strategies -->
+				<method name="preloadQuestions" args="ignore=null">				
+					
+					//deebug("to preload");
+					var prevqname = 'none';
+					if(this.prevquestion) prevqname=this.prevquestion.qname;
+					this.qcache.loadQuestions(this.nowquestion.preload, this.nowquestion.qname,prevqname);
+				</method>
+				<!-- Method we used for flash : identical?
+				<method name="preloadQuestions" args="ignore=null">
+					var prevqname = 'none';
+					var preloadstring = 'none';
+					if(this.prevquestion) prevqname=this.prevquestion.qname;
+					if(this.nowquestion.preload) preloadstring= this.nowquestion.preload;
+					this.qcache.loadQuestions(preloadstring, this.nowquestion.qname, prevqname);
+				</method>
+				-->
+				
+				<method name="preloadNext" args="ignore=null">
+					var prevqname = 'none';
+					var preloadstring = 'none';
+					if(this.prevquestion) prevqname=this.prevquestion.qname;
+					preloadstring= this.nowquestion.getNext() + "," + this.nowquestion.qback;
+					
+					this.qcache.loadQuestions(preloadstring, this.nowquestion.qname, prevqname);
+				</method>
+		
+		
+		<!-- On view init we set up the delegate for switching -->
+		<handler name="oninit">
+			//init our questioncache
+			//deebug("initing cache");
+			this.qcache.initCache();
+			
+		
+			
+			//deebug("switchdel");
+			if( typeof this.switchDel == "undefined" )  {
+				this.switchDel = new lz.Delegate( this, "doSwitch"); 
+				//set up our first question load
+				deebug("doing switch");
+				this.doSwitch();
+				//begin playing the background audio
+				if (this.settings.XAplaybacksound =='yes'){
+					deebug("doing initial background play");
+					deebug("audiosrc=" + this.backgroundaudio.audiosrc);
+					this.backgroundaudio.play();
+				}
+			}      
+		</handler>
+
+	</view>
+
+</class>
+
+<class name="questioncache" >
+		<attribute name="cachesize" value="10" />
+		<attribute name="qholder" />
+		<attribute name="stickyquestions" />
+		<event name="onloadcomplete" />
+		
+		<method name="initCache">
+			if( typeof this.qCache == "undefined" )  {
+				this.qCache = new Array();					
+			}		
+		</method>
+		
+		<method name="pushCache" args="aquestion">
+			if( typeof this.qCache != "undefined" )  {
+				this.qCache.push(aquestion);				
+			}		
+		</method>
+
+		<method name="getCacheIndex" args="qname">
+			var foundIt = false;
+			for (var key in this.qCache) {
+				if (this.qCache[key].qname == qname) {
+					//deebug("found qname:" + qname + ":" + key);
+					foundIt=true;
+					break;
+				}
+			}
+			if(foundIt) {		
+				return key;
+			}else{
+				return -1;
+			}
+		</method>
+			
+
+		<method name="unsetQuestion" args="qname">
+		<![CDATA[
+			//remove a question from the cached questions
+			var key = this.getCacheIndex(qname);
+			if(key ==-1){
+				return null
+			}else{
+				
+				return this.qCache.splice(key, 1)[0];
+			}
+
+			]]>
+		</method>
+		
+		<method name="setQuestion" args="qname">
+		<![CDATA[
+			var newQ = fetchQuestion(qname);
+			//deebug("newQ:next:" + newQ.qnext); 
+			//add a question to the cached questions
+			if(newQ)  {
+				//deebug("preloaded " + qname);
+				//deebug(typeof newQ);
+				this.qCache.push(newQ);
+				return newQ;
+			}else{
+				return null;
+			}
+			]]>
+		</method>
+		<method name="getQuestion" args="qname">
+		<![CDATA[
+			//get a question from the cached questions
+			var key = this.getCacheIndex(qname);
+			if(key ==-1){
+				return setQuestion(qname);
+			}else{
+				return this.qCache[key];
+			}
+			]]>
+		</method>
+		<method name="removeDuplicates" args="thearray">
+			<![CDATA[
+
+				  var i;
+				  var len=thearray.length;
+				  var out=[];
+				  var obj={};
+
+				  for (i=0;i<len;i++) {
+					obj[thearray[i]]=0;
+				  }
+				  for (i in obj) {
+					out.push(i);
+				  }
+				  return out;
+
+			]]>
+		</method>
+		
+		<method name="loadQuestions" args="preloads,currentqname,prevqname">
+		
+		<![CDATA[
+			//It is wise to have some sticky questions preloaded, for options, start etc, 
+			//we don't want to overwrite and remake them all the time
+			if (this.stickyquestions != null){
+					var stickyArray = this.stickyquestions.split(",");
+				}else{
+					var stickyArray= new Array();
+			}
+			
+			//Add stickyqs and any preload qs to our preload array
+			if (!preloads || preloads=='none'){
+				var preloadArray=stickyArray;
+			}else{
+				var preloadArray = preloads.split(",");	
+				preloadArray = preloadArray.concat(stickyArray);
+			}
+			
+			//add currentqname and prevqname
+			if(currentqname && currentqname!='none'){
+				preloadArray.push(currentqname);
+			}
+			if(prevqname && prevqname!='none'){
+				preloadArray.push(prevqname);
+			}
+			
+			//remove any duplicates which there quite possibly will be
+			preloadArray=removeDuplicates(preloadArray);
+			
+			/*
+			deebug("preloadarray count:" + preloadArray.length); 
+			for (var lkey in preloadArray){
+				deebug("peloadkeys:" + lkey + ":" + preloadArray[lkey]);
+			}
+			*/
+			
+			var loadKeysArray = new Array();
+			var qtempArray = new Array();
+			
+			/*
+			deebug("ONE qCache count:" + this.qCache.length); 
+			for (var lkey in this.qCache){
+				deebug("qCache:" + lkey + ":" + this.qCache[lkey].qname);
+			}
+			*/
+			
+			//if we already have a question in cache that doesn't need preloading, shift it to temp
+			//else record the real need to preload
+			for (var key in preloadArray){
+				var cIndex = this.getCacheIndex(preloadArray[key]);
+				if (cIndex > -1){
+					//deebug("stashing for reuuse:" + preloadArray[key]);
+					qtempArray.push(unsetQuestion(preloadArray[key]));
+				}else{
+					loadKeysArray.push(preloadArray[key]);
+				}
+			}
+			/*
+			deebug("TWO qCache count:" + this.qCache.length); 
+			for (var lkey in this.qCache){
+				deebug("qCache:" + lkey + ":" + this.qCache[lkey].qname);
+			}
+			*/
+		/*
+			deebug("temparray count:" + qtempArray.length); 
+			for (var lkey in qtempArray){
+				deebug("tempkeys:" + lkey + ":" + qtempArray[lkey].qname);
+			}
+			
+			deebug("loadKeysArray count:" + loadKeysArray.length); 
+			for (var lkey in loadKeysArray){
+				deebug("lkeys:" + lkey + ":" + loadKeysArray[lkey]);
+			}
+			
+			deebug("qCache count:" + this.qCache.length); 
+			for (var lkey in this.qCache){
+				deebug("qCache:" + lkey + ":" + this.qCache[lkey].qname);
+			}
+			*/
+			//go through the cache reassigning questions xpaths to preload xpaths. If we run out of questions, create new ones.
+			for (var lkey in loadKeysArray){
+				//deebug("preloading:"  + loadKeysArray[lkey]);
+				//if profiling enable this
+				//var startD = Number(new Date().getTime());
+				
+				if(lkey < this.qCache.length){
+					//printtime("x start:" + loadKeysArray[lkey]);
+					//deebug("loading " + loadKeysArray[lkey] + " over " + this.qCache[lkey].qname);
+					//this.qCache[lkey].datapath.setXPath("local:qholder.parent.questions:/questionset/question[@qname='" + loadKeysArray[lkey] + "']/text()");
+					this.qCache[lkey].datapath.setXPath("questions:/questionset/question[@qname='" + loadKeysArray[lkey] + "']/text()");
+					//printtime("x end:" + loadKeysArray[lkey]);
+				}else{
+					//printtime("s start:" + loadKeysArray[lkey]);
+					//deebug("creating new  " + loadKeysArray[lkey]);
+					setQuestion(loadKeysArray[lkey] );
+					//printtime("s end:" + loadKeysArray[lkey]);
+				}
+				
+				//If profiling enable this
+				/*
+				var endD = Number(new Date().getTime());
+				var diff = (endD - startD);
+				deebug( loadKeysArray[lkey] + " loadtime:" + diff); 
+				*/
+			}
+
+			//put the questions we shifted to temp, back into main array
+			while(qtempArray.length > 0){
+			 //deebug("replacing:"  + qtempArray[qtempArray.length-1].qname);
+			 this.qCache.push(qtempArray.pop());
+			}
+			
+			//deebug("qCache count:" + this.qCache.length);
+			
+			//Raise event to alert the current question that it has started
+			//the questions delegate was set in switch question
+			//this is to make the caching and q starting/animation sequential
+			//if superloader never loaded cos all cached, force an alert
+			this.onloadcomplete.sendEvent();
+			if(superloader.loading.length==0){
+				superloader.alertEmpty();
+			}		
+			
+			]]>
+		
+		
+		</method>
+		
+	
+		
+		<method name="fetchQuestion" args="qname">
+			<![CDATA[
+			deebug("qname:" + qname);
+			var newQ = new lz.singlequestion(this.qholder,{
+				"y" :0,
+				"width": parent.width,
+				"height": parent.height,
+				"qholder": classroot.qholder,
+				"visible": false,
+				"font": classroot.qholder.font,
+				"fgcolor": classroot.usefontcolor,
+				"datapath": "questions:/questionset/question[@qname='" + qname + "']/text()"				
+			});
+		
+			
+	
+			if(newQ){
+				newQ.datapath.setAttribute("pooling",classroot.qholder.pooling);			
+			}else{
+				deebug("couldn't make question:" + qname);
+			}
+			
+
+			return newQ;
+			]]>
+		</method>
+
+
+</class>
+
+
+
+		<!--The visible part of a question, contains buttons, prompts text etc -->
+		<class name="singlequestion"  visible="false" extends="transitionview" >
+			
+				<!--the current next and fallback questions names in the dataset -->
+				<attribute name="qname" value="$path{'@qname'}" />
+				<attribute name="qnext" value="$path{'@qnext'}" />
+				<attribute name="qback" value="$path{'@qback'}" />
+				<attribute name="preload" value="$path{'@preload'}" />
+				<attribute name="backcolor" value="$path{'@bgcolor'}" />
+				<attribute name="backimage" value="$path{'@bgimage'}" />
+				<attribute name="hinttext" value="$path{'@hinttext'}" />
+				
+				<!-- added two new properties 20110515 nextsound and backsound -->
+				<!-- to simplify game type success/fail sounds -->
+				<attribute name="nextsound" value="$path{'@nextsound'}" />
+				<attribute name="backsound" value="$path{'@backsound'}" />
+				
+				<!--Are x and y coords abs or percentage based -->
+				<attribute name="absolute" value="false" />
+				
+				<!--if set, sets the top back image, ie behind this question, to the image specified -->
+				<attribute name="topbackimage" value="$path{'@topbgimage'}" />
+				
+				<!-- This matches with action button slot as a key for enablign disabling menu buttons-->
+				<attribute name="slot" value="$path{'@slot'}"/>
+				
+				<!-- A flag to tell use which "next" question we put into the question cache at preloading -->
+				<!-- Only necessary if we intend to do semi random nextquestioning -->
+				<attribute name="cachedqnext" value="''" />
+				
+				<!--A handle on the question container -->
+				<attribute name="qholder" value="null" />
+				
+				<!--Delegate we use to begin audio -->
+				<attribute name="audioPromptDel" />
+				
+				<!--Flag to allow/diallow click events -->
+				<attribute name="canclick" value="false" />
+				
+				<!-- Delegate we use to start off the question -->
+				<attribute name="startQuestionDel" />"
+				<attribute name="stopQuestionDel" />"
+
+				
+				<!--Delegate we use to perform "next" and "back to start" action -->
+				<attribute name="nextDel" />
+				<attribute name="backDel" />
+				
+				<!--Timer info to handle timed actions -->
+				<attribute name="timer" value="$path{'@timer'}" />
+				<attribute name="timerarg" value="$path{'@timerarg'}" />
+				<attribute name="hidetimer" value="$path{'@hidetimer'}" />
+				<attribute name="promptaudiopath" value="$path{'prompt/@promptaudio'}" />
+				
+				<!-- Entry animation  values = in left right up none-->
+				<attribute name="entryanim" value="$path{'@entryanim'}" />
+				<!--The animation duration time(ms)  -->
+				<attribute name="transdur" value="0"/>
+				<attribute name="useTransDur" value="400"/>
+				
+				<!--Attribute to validate a question against button state -->
+				<attribute name="validateIndex" value="0"/>
+				
+				<!--The time(ms) to wait after determination, for the transition -->
+				<attribute name="transitionTime" value="0"/>
+
+				
+				<!-- event to show listeners we have started the question. -->
+				<event name="onstarted" />
+				<event name="onstopped" />
+				
+				<setter name="x" args="newX">
+						<![CDATA[
+						//SWF10 doesnt recognise this.qholder but dhtml does? so used parent.qholder
+						if(newX!=null && this.qholder!=null && !this.absolute){
+							super.setAttribute("x", this.qholder.fetchX(newX));
+							//deebug("x:"  + x + ":" + newX);
+						}else{
+
+							super.setAttribute("x", newX);
+						}
+						]]>
+				</setter>
+				<setter name="y" args="newY">
+						<![CDATA[
+						//SWF10 doesnt recognise this.qholder but dhtml does? so used parent.qholder
+						if (newY!=null && this.qholder!=null  && !this.absolute){
+							super.setAttribute("y", this.qholder.fetchY(newY));
+							//if (y==0){deebug("y:0:" + newY);}
+						}else{
+							super.setAttribute("y", newY);
+						}
+						]]>
+				</setter>
+				
+				
+				
+				<!-- attribute name="prompttexttext" value="$path{'prompt/@prompttext'}" -->
+			
+				
+				<!--The background image : should be able to change this from dataset data really.-->
+				<!-- added the visible condition, cos flash did not renullify a null bg if it has alreqdy been set as a prev q -->	
+				<smartimage name="backgroundimage" smartsrc="${parent.backimage}" sloader="${superloader}"  visible="${this.smartsrc != null}" bgcolor="${parent.backcolor ? Number(parent.backcolor) : null}" stretches="both" width="${parent.width}" oninit="this.sendToBack()" height="${parent.height}" />
+				
+				<!-- Prepare Audio prompt if we have one  -->
+				<!-- audionode name="promptaudio"  audiosrc="${parent.promptaudiopath}" autoplay="false" loopplay="false" mute="${classroot.qholder.settings.XAplayaudioprompt != 'yes'}" -->
+				
+				<!-- Prepare Text prompt if we have one ading a fot here is dodgey font="${parent.font}" -->
+				<itext name="prompttext" datapath="prompt/@prompttext" font="${parent.font}" restoretext="$path{'@prompttext'}" fgcolor="$path{'@fcolor'}" width="$path{'@width'}" bgcolor="$path{'@bcolor'}" fontsize="$path{'@fsize'}" fontstyle="bold" y="$path{'@y'}" visible="${classroot.qholder.settings.XAshowtextprompt=='yes'}"  />
+
+				<!-- Show the option button(s)  -->
+				<!-- Added a type to button so that pooling remnants not required, are also not displayed 
+				ie a text button, sometimes will show the image of a reused image button, if we dont do this -->
+				<!-- added a pic1visible=true so that it is always initialised, otherwise the pic2 image can be displayed as a pooling remnant --> 
+				<actionbutton  title="$path{'@name'}"  type="$path{'frame[1]/@type'}" font="${parent.font}"  slot="$path{'@slot'}" framecount="$path{'@framecount'}" timer="$path{'@timer'}" qholder="${classroot.qholder}" cantoggle="$path{'@cantoggle'}" systemproperty="$path{'@systemproperty'}" audpath="$path{'@clicksound'}" x="${this.startX}" y="${this.startY}" startX="$path{'@startx'}" startY="$path{'@starty'}" endX="$path{'@endx'}" endY="$path{'@endy'}" animTime="$path{'@animtime'}" >
+					<datapath xpath="button" pooling="true" />
+					<panframe type="$path{'@type'}" pic1source="$path{'@src'}" pic1visible="true" pic2source="$path{'@src2'}" picspeed="$path{'@picspeed'}"  width="$path{'@width'}"  height="$path{'@height'}" font="${parent.font}"  ftext="$path{'@ftext'}" fsize="$path{'@fsize'}" fcolor="$path{'@fcolor'}" bstate="$path{'@bstate'}" action="$path{'@action'}" args="$path{'@args'}" qholder="${classroot.qholder}" >
+						<datapath xpath="frame" pooling="true"  />
+					</panframe>
+					
+				</actionbutton>
+				<!-- Show any static elements  -->
+				<staticelement  title="$path{'@name'}" type="$path{'frame[1]/@type'}"  font="${parent.font}"  framecount="$path{'@framecount'}" timer="$path{'@timer'}" qholder="${classroot.qholder}" x="${this.startX}" y="${this.startY}" startX="$path{'@startx'}" startY="$path{'@starty'}" endX="$path{'@endx'}" endY="$path{'@endy'}" animTime="$path{'@animtime'}" >
+					<datapath xpath="static" pooling="true"   />
+					<panframe type="$path{'@type'}" pic1source="$path{'@src'}"  pic1visible="true" pic2source="$path{'@src2'}" picspeed="$path{'@picspeed'}"  width="$path{'@width'}"  height="$path{'@height'}" font="${parent.font}"  ftext="$path{'@ftext'}" fsize="$path{'@fsize'}" fcolor="$path{'@fcolor'}" bstate="$path{'@bstate'}" action="$path{'@action'}" args="$path{'@args'}" qholder="${classroot.qholder}" >
+						<datapath xpath="frame" pooling="true"  />
+					</panframe>
+					
+				</staticelement>
+				<alert name="hintbox" minwidth="250" maxtextwidth="200" fgcolor="0x000000">dont kid me that buttons have a meaning mortals cant fathom</alert>
+
+				<switch>
+					<when property="$dhtml">
+
+						<method name="iap_restore">
+							iapnode.executeRestore();
+						</method>
+						<method name="iap_prodreq" args="productid">
+							var prodinfo = settings.getProperty("ZA" + productid);
+							
+							if(prodinfo == '0'){
+								deebug("actioning prodreq:" + productid);
+								iapnode.executeProdReq(productid);
+							}else{
+								prodinfo = prodinfo.split('|');
+								var title= prodinfo[0];
+								var description = prodinfo[1];
+								deebug("ZAblahblahblah:" + title + ':' + description);
+								deebug("actioning confirm:" + productid);
+								iapnode.executeConfirm(productid,title, description);
+							}
+							
+						</method>					
+					</when>
+					<otherwise>
+
+						<method name="iap_prodreq" args="productid">
+							deebug('iapprodreq_action:' + productid);
+						</method>
+						<method name="iap_restore" >
+							deebug('iaprestore_action:');
+						</method>
+					</otherwise>
+				</switch>
+				
+				<!-- The main action procedure  -->
+				<method name="doaction" args="theaction,args">
+				<![CDATA[
+					//printtime("doaction");
+					switch (theaction){
+						case 'none': return;
+									break;
+									
+						case 'condition': 
+									var next= this.qholder.evalCondition(args);
+									this.qholder.switchQuestion(next,this.transitionTime);
+									if (this.nextsound){
+												this.qholder.nextbackaudio.setAttribute("audiosrc", this.nextsound);
+												this.qholder.nextbackaudio.play();
+									}
+									break;
+								
+						case 'playback': 
+									if (this.backsound){
+												this.qholder.nextbackaudio.setAttribute("audiosrc", this.backsound);
+												this.qholder.nextbackaudio.play();
+									}
+									break;
+						
+						case 'playnext': 
+									if (this.nextsound){
+												this.qholder.nextbackaudio.setAttribute("audiosrc", this.nextsound);
+												this.qholder.nextbackaudio.play();
+									}
+									break;
+						
+						case 'pngproperty': 
+									this.qholder.settings.setProperty(args + "png","resources/" + this.qholder.settings.getProperty(args) + ".png",false);
+									deebug(args + " " + this.qholder.settings.getProperty("args"));
+									break;
+						
+						case 'incproperty': 
+									this.qholder.settings.setProperty(args,Number(this.qholder.settings.getProperty(args))+ 1,false);
+									deebug(args + " " + this.qholder.settings.getProperty("args"));
+									break;
+									
+						case 'decproperty': 
+									this.qholder.settings.setProperty(args,(Number(this.qholder.settings.getProperty(args)) - 1),false);
+									break;
+						
+						case 'systemproperty': 
+									var propdata= args.split(':');
+									//deebug("propdata[0]:" + propdata[0]);
+									//deebug("propdata[1]:" + propdata[1]);
+									this.qholder.settings.setProperty(propdata[0],propdata[1],true);
+									break;
+						
+						case 'tempproperty': 
+									var propdata= args.split(':');
+									//deebug("propdata[0]:" + propdata[0]);
+									//deebug("propdata[1]:" + propdata[1]);
+									this.qholder.settings.setProperty(propdata[0],propdata[1],false);
+									break;
+									
+						case 'systemcommand': 
+									var propdata= args.split(':');
+									//deebug("propdata[0]:" + propdata[0]);
+									//deebug("propdata[1]:" + propdata[1]);
+									switch(propdata[0]){
+										case 'clearall': this.qholder.settings.ld.clear();
+														break;
+										case 'default': break;									
+									}
+									
+						case 'showhint':
+								Debug.write(this.qholder.prevquestion.hinttext);
+								if (lz.Browser.getOS().indexOf('iP')<0){
+									this.hintbox.alerttext.setAttribute("text", this.qholder.prevquestion.hinttext);
+									this.hintbox.open();
+								}else{
+									navigator.notification.alert(this.qholder.prevquestion.hinttext);
+									
+								}
+								
+								break;
+									
+						case 'next': 									
+									this.doNext();
+									break;
+									
+						case 'startbigtimer': 									
+									this.qholder.bigtimer.resetTimer();
+									this.qholder.bigtimer.setAttribute("inittime", args);
+									this.qholder.bigtimer.startTimer();
+									break;
+									
+						case 'resetbigtimer': 									
+									this.qholder.bigtimer.resetTimer();
+									break;
+									
+						case 'loader': 
+									this.qholder.setAttribute("postloaderqname",args);
+									this.qholder.switchQuestion('loader',this.transitionTime);
+									break;
+									
+						case 'prompttext': 
+									this.prompttext.setAttribute("text",args);
+									break;
+						
+						case 'playprompt': 
+									this.beginAudioPrompt();
+									break;
+									
+						case 'promptaudio': 
+									this.setAttribute("promptaudiopath",args);
+									this.prepareAudioPrompt();
+									break;
+									
+						case 'bumpAnother': 
+									var theStatic = this.searchSubviews('title',args);
+									if(theStatic){
+										theStatic.bumpState();
+									}
+									break;
+									
+						case 'pausenext': this.qholder.switchQuestion(this.getNext(),args);
+									if (this.nextsound){
+										deebug("playing next");
+										this.qholder.nextbackaudio.setAttribute("audiosrc", this.nextsound);
+										this.qholder.nextbackaudio.play();
+									}
+									break;
+									
+						case 'iap_prodreq': 
+									this.iap_prodreq(args);
+									break;
+						
+									
+						case 'iap_restore': 
+									this.iap_restore();
+									break;
+									
+						case 'shuffle': 
+									this.qholder.shuffle(args);
+									break;
+															
+						case 'previous': this.doPrev();
+									break;
+									
+						case 'start': this.qholder.switchQuestion("start",this.transitionTime);
+									break;
+						
+						case 'back': this.doBack();
+									break;
+									
+									
+						case 'jump': this.qholder.switchQuestion(args,this.transitionTime);
+									break;
+									
+						case 'seqvalidate': if (this.validateIndex<args){
+											doBack();
+										}else{
+											this.setAttribute("validateIndex",args+1);
+										}
+									break;
+									
+						case 'seqvalidatenext': 
+										//deebug("valindex:args:" + this.validateIndex + ":" + args);
+										if (this.validateIndex<args){
+											this.doBack();
+										}else{
+											this.doNext();
+										}
+									break;
+						case 'grpvalidate': 
+										//deebug("valindex:" + this.validateIndex + ":" + args );
+										if (this.validateIndex<args){
+											this.setAttribute("validateIndex",this.validateIndex+1);
+										}else if(this.validateIndex==args){
+											this.doNext();
+										}else{
+											//presumably we bust, so we got to get out
+											this.doBack();
+										}
+									break;
+						case 'grpvalidatepause': 
+										//deebug("valindex:" + this.validateIndex + ":" + args );
+										if (this.validateIndex<args){
+											this.setAttribute("validateIndex",this.validateIndex+1);
+										}else if(this.validateIndex==args){
+											this.qholder.switchQuestion(this.getNext(),800);
+											if (this.nextsound){
+												this.qholder.nextbackaudio.setAttribute("audiosrc", this.nextsound);
+												this.qholder.nextbackaudio.play();
+											}
+										}else{
+											//presumably we bust, so we got to get out
+											this.doBack();
+										}
+									break;
+						
+						//The default heads up to canvas. though this wont happen often
+						//It is to provide app specific actions.
+						default: canvas.doaction(theaction,args);
+								break;
+						
+					};
+					]]>
+				</method>
+				
+				<!-- Determines the next question. -->
+				<!-- This gets complicated when we cache questions -->
+				<!-- we do this when we are randmosing the next question, so that the question that gets cached
+					is the same one that gets called as the new nowquestion later 
+					because it is important that it doesn't persist as a pooling remnant, we clear it a number of points.					
+				-->
+				<method name="getNext">
+					var usenext='';
+						
+					//if we have a qnext we use it, else we try to determine it.	
+					if(this.qnext){
+							//if the qnext is a list of random options
+							if(this.qnext.indexOf('random:')==0){
+								var optstring = this.qnext.substring(7);
+								var optarray=optstring.split(",");
+								
+								//check if our cachedquestion exists
+								if(this.cachedqnext !=''){
+									for (var akey in optarray){
+										if(optarray[akey]==this.cachedqnext){
+											usenext=this.cachedqnext;
+											this.setAttribute('cachedqnext','');
+											break;
+										}
+									}
+								}else{								
+									//select the next randomly, and cache it, because we are probably preloading now, and want to load same later
+									usenext = optarray[Math.floor(Math.random()* optarray.length)];
+									this.setAttribute('cachedqnext',usenext);
+								}
+									
+							//if the qnext is listerally the next q name
+							}else{
+								usenext=this.qnext;
+							}
+					//if nothign specified we just work it out based on sequence in the xml file	
+					}else{
+							var dp = this.datapath.dupePointer();
+							if(dp.selectNext()){
+								usenext= dp.getNodeAttribute("qname");							
+							
+							}
+					}
+					//deebug("figuredoutqnext:" + usenext);
+					return usenext;
+				</method>
+				
+				<!-- These two are convenience methods to call from delegates and the action procedure  -->
+				<method name="doNext" args="pausetime=0">
+						//sometimes had a strange value come in at pausetime, never passed in anyway
+						//so removed it from switchQuestion call, replaced with transition time
+						this.qholder.switchQuestion(this.getNext(),this.transitionTime);
+						if (this.nextsound){
+								this.qholder.nextbackaudio.setAttribute("audiosrc", this.nextsound);
+								this.qholder.nextbackaudio.play();
+						}
+				</method>
+				<method name="doBack" args="pausetime=0">
+						//sometimes had a strange value come in at pausetime, never passed in anyway
+						//so removed it from switchQuestion call, replaced with transition time
+						this.qholder.switchQuestion(this.qback, this.transitionTime);
+						if (this.backsound){
+								this.qholder.nextbackaudio.setAttribute("audiosrc", this.backsound);
+								this.qholder.nextbackaudio.play();
+						}
+				</method>
+				<method name="doPrev" args="pausetime=0">
+						//sometimes had a strange value come in at pausetime, never passed in anyway
+						//so removed it from switchQuestion call, replaced with transition time
+						this.qholder.switchQuestion(this.qholder.prevactiontarget, this.transitionTime);
+						
+				</method>
+				
+				<method name="startTimer">
+					<![CDATA[
+						//deebug("timer:"+ this.timer);
+						//deebug("timer:"+this.timerarg);
+						if (this.timer !=null && this.timerarg !=null && !this.qholder.parent.disabletimer ){
+							switch(this.timerarg){
+							
+								case 'next':
+										lz.Timer.addTimer( this.nextDel, this.timer);
+										break;
+								case 'back':
+										lz.Timer.addTimer( this.backDel, this.timer);
+										break;
+								case 'previous':
+										lz.Timer.addTimer( this.prevDel, this.timer);
+										break;
+								
+							}
+							
+							//kick off our visible timer.
+							//We could probably combine the functions of the two ...
+							this.qholder.littletimer.resetTimer();
+							this.qholder.littletimer.setAttribute("inittime", this.timer);
+							this.qholder.littletimer.startTimer();
+							//deebug('kickedofftimer');
+		
+						}
+						
+						
+						
+					]]>
+				</method>
+				<method name="prepareAudioPrompt">
+					lz.Timer.addTimer( this.audioPromptDel, 200);
+				</method>
+				<method name="beginAudioPrompt" args="ignore=null">
+						//play from top level
+						//deebug("promptaudiopath:" +  this.promptaudiopath);
+						if (this.promptaudiopath){
+							this.qholder.promptaudio.setAttribute("audiosrc", this.promptaudiopath);
+							this.qholder.promptaudio.play();
+							//deebug("started playing:" +  this.promptaudiopath);
+						}
+						
+					
+						
+				</method>
+				
+				<!-- The StartQuestion method is designed to be called from a delegate
+						to prevent overloading iphone during caching but it could be called manually.
+					-->
+				<method name="startQuestion" args="ignore=null">
+							<![CDATA[		
+					//ensure our menu buton is enabled if we have one and we arrived here (by merit) so we can come back from menu
+					if (this.slot){
+						var propvalue = this.qholder.settings.getProperty(this.slot);
+						if (propvalue=='false'){
+							this.qholder.settings.setProperty(this.slot,'true');
+							deebug("enabled slot:" + this.slot);
+						}
+						
+					}
+					
+					//if we preloaded and flagged the cachedqnext attribute with the name of the next q
+					//in a previous incarnation (ie a pooling remnant) lets clear it here. 
+					//This depends on preload being called AFTER startQuestion. Otherwise we would clear it before we use it at switchquestion
+					this.setAttribute("cachedqnext",'');
+					
+					
+					
+					//If the prompttext was changed via an action previously restore it
+					//deebug("restoretext:" + this.prompttext.restoretext);
+					if(this.prompttext.restoretext && this.prompttext.restoretext !=  this.prompttext.text){
+						this.prompttext.applyData(this.prompttext.restoretext);
+					}
+					
+					//deebug("starting:" +  this.qname);
+					this.onstarted.sendEvent();				
+					this.bringToFront();
+					
+					//If we have a background picture for the top level then lets set that now
+					//This will occur only on the head question in a set.
+					if (this.topbackimage){
+						if (this.qholder.backgroundimage.smartsrc != this.topbackimage){
+							//deebug("changing top bbg image:" + this.topbackimage);
+							this.qholder.backgroundimage.setAttribute("smartsrc", this.topbackimage);
+						}
+					}	
+		
+					
+					//Begin any animations we need
+					//first clear upany animation remnants
+					this.resetTransAttr("x",0);
+					this.resetTransAttr("y",0);
+					this.resetTransAttr("opacity",1);
+
+					
+					if(!this.entryanim){this.setAttribute("entryanim",'none');}
+					switch(this.entryanim){
+				
+						case 'none':this.setAttribute("visible",true);
+									break;
+									
+						case 'in':	
+									this.resetTransAttr("opacity",0);
+									this.setAttribute("visible",true);
+									this.setAttribute("transdur",this.useTransDur);
+									this.setTransAttr("opacity",1);									
+									break;
+									
+						case 'left': 
+									this.setAttribute("visible",true);
+									this.resetTransAttr("x",100);					
+									this.setAttribute("transdur",this.useTransDur);
+									this.setTransAttr("x",0);
+									break;
+									
+						case 'right': 										
+									this.setAttribute("visible",true);
+									this.resetTransAttr("x",-100);
+									this.setAttribute("transdur",this.useTransDur);
+									this.setTransAttr("x",0);																		
+									break;
+									
+						case 'up': this.resetTransAttr("y",100);									
+									this.setAttribute("visible",true);
+									this.setAttribute("transdur",this.useTransDur);
+									this.setTransAttr("y",0);
+									break;
+					
+					}
+					//set flag to allow click events
+					this.setAttribute("canclick",true);
+					
+					this.prepareAudioPrompt();
+					this.startTimer();	
+					]]>			
+				</method>
+				
+				<!-- The StopQuestion method is designed to be called from a delegate
+						in conjunction with start question but it could be called manually.
+					-->
+				<method name="stopQuestion" args="exitanim=null">
+					if( typeof this.startQuestionDel != "undefined" )  {
+						this.startQuestionDel.unregisterAll();
+					}
+					
+					
+					if(exitanim){
+	
+	
+							switch(exitanim){
+								case 'none':
+										//this.setAttribute("visible",false);
+										this.hideQuestion();
+										break;
+								case 'in':
+										this.setAttribute("transdur",this.useTransDur);
+										this.hideQuestionDel.register(this, "transitionover");
+										this.setTransAttr("opacity",0);									
+										break;
+								case 'left': 
+										this.setAttribute("transdur",this.useTransDur);
+										this.hideQuestionDel.register(this, "transitionover");
+										this.setTransAttr("x",-100);									
+										break;
+								case 'right': 
+										this.setAttribute("transdur",this.useTransDur);
+										this.hideQuestionDel.register(this, "transitionover");
+										this.setTransAttr("x",100);										
+										break;
+								case 'up': 		
+										this.setAttribute("transdur",this.useTransDur);
+										this.hideQuestionDel.register(this, "transitionover");
+										this.setTransAttr("y",-100);								
+										break;
+								default: //this.setAttribute("visible",false);
+										this.hideQuestion();
+							
+					
+							}
+							
+							
+							
+					}else{
+						//deebug("no exit anim");
+						this.hideQuestion();
+					}
+					
+					
+					
+					//we raise the onstopped event to reset button positions
+					//if we are transitioning, we want to do that after the question is off screen
+					//so we move this call to the hideQuestion Justin 20110515
+					//this.onstopped.sendEvent();	
+					
+					//This is important, probably no harm in moving it to hideQuestion too
+					//but wait and see    Justin 20110515
+					this.setAttribute("validateIndex",0);					
+				</method>
+				
+				<method name="hideQuestion" args="ignore=null">
+					//deebug("tranny over: hiding question");
+					this.setAttribute("visible",false);
+					this.onstopped.sendEvent();
+					this.hideQuestionDel.unregisterAll();
+					
+				</method>
+
+				<handler name="oninit">
+					//Debug.write("question view inited");
+		
+					if( typeof this.audioPromptDel == "undefined" )  {
+						this.audioPromptDel = new lz.Delegate( this, "beginAudioPrompt"); 
+					}
+					if( typeof this.nextDel == "undefined" )  {
+						this.nextDel = new lz.Delegate( this, "doNext"); 
+					}
+					if( typeof this.backDel == "undefined" )  {
+						this.backDel = new lz.Delegate( this, "doBack"); 
+					}
+					if( typeof this.prevDel == "undefined" )  {
+						this.prevDel = new lz.Delegate( this, "doPrev"); 
+					}
+					if( typeof this.startQuestionDel == "undefined" )  {
+						this.startQuestionDel = new lz.Delegate( this, "startQuestion");
+					}
+					if( typeof this.hideQuestionDel == "undefined" )  {
+						this.hideQuestionDel = new LzDelegate( this, "hideQuestion" );
+					}
+
+					
+					if( typeof this.stopQuestionDel == "undefined" )  {
+						this.stopQuestionDel = new lz.Delegate( this, "stopQuestion");
+					}
+
+					
+
+					
+				</handler>
+		
+				
+</class>
+
+
+<switch>
+    <when property="$dhtml">
+	<class name="simpleaudionode" >
+			<attribute name="autoplay" value="false" />
+			<attribute name="loopplay" value="false" />
+			<attribute name="loops" value="'{numberOfLoops:1}'" />
+			<attribute name="audiosrc" type="text" />
+			<attribute name="mediafile" />
+			<attribute name="mute" value="true" />
+			<attribute name="useresources" value="false" />
+			
+			
+			<method name="fetchaudiosrc">
+				return this.audiosrc;
+				//bypass the following while testing FinchPlug
+				if(this.audiosrc){
+					if (lz.Browser.getOS().indexOf('iP')>-1) {
+						return(this.audiosrc + ".caf");
+					}else{
+						return(this.audiosrc + ".wav");
+					}
+				}else{
+					return null;
+				}
+			
+			</method>
+			
+			<method name="play" args="ignore=null">
+			
+				<![CDATA[
+				//deebug("palying clic sound");
+				if (!this.audiosrc) return;	
+				//deebug("auidiosrc ok");
+				if (lz.Browser.getOS().indexOf('iP')<0) return;
+				if (settings.getProperty("ZAdisablephonegap")=='true') return;
+				//deebug("browserok");
+				if (this.mute)return;
+				//deebug("no mute");
+				 var usesrc= this.fetchaudiosrc();
+				if(usesrc !=null){
+						PhoneGap.exec("FinchPlug.play", usesrc);
+				}
+				]]>
+			</method>
+			<method name="init">
+			<![CDATA[
+				if (!this.audiosrc) return;	
+				if (this.mute)return;
+				if (settings.getProperty("ZAdisablephonegap")=='true') return;
+				if (lz.Browser.getOS().indexOf('iP')>-1){
+					var usesrc= this.fetchaudiosrc();
+					if(usesrc !=null){
+						deebug("src=:notnull");
+						deebug("src=:" + usesrc);
+						PhoneGap.exec("FinchPlug.prepare", usesrc);
+					}
+				}
+				super.init();
+				]]>
+			</method>
+	</class>
+	<!-- A phonegap audionode -->
+		<class name="audionode" >
+			<attribute name="autoplay" value="false" />
+			<attribute name="loopplay" value="false" />
+			<attribute name="loops" />
+			<attribute name="audiosrc" type="text" />
+			<attribute name="mediafile" />
+			<attribute name="mute" value="true" />
+			<attribute name="useresources" value="false" />
+			
+			<handler name="onaudiosrc">
+				if(this.audiosrc){
+					if (this.audiosrc.indexOf('.mp3')>-1 ) {
+						deebug("leaving audio alone as mp3");
+					}else if(lz.Browser.getOS().indexOf('iP')>-1) {
+						this.audiosrc=this.audiosrc + ".aifc";
+						//this had little effect
+						//this.audiosrc=this.audiosrc + ".caf";
+					}else{
+						this.audiosrc=this.audiosrc + ".wav";
+					}
+					
+					//replace up to four spaces with _ (only replaces first instance at least in dhtml ..)
+					//hence we do it  four times
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					
+				}
+				this.initaudio();
+			</handler>
+			
+			
+			<handler name="oninit">
+				this.initaudio();
+			</handler>
+			<handler name="ondata">
+				this.initaudio();
+			</handler>
+			<method name="initaudio" args="ignore=null">
+				<![CDATA[
+				/*
+				*	only while figuring it out set the attribute from here
+				*	there should be a calback from the phonegaploaded event ... but i think laszlo 
+				*	loads too late anyway so the whole thing is meaningless...
+				*
+				if(!callback.phonegapready) {
+					deebug("delaying start node:" + callback.phonegapready);
+					lz.Timer.addTimer( new lz.Delegate( this, "initaudios"),500); 				
+					return;										
+				}
+				*/
+				
+				
+				if (!this.audiosrc) {
+					return
+				}
+					
+					
+				this.stop();
+				this.resetNode();
+				var myDictionary = new Object();
+				if(loopplay){
+					myDictionary["numberOfLoops"] = 9999;
+					
+				}else{
+					myDictionary["numberOfLoops"] = 1;
+				}
+				this.setAttribute('loops',myDictionary);
+				if(autoplay){this.play();}
+				]]>
+			</method>
+			<method name="resetNode">
+				<![CDATA[
+				if (!this.audiosrc) return;	
+				//When debuging this will get in the way when not using phonegap so we check for that here.
+				//Debug.write("canvas.mute=",canvas.mute );
+				if (settings.getProperty("ZAdisablephonegap")=='true') return;
+				if (lz.Browser.getOS().indexOf('iP')<0) return;
+				if (this.mute)return;
+				//return;
+				this.mediafile = new Media(this.audiosrc, 
+                    function() {
+						deebug("succeeded making media");
+                        this.gotsuccess;
+                    }, 
+					function (error) {
+						deebug("failed making media");
+						this.goterror(error.message);
+						
+					});
+				]]>
+			</method>
+			<method name="goterror" args="err=null">
+				 deebug("Error making media:" + this.audiosrc + ":" + err);
+			</method>
+			<method name="gotsuccess" args="success=null">
+				deebug("success making media");
+			</method>
+			<method name="play" args="ignore=null">
+			
+				<![CDATA[	
+				
+				if (this.mute || !this.audiosrc){return;}
+				//It might be null if user has toggled mute on and off.
+				if (!this.mediafile){
+					this.initaudio();
+				}
+				if (this.mediafile){
+					this.mediafile.play(this.loops);
+				}
+				
+				]]>
+			</method>
+			<method name="pause" args="ignore=null">	
+				<![CDATA[
+				if (this.mediafile != null ){
+					this.mediafile.pause();
+				}
+				]]>
+			</method>
+			<method name="stop" args="ignore=null">
+				<![CDATA[
+				if (this.mediafile != null ){
+					this.mediafile.stop();
+				}
+				]]>
+			</method>
+
+		</class>	
+		
+	</when>
+	<when property="'safaridesktop'">
+	<!-- An html5 audionode -->
+		<class name="audionode" extends="text">
+			<attribute name="autoplay" value="false" />
+			<attribute name="loopplay" value="false" />
+			<attribute name="audiosrc" type="text" />
+			<attribute name="mute" value="false"/>
+			<attribute name="divid" type="text" value="$once{'lzaudio_' + this.name + '_' + Math.random(10000000)}" />
+			<handler name="oninit">
+				this.resetNode();
+				//Debug.write("this.name:" ,this.name )
+			</handler>
+			<handler name="onaudiosrc">
+				this.resetNode();
+			</handler>
+			<handler name="ondata">
+				this.resetNode();
+			</handler>
+			
+			<method name="resetNode">
+				<![CDATA[
+				if(this.mute) return;
+				if (!this.audiosrc) return;	
+				var autoplayString = '';
+				var loopplayString = '';
+				if (this.autoplay) {autoplayString=" autoplay='true'"};
+				if (this.loopplay) {loopplayString=" loop='true'"};
+				this.setAttribute("text","<audio id='" + this.divid + "' src='"  + this.audiosrc + "'" + autoplayString + loopplayString + " />");		
+				if (this.autoplay) {this.play()};
+				//Debug.write("text:", this.text);
+				]]>
+			</method>
+			<method name="load" args="ignore=null">
+				<![CDATA[
+				if(this.mute) return;
+				if (this.audiosrc != null && this.audiosrc !=""){
+					lz.Browser.loadJS("document.getElementById('" + this.divid + "').load()");
+				}
+				]]>
+			</method>
+			<method name="play" args="ignore=null">
+			
+				<![CDATA[
+				if(this.mute) return;
+				if (this.audiosrc != null && this.audiosrc !=""){
+					this.load();
+					lz.Browser.loadJS("document.getElementById('" + this.divid + "').play()");
+				}
+				]]>
+			</method>
+			<method name="stop" args="ignore=null">
+				<![CDATA[
+				if(this.mute) return;
+				if (this.audiosrc != null && this.audiosrc !=""){
+					lz.Browser.loadJS("document.getElementById('" + this.divid + "').stop()");
+				}
+				]]>
+			</method>
+
+		</class>	
+	</when>
+	<otherwise>
+		<!-- If it is flash set up resource based sound nodes -->
+		
+		<!-- This is a simple node for soundfx, in flash no different to regular audionode -->
+		<class name="simpleaudionode" extends="audionode" />
+		
+		<!-- This flash audionode -->
+		<class name="audionode" extends="view">
+			<attribute name="audiosrc" type="text" />
+			<attribute name="mute" value="true" />
+			<attribute name="raninit" value="false" />
+			<attribute name="autoplay" value="false" />	
+			<attribute name="loopplay" value="false" />	
+			<attribute name="useresources" value="false" />
+			
+			<handler name="onaudiosrc">
+				<![CDATA[
+				//this a possibility we might append .flv to .flv to .flv here
+				//if that happens need to add logic or mve this to a setter
+				//initally used setter but it worked poorly
+				if(this.audiosrc && this.audiosrc.indexOf(".mp3") < 0){
+					this.audiosrc=this.audiosrc + ".mp3";
+				}
+				this.initaudio();
+				]]>
+			</handler>
+			<handler name="oninit">
+				this.initaudio();
+			</handler>
+			<handler name="ondata">
+				this.initaudio();
+			</handler>
+			<handler name="onmute">
+				<![CDATA[
+				if(this.raninit && this.mute){
+					deebug('stopping');
+					//added justin 2011 07 to make bgm toggle immediate
+					super.stop(null,false);
+				}
+				]]>
+			</handler>
+			<method name="initaudio">
+			<![CDATA[
+				if(this.mute) return;
+				
+			
+				if (!this.audiosrc) {
+					return;
+				}	
+				//had problems where this method somehow called itself relentlessly
+				//so be careful on the timing with the raninit attribute
+				this.setAttribute("raninit",true);
+				
+				//we massage the audio source a little if embedded or not.
+				//deebug("useresources:" + this.useresources);
+				if(this.useresources){
+					//use these to use compiled in resources
+					var namestring = this.audiosrc.replace("/","_");
+					namestring = namestring.replace(".","_");
+					namestring = namestring.replace(" ","_");
+					
+					//deebug("namestring:" + namestring);
+					this.setAttribute("resource",namestring);				
+				}else if(this.src != ("http:" + this.audiosrc)){
+					//replace up to four spaces with _ (only replaces first instance at least in dhtml ..)
+					//hence we do it  four times
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.setSource("http:" + this.audiosrc);
+				}
+				
+				this.setAttribute("loop",this.loopplay);
+				if(!this.autoplay){
+					this.stop();
+				}
+				]]>
+			</method>
+			<method name="play" args="f=null, rel:Boolean = false" returns="void">
+				<![CDATA[
+				//if mute or no src dont play, beware pooling remnants pooling remnants
+				if(!this.mute && this.audiosrc){
+					if(!this.raninit){this.initaudio();}
+					
+					super.play(f,rel);
+				}
+				]]>
+			</method>
+			<method name="stop" args="f=null, rel:Boolean = false" returns="void">
+			<![CDATA[
+				if(!this.mute && this.audiosrc){
+					if(!this.raninit){this.initaudio();}  
+					super.stop(f,rel);
+				}
+				]]>
+			</method>
+			<handler name="onlastframe">
+				if (this.loopplay){
+					this.play(1);
+				}
+			</handler>
+		</class>
+	</otherwise>
+</switch>
+
+
+<!-- An action of which a frame may have plural -->
+<class name="action" extends="node">
+	<attribute name="type" />
+	<attribute name="args" />
+</class>
+
+
+
+<!-- The base view that is touchable, to be extended only -->
+<!-- The detatched clone flag and the crap spelling of it are important! -->
+<class name="touchframe" visible="${this.bstate==this.parent.currentstate  &amp;&amp; (!this.isdetatchedclone)}" extends="view">
+	<attribute name="ftext" value="''"/>
+	<attribute name="fsize" value="18"/>
+	<attribute name="fcolor" value="0x000000"/>
+	<attribute name="qholder"/>
+	<attribute name="bstate"/>
+	<attribute name="action"/>
+	<attribute name="args"/>
+	<attribute name="type"/>
+
+	
+	
+	
+	<setter name="width" args="newW">
+		<![CDATA[
+		//SWF10 doesnt recognise this.qholder but dhtml does? so used parent.qholder
+		if(newW=='null'){newW=null;}
+		if(this.parent.qholder!=null){
+			super.setAttribute("width", this.parent.qholder.fetchW(newW));
+			//deebug("x:"  + x + ":" + newX);
+		}else{
+			deebug("qholder:null");
+			super.setAttribute("width", newW);
+		}
+		]]>
+	</setter>
+	<setter name="height" args="newH">
+		<![CDATA[
+		//SWF10 doesnt recognise this.qholder but dhtml does? so used parent.qholder
+		if(newH=='null'){newH=null;}
+		if(this.parent.qholder!=null){
+			super.setAttribute("height", this.parent.qholder.fetchH(newH));
+		}else{
+			deebug("qholder:null");
+			super.setAttribute("height", newH);
+		}
+		]]>
+	</setter>
+	
+	<!-- may be best not to pool actions, we can review later -->
+	<action name="actions" type="$path{'@type'}" args="$path{'@args'}" >
+		<datapath xpath="action" pooling="false" />
+	</action>
+	
+</class>
+
+<!-- A largely useless roundrect button drawn at runtime -->
+<!--  visible="${this.bstate==this.parent.currentstate &amp;&amp; (this.parent.type=='rect')} -->
+<class name="rectframe" extends="touchframe">
+	<attribute name="bgstartcolor"/>
+	<attribute name="bgstopcolor"/>
+	<attribute name="bdcolor"/>	
+	
+
+	<roundrect align="center" name="therect" font="${parent.font}"  width="${this.theText.width * 1.5}" height="${this.theText.height * 2}" 
+				backgroundStartColor="${parent.bgstartcolor}"
+				backgroundStopColor="${parent.bgstopcolor}"
+				borderColor="${parent.bdcolor}"
+				borderWidth="5"	
+				>
+		
+		 <itext align="center" valign="middle" font="${parent.font}"  name="theText" visible="true" fontsize="${!parent.parent.fsize ? 2 : parent.parent.fsize}" text="${parent.parent.ftext}" fgcolor="${parent.parent.fcolor}" />
+
+	</roundrect>
+</class>
+
+<!-- A text to be used as a button  in a toggle button-->
+<class name="textframe" extends="touchframe">		
+		 <itext  align="center" valign="middle" name="theText" font="${parent.font}" visible="true"  fontsize="${!parent.fsize ? 2 : parent.fsize}" text="${parent.ftext}" fgcolor="${parent.fcolor}" />
+</class>
+
+<!-- A single frame of a button state this.picsource-->
+<class name="buttonframe" extends="imageframe">
+	 <itext  align="center"  valign="middle" name="theText"  text="${parent.ftext}" font="${parent.font}" visible="true" fontsize="${!parent.fsize ? 2 : parent.fsize}" fgcolor="${parent.fcolor}"  />
+</class>
+
+<!-- A frame to do the role of button or image to reduce the number of frames to create when creating pooling and resuing-->
+<class name="panframe" extends="touchframe">
+	<attribute name="pic1source"/>
+	<attribute name="pic2source"/>
+	<attribute name="picsources"/>
+	<attribute name="picsourcecount" value="0"/>
+	<attribute name="currentpicsource" value="0"/>
+	<attribute name="picspeed"/>
+	<attribute name="pic1visible" value="true"/>
+	<attribute name="constraintProp" value="''" />
+	
+	<smartimage name="imageone" visible="${parent.type!='text' &amp;&amp; parent.pic1visible}"  sloader="${superloader}" width="${parent.width ? parent.width : null}" height="${parent.height ? parent.height : null}" stretches="both" />
+	<smartimage name="imagetwo" visible="${parent.type=='image'  &amp;&amp; !parent.pic1visible}"  sloader="${superloader}" width="${parent.width ? parent.width : null}" height="${parent.height ? parent.height : null}" stretches="both" />
+	 <itext  align="${parent.type=='text' ? 'left' : 'center' }" visible="${parent.type!='image'}" valign="${parent.type=='text' ? 'top' : 'middle' }" name="theText"  text="${parent.ftext}" font="${parent.font}" fontsize="${!parent.fsize ? 2 : parent.fsize}" fgcolor="${parent.fcolor}"  />
+
+	<handler name="oninit">
+		<![CDATA[
+		this.setupImage();
+		]]>
+	</handler>
+	<handler name="loopevent" reference="this.qholder.thegameloop" args="thespeed">
+		<![CDATA[
+		//trying swapping this image toggling out for src toggling Justin 20110607
+		if(this.picsourcecount > 0){
+			if (thespeed == this.picspeed && this.parent.islive){
+					//first toggle visibility from buffered to visible, check first that we have a buffered image
+					if (this.imagetwo.smartsrc && this.imagetwo.smartsrc !=''){ 
+						this.setAttribute("pic1visible", !this.pic1visible);
+					}
+					
+					//update our image index
+					if(this.currentpicsource < this.picsourcecount -1){
+						this.setAttribute("currentpicsource",this.currentpicsource+1);
+					}else{
+						this.setAttribute("currentpicsource",0);
+					}
+					
+					//then load next image into buffer
+					if(this.pic1visible){
+						this.imagetwo.setAttribute("smartsrc", this.picsources[this.currentpicsource]);
+					}else{
+						this.imageone.setAttribute("smartsrc", this.picsources[this.currentpicsource]);
+					}
+					
+					
+			}
+		}
+		
+		/*
+		if(this.pic2source){
+			if (thespeed == this.picspeed){
+				this.setAttribute("pic1visible", !this.pic1visible);
+			}
+		}
+		*/
+		]]>
+	</handler>
+	<handler name="ondata">
+		<![CDATA[
+		this.setupImage();
+			]]>
+	</handler>
+	<method name="setupImage" args="ignore=null">
+			<![CDATA[
+			
+				/*
+				
+				Be aware that this method ,ay be called twice, from oninit and ondata, v hard to pin down
+				
+				This is a little complex because we need to add a constraint and property
+				getting code, if the image url is actually a property call. We only bother to do this for image1		
+				We may have to get more tricky because the constraint will not recognise change in settings property
+				only settings object itself I think ...	
+				
+			
+				//if we had a constraint before, we would like to remove that now
+				if(this.constraintProp != ''){
+					this.releaseConstraintMethod("doConstraint");
+					this.setAttribute("constraintProp",'');
+				}
+				*/
+			
+				//if the pic1source passed in is reall a system or temp property name
+				//then we try and replace with the value of that property
+				//We ZA naming convention as a temp property (not saved to storage) and XA as system property		
+				if(this.pic1source && typeof this.pic1source=='string' && ( this.pic1source.indexOf('ZA') == 0 || this.pic1source.indexOf('XA') == 0)){
+					this.applyConstraintMethod("doConstraint", [settings,this.pic1source]);					
+					//this.applyConstraintMethod("doConstraint", [settings,this.pic1source]);
+					this.setAttribute("constraintProp",this.pic1source);
+					this.pic1source = settings.getProperty(this.pic1source);
+				}
+				
+				//This is the standard setting of url to our images
+				if (this.pic1source && this.pic1source!='0' && this.pic1source!='false'){
+					this.imageone.setAttribute('smartsrc', this.pic1source);
+					//pooling rmnants may see this set to false at init of button so hwere we set to true
+					//this.imageone.setAttribute('visible',true);
+					this.setAttribute("pic1visible",true);
+				}
+				
+				//managing picsources if animating images
+				if(this.pic2source){
+					//removeD image toggling in favour or src toggling, this linebecame defunct justin 20110607
+					//this.imagetwo.setAttribute('smartsrc',this.pic2source);
+					
+					this.setAttribute("picsources",(this.pic1source + "," + this.pic2source).split(','));
+					this.setAttribute("picsourcecount",this.picsources.length);
+					this.setAttribute("currentpicsource",0);
+				}else{
+					this.setAttribute("picsources",null);
+					this.setAttribute("picsourcecount",0);
+				}
+				//deebug("this.picsourcecount:" + this.picsourcecount);
+				]]>
+	</method>
+				
+		<!-- The constraint method that gets called when the setings -->		
+		<method name="doConstraint" args="ignore" >
+		<![CDATA[
+			//if we have a constraint prop
+			if(this.constraintProp != ''){
+				//and if it looks like a property
+				if(this.constraintProp.indexOf('ZA') == 0 || this.constraintProp.indexOf('XA') == 0){
+					deebug("showing contraint:" + this.constraintProp);
+					//fetch value and set it to our image
+					var thesrc = settings.getProperty(this.constraintProp);
+					if (thesrc!='0' && thesrc != 'false'){
+						this.imageone.setAttribute('smartsrc', thesrc );
+					}
+				}
+			}	
+	]]>			
+		</method>
+				
+				
+				
+</class>
+
+<!-- A single frame of a button state this.picsource-->
+<!-- specify an alternative image and speed to have gif style animation
+ set the alt image source to 'blank' to have a hide the first image effect-->
+<class name="imageframe" extends="touchframe">
+	<attribute name="pic1source"/>
+	<attribute name="pic2source"/>
+	<attribute name="picspeed"/>
+	<attribute name="pic1visible" value="true"/>
+	<attribute name="constraintProp" value="''" />
+	<smartimage name="imageone" sloader="${superloader}" width="${parent.width ? parent.width : null}" height="${parent.height ? parent.height : null}" stretches="both" visible="true"/>
+	<smartimage name="imagetwo" sloader="${superloader}" width="${parent.width ? parent.width : null}" height="${parent.height ? parent.height : null}" stretches="both" visible="${!parent.imageone.visible}" />
+	<handler name="oninit">
+		<![CDATA[
+		this.setupImage();
+		]]>
+	</handler>
+	<handler name="loopevent" reference="this.qholder.thegameloop" args="thespeed">
+		if(this.pic2source){
+			if (thespeed == this.picspeed){
+				this.setAttribute("pic1visible", !this.pic1visible);
+			}
+		}
+	</handler>
+	<handler name="ondata">
+		<![CDATA[
+		this.setupImage();
+			]]>
+	</handler>
+	<method name="setupImage" args="ignore=null">
+			<![CDATA[
+			
+				/*This is a little complex because we need to add a constraint and property
+				getting code, if the image url is actually a property call. We only bother to do this for image1		
+				We may have to get more tricky because the constraint will not recognise change in settings property
+				only settings object itself I think ...	
+				
+			
+				//if we had a constraint before, we would like to remove that now
+				if(this.constraintProp != ''){
+					this.releaseConstraintMethod("doConstraint");
+					this.setAttribute("constraintProp",'');
+				}
+				*/
+			
+				//if the pic1source passed in is reall a system or temp property name
+				//then we try and replace with the value of that property
+				//We ZA naming convention as a temp property (not saved to storage) and XA as system property		
+				if(this.pic1source && typeof this.pic1source=='string' && ( this.pic1source.indexOf('ZA') == 0 || this.pic1source.indexOf('XA') == 0)){
+					this.applyConstraintMethod("doConstraint", [settings,this.pic1source]);					
+					//this.applyConstraintMethod("doConstraint", [settings,this.pic1source]);
+					this.setAttribute("constraintProp",this.pic1source);
+					this.pic1source = settings.getProperty(this.pic1source);
+				}
+				
+				//This is the standard setting of url to our images
+				if (this.pic1source && this.pic1source!='0' && this.pic1source!='false'){
+					this.imageone.setAttribute('smartsrc', this.pic1source);
+					//pooling rmnants may see this set to false at init of button so hwere we set to true
+					this.imageone.setAttribute('visible',true);
+				}
+				if(this.pic2source ){
+					this.imagetwo.setAttribute('smartsrc',this.pic2source);
+				}
+				]]>
+	</method>
+				
+		<!-- The constraint method that gets called when the setings -->		
+		<method name="doConstraint" args="ignore" >
+		<![CDATA[
+			//if we have a constraint prop
+			if(this.constraintProp != ''){
+				//and if it looks like a property
+				if(this.constraintProp.indexOf('ZA') == 0 || this.constraintProp.indexOf('XA') == 0){
+					deebug("showing contraint:" + this.constraintProp);
+					//fetch value and set it to our image
+					var thesrc = settings.getProperty(this.constraintProp);
+					if (thesrc!='0' && thesrc != 'false'){
+						this.imageone.setAttribute('smartsrc', thesrc );
+					}
+				}
+			}	
+	]]>			
+		</method>
+				
+				
+				
+</class>
+
+<!-- A button whose visible state alters on clicked -->
+<!-- opacity="${this.enabled ? 1.0 : 0.6}" bgcolor="${this.enabled ? null: '0x000000'}"   -->
+<class name="actionbutton" extends="transitionview">
+	<attribute name="currentstate" value="0" />
+	<attribute name="title" value="null" />
+	<attribute name="framecount" value="0" />
+	<attribute name="audpath" value="null"/>
+	<attribute name="timer" value="null" />
+	<attribute name="qholder" value="null" />
+	<attribute name="islive" type="boolean" />
+	<attribute name="bumpDel" />
+	<attribute name="qname" />
+	
+	<!-- this is a type -->
+	<attribute name="type" value="null" />
+	
+	<attribute name="cantoggle" value="'no'" />
+	<attribute name="systemproperty"  />
+
+	<attribute name="slot" value="false" />
+	
+	<attribute name="animTime" value="0"/>
+	<attribute name="endX" />
+	<attribute name="endY" />
+	<attribute name="startX" />
+	<attribute name="startY" />
+	
+	<attribute name="intX" />
+	<attribute name="intY" />
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+	
+	<!-- we need the intermediate x and y because otherwise the animator will increment the translated coords, not the % coords -->
+	<handler name="onintX">
+		this.setAttribute("x",intX);
+	</handler>
+	<handler name="onintY">
+		this.setAttribute("y",intY);
+	</handler>
+	
+	<setter name="x" args="newX">
+		<![CDATA[
+		//SWF10 doesnt recognise this.qholder but dhtml does? so used parent.qholder
+		if(newX!=null && parent.qholder!=null && !this.absolute){
+			super.setAttribute("x", parent.qholder.fetchX(newX));
+			//deebug("x:"  + x + ":" + newX);
+		}else{
+
+			super.setAttribute("x", newX);
+		}
+		]]>
+	</setter>
+	<setter name="y" args="newY">
+		<![CDATA[
+		//SWF10 doesnt recognise this.qholder but dhtml does? so used parent.qholder
+		if (newY!=null && parent.qholder!=null && !this.absolute){
+			super.setAttribute("y", parent.qholder.fetchY(newY));
+			//if (y==0){deebug("y:0:" + newY);}
+		}else{
+			super.setAttribute("y", newY);
+		}
+		]]>
+	</setter>
+
+	
+	
+	<!-- Set up the sound on click -->
+	<!-- simpleaudionode is too unstable. canned it.
+	-->
+	<!-- audionode name="audioclick" useresources="$once{superloader.useresources}" audiosrc="${parent.audpath}" autoplay="false" loopplay="false" mute="${classroot.qholder.settings.XAplaysoundfx!='yes'}" -->
+	<simpleaudionode name="audioclick" useresources="$once{superloader.useresources}" audiosrc="${parent.audpath}" autoplay="false" loopplay="false" mute="${classroot.qholder.settings.XAplaysoundfx!='yes'}" />	
+	
+	<!-- When data arrives, reset the current state -->	
+	<handler name="ondata">
+		<![CDATA[
+		//we do this because otherwise it may retain the previous questions state
+		this.setAttribute("currentstate", 0);
+		//Debug.write("currentstate reset:",this.name);
+					
+		]]>
+	</handler>
+	
+	<!-- The onstarted and the onstopped events are generated by the question! -->
+	<!-- They are not animation events. They are "question went live/not live" notifications -->
+	<handler name="onstarted" reference="this.parent">
+	<![CDATA[
+			
+			//If the button exists but is not live due to being unneeded in this pooling round
+			//then we want to just exit quietly
+			if(this.isdetatchedclone){
+				//deebug(this.title + " detclone start: animTime:" + this.animTime);
+				return;
+			}
+			
+			//set our islive flag
+			this.setAttribute("islive",true);
+			
+			//set up our delegate for handling auto frame jumps if timer attribute is set
+			if (this.timer !=null && this.timer != 'undefined'){
+				lz.Timer.addTimer( this.bumpDel, this.timer);		
+			}
+			
+			//here we determine the initial button state
+			//--1--
+			//this is for syncing the initial state of a system property button with its system property
+			//assumes if system property is set, bstate:0  = property:yes, bstate:1 = property:no
+			//because will apply bstate to system property if clicked. 
+			//So if it says "yes" then click should make it no. Hence the bstate of the yes button is 0 and no button is 1
+			if (this.systemproperty){
+				deebug("systemproperty:" + this.systemproperty);
+				var usestate = this.qholder.settings.getProperty(this.systemproperty);
+				deebug("usestate:" + usestate);
+				if(usestate == 'no'){
+					if (this.currentstate != 1){
+						this.setAttribute("currentstate",1);
+						//deebug("set button:" + this.systemproperty + ":" + this.currentstate);
+					}
+				}else{
+					if (this.currentstate != 0){
+						this.setAttribute("currentstate",0);
+						//deebug("set button:" + this.systemproperty + ":" + this.currentstate);
+					}
+				}
+			//if not a system propertty ..
+			//--2--
+			// evaluate the frame to show depending on conds 99=disabled 50=hidden
+			//else reset to zero incase a pooling remnant has it at non zero
+			}else if(this.slot){
+				//deebug("thecond:" + this.slot);
+				var propvalue=this.qholder.evalCondition(this.slot)
+				//deebug("thepropvalue:" + propvalue);
+				this.setAttribute("currentstate",propvalue);
+			}else{
+				this.setAttribute("currentstate",0);
+			}
+			
+			
+			//if we are animating do that now
+			if(this.animTime && this.animTime>0){
+				if(!this.animTime){this.animTime=0;}
+					this.setAttribute("transdur",this.animTime);
+					this.setTranslateAttr(this.endX,this.endY);
+				
+			//we have strange translate remnant problems, mainly on non anims 
+			//overwritting anims. here we try to deal with that 
+			}else{
+				this.forceZeroTranslate();
+			}
+			]]>
+	</handler>
+	
+	<!-- The onstarted and the onstopped events are generated by the question! -->
+	<!-- They are not animation events. They are "question went live/not live" notifications -->
+	<handler name="onstopped" reference="this.parent">
+		<![CDATA[
+		
+		
+			//set our islive flag
+			this.setAttribute("islive",false);
+		
+			//If the button exists but is not live due to being unneeded in this pooling round
+			//then we want to just exit quietly
+			if(this.isdetatchedclone){
+				return;
+			}
+			
+		
+			//if we have already animated in, lets reset in case they come back ..
+			if(this.animTime && this.animTime>0){
+				///deebug(this.title + " :resetting startx:" + this.x + ":" + this.startX);
+				//deebug(this.title + " :resetting starty:" + this.x + ":" + this.startY);
+				this.resetTranslateAttr(this.startX,this.startY);
+				
+				
+			}
+		]]>
+	</handler>
+	
+	<!-- When data arrives, reset the current state -->	
+	<handler name="oninit">
+		//Debug.write("question view inited");
+		if( typeof this.bumpDel == "undefined" )  {
+			this.bumpDel = new lz.Delegate( this, "bumpState"); 
+		}
+		//Add a tap event to this 
+		//lz.Browser.loadJS("document.getElementByName('" + this.id + "').addEventListener('touchstart'," + this.id + ".touchStart,false);");
+	</handler>
+	
+	<!-- Handle a user tap ie do action and play sound -->	
+	<!-- plays sound onmousedown(event arrives twice .. but not onclick .?! -->	
+	<!-- onmouseover works best for phone, but onclick for flash and safari -->	
+	<switch>
+	 <when property="$dhtml">								
+		<handler name="onclick" >
+			<![CDATA[
+				this.doTap();
+			]]>	
+		</handler>
+	 </when>
+	 <otherwise>
+		<handler name="onclick" >			
+			<![CDATA[
+				this.doTap();
+			]]>		
+		</handler>
+	 </otherwise>
+	</switch>
+	
+	<!-- Method to be called from delegate to bump up a state -->
+	<method name="bumpState" args="ignore=null">
+		<![CDATA[
+		//disabled the currentstate=0 requirement
+		//if (this.currentstate==0){
+			//play sound 
+			this.dosound();		
+			//Debug.write("currentstate", this.currentstate);	
+						
+			//alter frame if that option is available			
+			if(this.currentstate < (this.framecount)){
+				this.setAttribute("currentstate",this.currentstate +1);
+			}else if(this.cantoggle=="yes"){
+				this.setAttribute("currentstate",0);
+			}
+			]]>
+
+	</method>
+	
+	<!-- Handle a user tap ie do action and play sound -->	
+	<method name="doTap">
+			<![CDATA[	
+			//printtime("dotap");
+			//play sound 
+			//right now a subsequent click or next action will negate this
+			//return if we are in a non click state
+			
+			//20110721 removed the currentstate restriction for more flexibility
+			//if(!parent.canclick || this.currentstate>50)return;
+			if(!parent.canclick)return;
+			
+			//started calling bumpstate so disabled the soundcall here Jan21st
+			//this.dosound();
+			//this.bumpState();		
+	
+			
+			//fetch the current frame before we bump it up
+			//parent.doaction(this.subviews[this.currentstate + 1].action,this.subviews[this.currentstate + 1].args);
+			var theframe = this.searchSubviews('bstate',this.currentstate);
+			
+			//bump to next frame if required, currentstate will change here
+			this.bumpState();
+			
+			//determine action and go
+			if(theframe){
+				//this will give us any actiondescribed in attribute 'action'
+				if (theframe.action){
+					//deebug("action:" + theframe.action);
+					parent.doaction(theframe.action,theframe.args);
+				}
+				
+				//this will do all the actions described in action tags
+				if(theframe.actions.clones){
+					//if multiple actions described
+					var iAction;
+					for (iAction in theframe.actions.clones){
+						//deebug("doing action:" + theframe.actions.clones[iAction].type);
+						parent.doaction(theframe.actions.clones[iAction].type,theframe.actions.clones[iAction].args);
+						//Debug.inspect(theframe.actions.clones[iAction]);
+					} 			
+				}else if(theframe.actions.type){
+					//if a singular action described
+					parent.doaction(theframe.actions.type,theframe.actions.args);
+					//Debug.inspect(theframe.actions);
+				}
+			}
+			
+			//alter frame if that option is available
+			//changed this to call  bumpstate  from above action stuff :Jan 21st
+			/*			
+			if(this.currentstate < (this.framecount)){
+				this.setAttribute("currentstate",this.currentstate +1);
+			}else if(this.cantoggle=="yes"){
+				this.setAttribute("currentstate",0);
+			}
+			*/
+	
+			]]>	
+	 </method> 
+	
+	<!-- We play the sound -->
+	<method name="dosound" >	
+	<![CDATA[
+	//printtime("dosound");
+		//Debug.write("playing sound");
+		/* canned local playing of audio to minimize crashes. 
+		* For local level audio us this. Its faster, slightly
+		*/
+		if(this.audioclick != null){
+			//deebug("audpath:" + this.audpath);
+			//deebug("audiosrc:" + this.audioclick.audiosrc);
+			if (this.audpath != this.audioclick.audiosrc){
+					//deebug("setting audiosrc:");
+					this.audioclick.setAttribute("audiosrc",this.audpath);
+			}
+			this.audioclick.play();
+		}
+		
+		/* For top level audio, use this, ie if you get crashes or disappearing text
+		if(this.audpath != null && this.audpath != ''){
+			this.qholder.soundfxaudio.setAttribute("audiosrc",this.audpath);
+			this.qholder.soundfxaudio.play();
+		}
+		*/
+		]]>
+	</method>			
+	
+	
+
+	<!-- 
+   <animatorgroup name="animIn" start="false" process="simultaneous">
+		<animator attribute="intX" from="${classroot.startX}" to="${classroot.endX}" duration="${classroot.animTime}" motion="easeout"/>
+		<animator attribute="intY" from="${classroot.startY}" to="${classroot.endY}" duration="${classroot.animTime}" motion="easeout"/>
+  </animatorgroup>
+  -->
+
+
+
+</class>
+
+<!-- An item like a button but which doesnt respond to a click -->
+<class name="staticelement" extends="actionbutton">
+	<!-- Handle a user tap. In this case do nothing -->	
+	<method name="doTap">
+			<![CDATA[	
+				deebug("do nothing");
+			]]>
+	</method>
+</class>
+
+
+
+
+
+
+<!-- An alternative textbox for the default which fails on the iphone ondata -->	
+<class name="itext" extends="view" >
+		<attribute name="innertext"  value="null"/>	
+		<!-- we call this qholder, but it is really one up sometiomes ..don't rely on it! -->
+		<!-- the timing thing screwed countdown text so we used one up -->
+		<attribute name="text" value="''" />
+		<attribute name="constraintProp" value="''" />
+		<attribute name="restoretext" value="''" />
+		<inputtext name="theText"  align="center" textalign="center" font="${parent.font ? parent.font : 'sans'}" fontsize="${parent.fontsize ? parent.fontsize : 8}" fontstyle="${parent.fontstyle ? parent.fontstyle : 'plain'}" fgcolor="${parent.fgcolor ? parent.fgcolor : 0}" enabled="true" resize="true" />		
+		<view name="clickfetcher" x="${parent.theText.x}" y="${parent.theText.y}"
+			height="${parent.theText.height}" width="${parent.theText.width}" onclick="classroot.parent.onclick.sendEvent()" >
+			<handler name="onclick">
+				if(classroot.parent.parent instanceof lz.actionbutton){
+						//deebug("actionbutton instanceo");
+						classroot.parent.parent.doTap();
+					}else if(classroot.parent.parent.parent instanceof lz.actionbutton){
+						classroot.parent.parent.parent.doTap();
+					}
+			</handler>
+		</view>
+		<setter name="width" args="newW">
+			<![CDATA[
+				super.setAttribute("width", this.fetchW(newW));
+			]]>
+		</setter>
+		<setter name="fontsize" args="newvalue">
+			super.setAttribute("fontsize",fetchF(newvalue));
+		</setter>
+		<setter name="fgcolor" args="newvalue">
+			newvalue = Number(newvalue);
+			if(!newvalue) newvalue=0;
+			super.setAttribute("fgcolor",newvalue);
+		</setter>
+		<!-- Fetch Width -->
+		<method name="fetchW" args="rawW">
+			<![CDATA[
+			if(!rawW || rawW == 0){
+				return null;
+			}else{
+				return (Math.round(rawW / 100 * mainpanel.width));
+			}
+			]]>
+		</method>
+		<!-- Fetch Fontsize -->
+		<method name="fetchF" args="rawF">
+			<![CDATA[
+			if(!rawF ) return 16;
+			if(mainpanel){
+				var theheight = mainpanel.height;
+			}else{
+				var theheight = canvas.height;
+			}
+			
+			//iphone 320
+			if (theheight < 500){
+				switch(Number(rawF)){
+					case 1: return 8;
+							break;
+					case 2: return 16;
+							break;
+					case 3: return 24;
+							break;
+					case 4: return 28;
+							break;
+					case 5: return 32;
+							break;
+					case 6: return 36;
+							break;
+					case 7: return 40;
+							break;
+					case 8: return 44;
+							break;
+					case 9: return 48;
+							break;
+					default: return 28;	
+					}
+			//ipad 768	
+			}else if(theheight < 800){
+				switch(Number(rawF)){
+					case 1: return 16;
+							break;
+					case 2: return 28;
+							break;
+					case 3: return 48;
+							break;
+					case 4: return 64;
+							break;
+					case 5: return 76;
+							break;
+					case 6: return 84;
+							break;
+					case 7: return 92;
+							break;
+					case 8: return 100;
+							break;
+					case 9: return 108;
+							break;
+					default: return 28;	
+				}
+			
+			
+			//desktop 1024
+			}else{
+				switch(Number(rawF)){
+					case 1: return 32;
+							break;
+					case 2: return 48;
+							break;
+					case 3: return 64;
+							break;
+					case 4: return 76;
+							break;
+					case 5: return 84;
+							break;
+					case 6: return 92;
+							break;
+					case 7: return 100;
+							break;
+					case 8: return 108;
+							break;
+					case 9: return 116;
+							break;
+					default: return 28;	
+				}
+
+			}
+			
+			
+			]]>
+		</method>
+
+		
+
+		
+		<!-- Here we pretend to be a textbox so we can call applyData -->
+		<handler name="ontext">
+			<![CDATA[
+			var sometext = this.text;
+			if(sometext && typeof sometext=='string' &&( sometext.indexOf('ZA') == 0 || sometext.indexOf('XA') == 0)){
+				deebug("constrainting it:" + this.text);
+				this.applyPropertyConstraint(sometext);
+			}else{
+				this.theText.setAttribute("text",sometext);
+			}
+			]]>
+		</handler>
+		
+		<!-- we override applyData to chek for and handle special data(ie constraints)-->
+		<method  name="applyData" args="v">
+			<![CDATA[
+				if (!v)return;
+				var sometext = v;
+				if(sometext && typeof sometext=='string' &&( sometext.indexOf('ZA') == 0 || sometext.indexOf('XA') == 0)){
+					deebug("constrainting it:" + this.text);
+					this.applyPropertyConstraint(sometext);
+				}else{
+					this.theText.setAttribute("text",sometext);
+					this.setAttribute("text",sometext);
+				}
+			]]>
+		</method>
+		<!-- consraints can be applied to this text box from outside sources incl. canvas and data settings -->
+		<method  name="applyPropertyConstraint" args="daproperty">
+		<![CDATA[
+				//if we are already listening to this constraint, just bail
+				if(this.constraintProp == daproperty ){
+					return;
+				}
+				
+				//if we had a constraint before, we would like to remove that now
+				if(this.constraintProp != '' ){
+					this.releaseConstraintMethod("doConstraint");
+					this.setAttribute("constraintProp",'');
+				}
+			
+				
+				//if the text passed in is reall a system or temp property name
+				//then we try and replace the text the with the value of that property
+				//We ZA naming convention as a temp property (not saved to storage) and XA as system property
+				//we also need to apply a constraint so timers and realtime changes are propagated	
+					//deebug("daproperty:" + daproperty);
+				if(typeof daproperty=='string' &&( daproperty.indexOf('ZA') == 0 || daproperty.indexOf('XA') == 0)){
+					//deebug("got a property at itext:" + daproperty);					
+					this.applyConstraintMethod("doConstraint", [settings,daproperty]);
+					this.setAttribute("constraintProp",daproperty);
+					var davalue = settings.getProperty(daproperty);
+					
+					//set it to the text box				
+					this.theText.setAttribute("text",davalue);
+					
+					//set it to this values text, for app read purposes
+					this.setAttribute("text",davalue);
+					
+					deebug("setvalue:" + davalue);
+ 				}else{
+					//no constraint just set the text to the textbox
+					this.theText.setAttribute("text",daproperty);
+					this.setAttribute("text",daproperty);
+					deebug("settext:" + daproperty);
+				}
+				
+			]]>
+		</method>
+		<method name="doConstraint" args="ignore" >
+			//if we have a constraint prop
+			if(this.constraintProp != ''){
+				//and if it looks like a property
+				if(this.constraintProp.indexOf('ZA') == 0 || this.constraintProp.indexOf('XA') == 0){
+					//fetch value and set it to our text box
+					this.theText.setAttribute("text", settings.getProperty(this.constraintProp));
+				}
+			}			
+		</method>
+	
+</class>
+
+
+<!-- The Main Game Loop. 
+		Set timer_resolution to 500 to fire every 500ms
+-->
+<class name="gameloop" extends="loopingtimer">
+	<attribute name="loopinterval" />
+	<attribute name="eventcount" value="0" />
+	<event name="loopevent" />
+	<method name="reactToTimeChange" args="theTime">
+		this.setAttribute("eventcount", eventcount+1);
+		//this operation could be optimised but at present it may raise the 
+		//the event several times, because 4 event is also a 2 event
+		var speed=0;
+		if ((eventcount % 2)==0){this.loopevent.sendEvent(1);}
+		if ((eventcount % 3)==0){this.loopevent.sendEvent(2);}
+		if ((eventcount % 4)==0){this.loopevent.sendEvent(3);}
+		if ((eventcount % 5)==0){this.loopevent.sendEvent(4);}
+	</method>
+</class>
+	
+
+<!-- For handling visual coutndowns -->	
+<class name="countdowntimer" extends="loopingtimer">
+
+		<event name="countevent" />
+		<event name="stopevent" />
+
+		<attribute name="inittime" value="0" />
+		<attribute name="progresstime" value="0" />
+		<attribute name="showmilli" value="0" />
+		<attribute name="showsec" type="number" value="0" />
+		<attribute name="showmin" type="number" value="0" />
+		<attribute name="showhour" type="number" value="0" />
+		<method name="reactToTimeChange" args="theTime">
+			this.setAttribute('progresstime' ,  theTime);
+			  if(progresstime > inittime){
+				this.stopTimer();
+				this.setAttribute('progresstime' ,  inittime);
+			        this.stopevent.sendEvent();	 
+			  }
+				
+			//set hours
+			var rawtime = (this.inittime - this.progresstime) % (60 * 60 * 1000);
+			var remainder = rawtime;
+			var quotient =  (this.inittime - this.progresstime - remainder) / (60 * 60 * 1000);
+			this.setAttribute('showhour', quotient );
+
+			//set minutes
+			remainder = rawtime % (60 * 1000);
+			quotient = (rawtime - remainder) / (60 * 1000);
+			rawtime = remainder;
+			this.setAttribute('showmin', quotient );
+
+			//set seconds
+			remainder = rawtime % 1000;
+			quotient = (rawtime - remainder) / 1000;
+			rawtime = remainder;
+			this.setAttribute('showsec', quotient );
+
+			//set milliseconds
+			this.setAttribute('showmilli', rawtime );
+		
+			//let anyone listening know about this
+			this.countevent.sendEvent();
+
+	    </method>
+	</class>
+	
+	
+	<!-- Local Storage Basic Level Class -->
+	<switch>
+		<when property="$dhtml">
+			<class name="localdata" extends="node">
+				<attribute name="settings" value="${this.parent}" />
+				<attribute name="enabled" value="false" />
+				<method name="init">					
+					if (typeof(sessionStorage) == 'undefined' || typeof(localStorage) == 'undefined') {
+						deebug('local and session storage not supported by this browser.');
+						this.setAttribute("enabled", false);
+					}else{
+						this.setAttribute("enabled", true);
+						deebug('localstorageok');
+					}					
+					super.init();
+				</method>
+				<method name="clear">
+					if(!this.enabled) return;
+					localStorage.clear();
+				</method>
+				<method name="removeProperty" args="propname">
+						 if(!this.enabled) return;
+						 localStorage.removeItem(propname);
+				</method>
+				<method name="getProperty" args="propname">
+						if(!this.enabled) return;
+						 return localStorage.getItem(propname);
+				</method>
+				<method name="setProperty" args="propname, propvalue">				 	
+						 
+						 //deebug("setting:" + propname + ":" + propvalue);
+						 if(!this.enabled) return;
+						 localStorage.setItem(propname,propvalue);
+						// deebug("set:" + propname + ":" + propvalue);
+				</method>
+
+				<method name="haveProperty" args="propname">
+						if(!this.enabled) return this.settings[propname];
+						 if(localStorage.getItem(propname)){
+							return true;
+						}else{
+							return false;
+						}	
+				</method>
+			</class>
+		</when>
+		<otherwise>
+			<class name="localdata" extends="node">
+				<attribute name="settings" value="${this.parent}"/>
+				<attribute name="enabled" value="false" />
+				<method name="init">					
+					deebug('local and session storage not supported by this runtime.');
+					this.setAttribute("enabled", false);									
+					super.init();
+				</method>
+				<method name="clear">
+					if(!this.enabled) return;
+				</method>
+				<method name="removeProperty" args="propname">
+						 if(!this.enabled) return;
+				</method>
+				<method name="getProperty" args="propname">
+						if(!this.enabled) return;
+				</method>
+				<method name="setProperty" args="propname, propvalue">				 	
+						 this.settings.setAttribute(propname,propvalue);
+						 if(!this.enabled) return;
+				</method>
+
+				<method name="haveProperty" args="propname">
+						if(!this.enabled) return this.settings[propname];	
+				</method>
+			</class>
+		</otherwise>
+	</switch>
+	
+	<!-- Settings for all aspects of game, probably store in db. -->
+	<class name="gamesettings" extends="node">
+		<method name="init">
+		//we only use prefix XA to make it easy to distinguish our attributes from junk stuff
+		//when setting attributes from defaults declared in code.
+		//the slot attributes on xml menu buttons and their questions MATCH and that is why they works
+		//It should be possible to apply constraints to them at runtime too
+		
+		//Use this when debugging to clear the local settings
+		//this.ld.clear();
+		
+		
+		
+		var iAttr;
+		for (iAttr in this)
+		{
+			if(iAttr.indexOf('XA') == 0){
+				deebug("got XA:" + iAttr);
+				var propvalue = ld.getProperty(iAttr);
+				//if we got a value, good, otherwise setProperty which will do both store and runtime attr
+				if (propvalue){
+					//deebug("pvalue:" + propvalue);
+					this.setAttribute(iAttr,propvalue);
+				}else{
+					this.setProperty(iAttr,this[iAttr]);
+				}
+				
+				deebug(this[iAttr]);
+			}
+		} 
+		
+		
+		//Here we ensure that the inital setting is set at first run,
+		//but not set again  if it was changed by app
+		//deebug("this.initsettings:" + this.initsettings);
+		if(this.initsettings){
+			var settings = this.initsettings.split('|');
+			for (var asetting in settings){
+				deebug("asetting:" + settings[asetting]);
+				var propval = settings[asetting].split(':');
+				if(!ld.getProperty(propval[0])){
+					this.setProperty(propval[0],propval[1]);
+					deebug("set:" + propval[0] + ':' + propval[1]);
+				}else{
+					this.setAttribute(propval[0],propval[1]);
+				}
+			}
+		}
+		
+		super.init();
+		</method>
+		
+
+		
+		<!-- Convenience class to set properties to local storage -->
+		<localdata name="ld"  />
+		
+		<!-- Defaults for option settings -->
+		<attribute name="XAplaybacksound" value="'yes'" />
+		<attribute name="XAplaysoundfx" value="'yes'" />
+		<attribute name="XAplayaudioprompt" value="'yes'" />
+		<attribute name="XAshowtextprompt" value="'no'" />
+		<attribute name="XAusepooling" value="'yes'" />
+		<attribute name="initsettings"  />
+	
+		<method name="setProperty" args="propname,propvalue,persist=true">
+			this.setAttribute(propname,propvalue);
+			//if this is a persistable property, store it
+			if(persist){
+				this.ld.setProperty(propname,propvalue);
+				}
+		</method>
+		<method name="getProperty" args="propname">
+			<![CDATA[
+			//return the prop value or init to 'false' if it has never been inited
+			if(!this[propname]){
+				var propvalue = this.ld.getProperty(propname);
+				if(propvalue!=null){
+					this.setAttribute(propname, propvalue);
+					return propvalue;
+				}else{
+					//we use naming convention to ZA to indicate non persistent storage
+					//notably ZAlittletimer
+					if(propname.indexOf('ZA')!=0){
+						this.setProperty(propname,'false',true);
+						return 'false';
+					}else{
+						this.setProperty(propname,'0',false);
+						return '0';
+					}
+				}
+			}else{
+				return this[propname];
+			}
+			]]>
+		</method>
+		
+
+	</class>
+	
+	 <!-- This is the class definition for the smart loader -->
+  <class name="smartloader">
+  <!-- 50 effectively means no waiting, a smaller number will cause delays but avoid timeouts -->
+	<attribute name="throttlesize" value="15"/>
+	<attribute name="timerdelay" value="100"/>
+	<attribute name="loading" />
+	<attribute name="waiting" />
+	<attribute name="starttime" />
+	<attribute name="imageprofiling" value="false" />
+	<attribute name="loadprofiling" value="false" />
+	<attribute name="useresources" value="false" />
+	<attribute name="output" value="''" />
+	<attribute name="checkdel" />
+	<event name="emptyevent" />
+	<method name="register" args="asmartimage">
+		<![CDATA[
+		
+		if(this.loadprofiling){
+			if(this.loading.length==0 && this.waiting.length==0){
+				var d = new Date();
+				this.setAttribute("starttime", d.getTime());				
+			}
+		
+		}
+		
+		if (this.loading.length < this.throttlesize){
+			this.loading.unshift(asmartimage);
+			this.startLoading(asmartimage);
+		}else{
+			this.waiting.unshift(asmartimage);
+		}
+		lz.Timer.removeTimer(this.checkdel);
+		lz.Timer.addTimer(this.checkdel,this.timerdelay); 
+		]]>
+	</method>
+	<method name="init">
+		//deebug("Initialising");
+		this.loading = new Array();
+		this.waiting = new Array();
+		this.setAttribute("checkdel", new lz.Delegate(this,"checkLoaded"));
+	</method>
+	<method name="checkLoaded" args="ignore=null">
+		<![CDATA[
+		
+		for (var iIndex in this.loading) {
+				//if this image is loaded or empty then quit it
+				if (this.loading[iIndex]){
+					if	(this.loading[iIndex].resource != null || this.loading[iIndex].loadratio == 1 || this.loading[iIndex].smartsrc==null
+						|| this.loading[iIndex].smartsrc=='' || this.loading[iIndex].smartsrc=='blank' || this.loading[iIndex].failed){
+						
+					// If imageprofiling enable this	
+					if (this.imageprofiling){
+						if( this.loading[iIndex].starttime && this.loading[iIndex].smartsrc ){
+							var takentime = new Date().getTime() - this.loading[iIndex].starttime;
+							output = output +  (this.loading[iIndex].smartsrc + "Q#" + iIndex + " took: " + takentime + " to load:" + this.loading[iIndex].actualstarttime + "\n");
+						}
+					}
+					
+					//remove from loading list
+					this.release(iIndex);
+				
+					}
+				}else{
+					
+					//remove from loading list
+					this.release(iIndex);
+					
+				
+				}
+			}
+		
+		while (this.waiting.length > 0 && (this.loading.length < this.throttlesize)) {
+			var nextsmartimage = this.waiting.pop();
+			this.startLoading(nextsmartimage);
+			this.loading.unshift(nextsmartimage);
+			//deebug("shifted:" + nextsmartimage.smartsrc);
+		}
+		
+		if (this.loading.length > 0){
+			lz.Timer.addTimer(this.checkdel,this.timerdelay); 
+		}else{
+			this.emptyevent.sendEvent();
+			
+			if(this.loadprofiling){
+				var takentime = new Date().getTime() - this.starttime;
+				deebug("imageloading took " + takentime) ;
+			}
+			
+			// If imageprofiling enable this
+			if(this.imageprofiling){
+				deebug(output);
+				this.setAttribute("output", '');
+			}
+
+		}
+		]]>
+	</method>
+	<method name="release" args="splicei">
+		//deebug("removing " + this.loading[splicei].smartsrc);
+		this.loading.splice(splicei,1);
+	</method>
+	<method name="alertEmpty" >
+		this.emptyevent.sendEvent();	
+	</method>
+	<method name="startLoading" args="asmartimage">
+	<![CDATA[
+
+		if(!this.useresources){
+			//use this to use runtime resources
+			asmartimage.setSource(asmartimage.smartsrc,"clientonly");
+		}else{
+			//use these to use compiled in resources
+			var namestring = asmartimage.smartsrc.replace("/","_");
+			namestring = namestring.replace(".","_");
+			//deebug("startloading:" + namestring);
+			asmartimage.setAttribute("resource",namestring);
+		}
+		
+
+		// If profiling enable this	
+		if (this.imageprofiling){	
+			var d = new Date();
+			asmartimage.setAttribute("starttime", d.getTime());
+			asmartimage.setAttribute("actualstarttime", d.getMinutes() + ":" + d.getSeconds());
+		}
+			
+		
+		]]>
+	</method>
+	
+  
+  </class>
+  
+    <!-- This is the class definition for the smart image -->
+  <!-- class name="smartimage" extends="image" -->
+  <class name="smartimage" extends="view">
+	<attribute name="smartsrc" />	
+	<attribute name="starttime" />
+	<attribute name="actualstarttime" />
+	<attribute name="sloader" />
+	<attribute name="failed" value="false"/>
+	<handler name="oninit">
+	<![CDATA[
+		if(this.smartsrc  && this.sloader){
+			this.setAttribute("failed",false);
+			this.sloader.register(this);
+			}
+			]]>
+	</handler>
+	<handler name="onsmartsrc">
+		<![CDATA[
+		//deebug("gg:" + this.smartsrc)
+		if(this.src!=this.smartsrc &&  this.sloader){
+				this.setAttribute("failed",false);
+				this.sloader.register(this);
+		}
+			]]>
+	</handler>
+	<!-- Flag failed if the media timesout -->
+	<handler name="ontimeout">
+		this.setAttribute("failed",true);
+	</handler>
+  </class>
+
+
+</library>

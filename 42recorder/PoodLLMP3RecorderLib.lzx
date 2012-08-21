@@ -27,6 +27,9 @@
 
 	<!-- The course id (parent will pass -1 if there is no course id) -->
 	<attribute name="course"  />
+	
+	<!-- Whether we should submit auto or by button -->
+	<attribute name="autosubmit" value="false"  />
 
 	<!-- Audio settings passed in -->
 	<attribute name="gain" value="50"/>
@@ -39,6 +42,7 @@
 	<!-- various status flags -->
 	<attribute name="haveRecorded" value="false" />
 	<attribute name="status" value="'stopped'" />
+	<attribute name="saved" value="true" />
 	
 	<attribute name="totaltime" value="'00:00:00'" />
 	
@@ -59,6 +63,7 @@
 
 	<!-- The save name of our file. Added Justin 2009/06/12 -->
 	<attribute name="savefilename" value="''" />
+
 
 	<!-- Justin 2000/06/12-->
 	<!-- Had many problems keeping this logic central and used with constraints-->
@@ -111,14 +116,22 @@
 				
 		<handler name="onActionComplete" args="message">
 			Debug.write("action complete:" + message);
+			thespinner.hidespinner();
+			classroot.setAttribute("saved",true);
 			classroot.setAttribute("filename", message);					
 			classroot.updatepage(classroot.filename);
+			
 		</handler>
 		<handler name="onActionStart" args="message">
 			Debug.write("action Start:" + message);
+			thespinner.setAttribute("caption","uploading");
+			thespinner.showspinner();
 		</handler>
 		<handler name="onActionError" args="message">
 			Debug.write("action Error:" + message);
+			classroot.setAttribute("saved",true);
+			thespinner.hidespinner();
+			
 		</handler>
 	</bytearrayutils>
 
@@ -214,10 +227,13 @@
 			this.mp3Encoder.addEventListener(Event.COMPLETE, this.mp3EncodeComplete);
 			this.mp3Encoder.addEventListener(ProgressEvent.PROGRESS, this.mp3EncodeProgress);
 			this.mp3Encoder.addEventListener(ErrorEvent.ERROR, this.mp3EncodeError);
+			thespinner.setAttribute("caption","converting");
+			thespinner.showspinner();
 			this.mp3Encoder.start();
 		</method>
 		<!-- The event signifying MP3 encoding has finished -->
 		<method name="mp3EncodeComplete" args="evt"> 
+			thespinner.hidespinner();
 			Debug.write("finished MP3 encode");
 			Debug.write("MP3 encoded bytes:" + this.mp3Encoder.mp3Data.length);
 			var mp3string = classroot.butils.makeBase64String(this.mp3Encoder.mp3Data);
@@ -233,6 +249,7 @@
 		</method>
 		<!-- The event signifying MP3 encoding error -->
 		<method name="mp3EncodeError" args="evt"> 
+			thespinner.hidespinner();
 			Debug.write("MP3 encode error:" + evt.text);
 		</method>
 	</poodllmicrophone>
@@ -245,21 +262,23 @@
         
 		<!-- Record Button -->
 		<button name="recordButton" 
-			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}"
+			width="${classroot.iconsize}" height="${classroot.iconsize}"
 			valign="middle" 
 			enabled="${classroot.status == 'stopped'}" 
 			onclick="record()">
         	<method name="record">
         		classroot.mic.startRec();
 				classroot.setAttribute("haveRecorded",true);
+				classroot.setAttribute("saved",false);
         	</method>
-			<view name="micicon" width="${classroot.iconsize}" height="${classroot.iconsize}" x="5" y="5" 
-				opacity="${1 - (parent.enabled ? 0 : 0.8)}" resource="icons/128x128/PlainGreen/RecordNormal.png" ></view>	
+			<view name="micicon" width="${classroot.iconsize}" height="${classroot.iconsize}"  x="19" y="10" 
+				opacity="${1 - (parent.enabled ? 0 : 0.8)}" resource="icons/64x64/PlainGreen/RecordNormal.png" ></view>	
+			 <text  align="center" valign="bottom" fontsize="18"  fgcolor="${parent.enabled ? '0x0' : '0xCCCCCC'}" text="Record" />
         </button>
 		
 	<!-- Play Button -->	
 		<button name="playButton" 
-			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}" 
+			width="${classroot.iconsize}" height="${classroot.iconsize}" 
 			valign="middle" 
 			enabled="${(classroot.status=='stopped'  &amp;&amp; classroot.haveRecorded)}" 
 			onclick="playRecording()">
@@ -268,44 +287,35 @@
 				Debug.write("playsound");
 			</method>
 			<view name="speakericon" width="${classroot.iconsize}" height="${classroot.iconsize}"  
-				x="5" y="5" opacity="${1 - (parent.enabled ? 0 : 0.8)}" 
-				resource="icons/128x128/CircleBordered/VolumePressed.png" >
+				x="19" y="10" opacity="${1 - (parent.enabled ? 0 : 0.8)}" 
+				resource="icons/64x64/CircleBordered/VolumePressed.png" >
 			</view>	
+			<text  align="center" valign="bottom" fontsize="18"  fgcolor="${parent.enabled ? '0x0' : '0xCCCCCC'}" text="Play" />
 		</button>	
 		
 	<!-- Stop Button -->
 		<button
 			name = "stopButton"
-			width="${classroot.iconsize + 10}" height="${classroot.iconsize + 10}"
-			valign="middle"
+			width="${classroot.iconsize}" height="${classroot.iconsize}"
+			valign="middle" 
 			enabled="${classroot.status != 'stopped'}"
 		        onclick="stopAll()">
 
        		<method name="stopAll" args="">
 				if(classroot.status=="recording"){
 					classroot.mic.stopRec();
+					if(classroot.autosubmit){
+						this.parent.parent.exportbutton.doExport();
+					}
 				}else if(classroot.status=="playing"){
 					classroot.mic.stopPlay();
 				}
-				//classroot.eService.moveMedia(classroot.contextid,classroot.itemid,usefilename,classroot.component,classroot.filearea);       			
+      			
        		</method>
-			<view name="stopicon" width="${classroot.iconsize}" height="${classroot.iconsize}"  x="5" y="5"  
-				opacity="${1 - (parent.enabled ? 0 : 0.8)}"  resource="icons/128x128/CircleBordered/Stop1NormalRed.png" ></view>	
+			<view name="stopicon" width="${classroot.iconsize}" height="${classroot.iconsize}"  x="19" y="10"  
+				opacity="${1 - (parent.enabled ? 0 : 0.8)}"  resource="icons/64x64/CircleBordered/Stop1NormalRed.png" ></view>	
+			<text align="center" valign="bottom" fontsize="18" fgcolor="${parent.enabled ? '0x0' : '0xCCCCCC'}" text="Stop" />
         </button>		
-		<button name="exportButton" text="export">
-			<handler name="onclick">
-				Debug.write("making wav");
-				//var wavbytes = classroot.mic.makeWav(classroot.mic.sbytes,44100);
-				var wavbytes = classroot.butils.makeWav(classroot.mic.sbytes,44100);
-				Debug.write("made wav");
-				Debug.write("byte size:" + wavbytes.length);
-				Debug.write("making mp3");
-				classroot.mic.makeMP3(wavbytes);
-			
-			</handler>
-		
-		</button>
-
     </view>
 	
 	<!-- this is the lower bar that tells us volume, talk time etc -->
@@ -327,6 +337,45 @@
 				<view x="${parent.width - this.width}" y="0"  bgcolor="black" width="${parent.width - (classroot.mic.level * 2.5)}" height="12"/>
 			</view>			
 	</view> 
+	<attribute name="adjustexportx" value="0"/>
+	<animator name="exportanimate" attribute="adjustexportx" from="-3" to="3" duration="500" repeat="Infinity" start="false" /> 
+	<button name="exportbutton" width="${parent.width - 190 - 40}" 
+			enabled="${(classroot.status=='stopped'  &amp;&amp; classroot.haveRecorded  &amp;&amp; !classroot.saved &amp;&amp; !classroot.autosubmit)}"  
+			text="Save" height="${classroot.recordinfo.height}" 
+			options="ignorelayout" y="${classroot.recordinfo.y}" 
+			x="${190 + (parent.adjustexportx * parent.adjustexportx) }"
+			visible="${!classroot.autosubmit}">
+				
+			<!--	<handler name="oninit">
+					this.applyConstraintMethod("highlightbutton", [classroot.exportbutton,"enabled"]);
+				</handler>
+			-->	
+				<handler name="onclick">
+					this.doExport();
+				</handler>
+				<method name="doExport">
+					Debug.write("making wav");
+					//var wavbytes = classroot.mic.makeWav(classroot.mic.sbytes,44100);
+					var wavbytes = classroot.butils.makeWav(classroot.mic.sbytes,44100);
+					Debug.write("made wav");
+					Debug.write("byte size:" + wavbytes.length);
+					Debug.write("making mp3");
+					classroot.mic.makeMP3(wavbytes);
+				</method>
+					<!-- Saved Actions -->
+				<handler name="onenabled" >
+					Debug.write("highlightbutton");
+					if(!this.enabled){
+						//this.setAttribute("fgcolor","0x0");
+						parent.exportanimate.stop();
+					}else{
+						//this.setAttribute("bgcolor","0xFFCCCC");
+						//this.setAttribute("fgcolor","0xFF0000");
+						parent.exportanimate.doStart();
+					}
+				</handler>
+				<view name="exporticon" width="${parent.height-4}" height="${parent.height-4}" opacity="${1 - (parent.enabled ? 0 : 0.8)}"  stretches="both" x="2" y="2"  resource="icons/32x32/save32.png" ></view>	
+	</button>	
 	<button name="settingsbutton" width="${classroot.recordinfo.height}" height="${classroot.recordinfo.height}" options="ignorelayout" y="${classroot.recordinfo.y}" x="${classroot.width - this.width}">
 				<handler name="onclick">
 					classroot.settingswindow.open();
@@ -342,9 +391,11 @@
    </modaldialog>
    
    	<!-- this service calls the save logic asyncroneously, and checks for results via callback -->
+	<!--
 	<explorerservice name="eService" filedataurl="${classroot.poodllfilelib}"  >
 		<handler name="onActionComplete" args="message">
 			thespinner.hidespinner();
+			classroot.setAttribute("saved",true);
 			classroot.updatepage(message);
 		</handler>
 		<handler name="onActionError" args="message">
@@ -354,6 +405,7 @@
 			thespinner.showspinner();
 		</handler>
 	</explorerservice>
+	-->
    
 </class>
 

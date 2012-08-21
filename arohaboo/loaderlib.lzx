@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	
+<!-- The Class Defs for Smart Loading of images -->
+
+ <!-- This is the class definition for the smart loader -->
+  <class name="smartloader">
+  <!-- 50 effectively means no waiting, a smaller number will cause delays but avoid timeouts -->
+	<attribute name="throttlesize" value="15"/>
+	<attribute name="timerdelay" value="100"/>
+	<attribute name="loading" />
+	<attribute name="waiting" />
+	<attribute name="starttime" />
+	<attribute name="imageprofiling" value="false" />
+	<attribute name="loadprofiling" value="false" />
+	<attribute name="useresources" value="false" />
+	<attribute name="output" value="''" />
+	<attribute name="checkdel" />
+	<event name="emptyevent" />
+	<method name="register" args="asmartimage">
+		<![CDATA[
+		
+		if(this.loadprofiling){
+			if(this.loading.length==0 && this.waiting.length==0){
+				var d = new Date();
+				this.setAttribute("starttime", d.getTime());				
+			}
+		
+		}
+		
+		if (this.loading.length < this.throttlesize){
+			this.loading.unshift(asmartimage);
+			this.startLoading(asmartimage);
+		}else{
+			this.waiting.unshift(asmartimage);
+		}
+		lz.Timer.removeTimer(this.checkdel);
+		lz.Timer.addTimer(this.checkdel,this.timerdelay); 
+		]]>
+	</method>
+	<method name="init">
+		//deebug("Initialising");
+		this.loading = new Array();
+		this.waiting = new Array();
+		this.setAttribute("checkdel", new lz.Delegate(this,"checkLoaded"));
+	</method>
+	<method name="checkLoaded" args="ignore=null">
+		<![CDATA[
+		
+		for (var iIndex in this.loading) {
+				//if this image is loaded or empty then quit it
+				if (this.loading[iIndex]){
+					if	(this.loading[iIndex].resource != null || this.loading[iIndex].loadratio == 1 || this.loading[iIndex].smartsrc==null
+						|| this.loading[iIndex].smartsrc=='' || this.loading[iIndex].smartsrc=='blank' || this.loading[iIndex].failed){
+						
+					// If imageprofiling enable this	
+					if (this.imageprofiling){
+						if( this.loading[iIndex].starttime && this.loading[iIndex].smartsrc ){
+							var takentime = new Date().getTime() - this.loading[iIndex].starttime;
+							output = output +  (this.loading[iIndex].smartsrc + "Q#" + iIndex + " took: " + takentime + " to load:" + this.loading[iIndex].actualstarttime + "\n");
+						}
+					}
+					
+					//remove from loading list
+					this.release(iIndex);
+				
+					}
+				}else{
+					
+					//remove from loading list
+					this.release(iIndex);
+					
+				
+				}
+			}
+		
+		while (this.waiting.length > 0 && (this.loading.length < this.throttlesize)) {
+			var nextsmartimage = this.waiting.pop();
+			this.startLoading(nextsmartimage);
+			this.loading.unshift(nextsmartimage);
+			//deebug("shifted:" + nextsmartimage.smartsrc);
+		}
+		
+		if (this.loading.length > 0){
+			lz.Timer.addTimer(this.checkdel,this.timerdelay); 
+		}else{
+			this.emptyevent.sendEvent();
+			
+			if(this.loadprofiling){
+				var takentime = new Date().getTime() - this.starttime;
+				deebug("imageloading took " + takentime) ;
+			}
+			
+			// If imageprofiling enable this
+			if(this.imageprofiling){
+				deebug(output);
+				this.setAttribute("output", '');
+			}
+
+		}
+		]]>
+	</method>
+	<method name="release" args="splicei">
+		//deebug("removing " + this.loading[splicei].smartsrc);
+		this.loading.splice(splicei,1);
+	</method>
+	<method name="alertEmpty" >
+		this.emptyevent.sendEvent();	
+	</method>
+	<method name="startLoading" args="asmartimage">
+	<![CDATA[
+
+		if(!this.useresources){
+			//use this to use runtime resources
+			asmartimage.setSource(asmartimage.smartsrc,"clientonly");
+		}else{
+			//use these to use compiled in resources
+			var namestring = asmartimage.smartsrc.replace("/","_");
+			namestring = namestring.replace(".","_");
+			//deebug("startloading:" + namestring);
+			asmartimage.setAttribute("resource",namestring);
+		}
+		
+
+		// If profiling enable this	
+		if (this.imageprofiling){	
+			var d = new Date();
+			asmartimage.setAttribute("starttime", d.getTime());
+			asmartimage.setAttribute("actualstarttime", d.getMinutes() + ":" + d.getSeconds());
+		}
+			
+		
+		]]>
+	</method>
+	
+  
+  </class>
+  
+    <!-- This is the class definition for the smart image -->
+  <!-- class name="smartimage" extends="image" -->
+  <class name="smartimage" extends="view">
+	<attribute name="smartsrc" />	
+	<attribute name="starttime" />
+	<attribute name="actualstarttime" />
+	<attribute name="sloader" />
+	<attribute name="failed" value="false"/>
+	<handler name="oninit">
+	<![CDATA[
+		if(this.smartsrc  && this.sloader){
+			this.setAttribute("failed",false);
+			this.sloader.register(this);
+			}
+			]]>
+	</handler>
+	<handler name="onsmartsrc">
+		<![CDATA[
+		//deebug("gg:" + this.smartsrc)
+		if(this.src!=this.smartsrc &&  this.sloader){
+				this.setAttribute("failed",false);
+				this.sloader.register(this);
+		}
+			]]>
+	</handler>
+	<!-- Flag failed if the media timesout -->
+	<handler name="ontimeout">
+		this.setAttribute("failed",true);
+	</handler>
+  </class>
+
+</library>

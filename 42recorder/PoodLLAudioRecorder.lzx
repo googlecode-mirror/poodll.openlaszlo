@@ -4,7 +4,7 @@
 	<include href="PoodLLAudioRecorderLib.lzx"/>
 	
 	<!-- The size of the buttons et al. -->
-	<attribute name="iconsize" value="128" />
+	<attribute name="iconsize" value="100" />
 	
 	<!-- The URL of the Red5 server -->
 	<attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />  	
@@ -49,7 +49,7 @@
 	<poodllaudiorecorder 
 		name="par"
 		width="${parent.width}" 
-		height="${parent.iconsize + 18}"
+		height="200"
 		filename="${parent.filename}"
 		saveformat="canvas.saveformat"
 		updatecontrol="${parent.updatecontrol}"
@@ -72,7 +72,11 @@
 		itemid="${canvas.itemid}"
 		/>
 	 
-	 	<view name="thespinner" id="thespinner" resource="spinner2.swf" stretches="both" align="center" options="ignorelayout: true" visible="false" width="$once{0.8*(Math.min(canvas.height,canvas.width))}" height="$once{0.8*(Math.min(canvas.height,canvas.width))}">
+	 	<view name="thespinner" id="thespinner" bgcolor="0xccffff" stretches="both" align="center" options="ignorelayout: true" x="${(parent.par.width - this.width) / 2}" y="${(parent.par.height - this.height) / 2}" visible="false" width="75" height="75">
+			<simplelayout axis="y" spacing="3" />
+ 			<attribute name="caption" value="'processing'" />
+			<view name="spindle" resource="spinner2.swf" stretches="both" align="center" width="60" height="60" />
+			<text text="${parent.caption}" align="center"/>
 			<method name="hidespinner" args="ignore=null">
 				this.setAttribute("visible",false);
 			</method>

@@ -5,7 +5,7 @@
 
 	
 	<!-- The size of the buttons et al. -->
-	<attribute name="iconsize" value="128" />
+	<attribute name="iconsize" value="100" />
 
 
 	<!-- The filename of the streamed file (must be unique) -->
@@ -17,6 +17,9 @@
 
 	<!-- UID for ensuring filenames  are unique-->
 	<attribute name="uid" value="lz.Browser.getInitArg('uid')" />
+	
+	<!-- Auto Submit: Upon stopping recording, auto convert and send-->
+	<attribute name="autosubmit" value="lz.Browser.getInitArg('autosubmit')" />
 
 	
 	<!-- Audio Settings -->
@@ -39,8 +42,8 @@
 	<attribute name="itemid" value="lz.Browser.getInitArg('itemid')" />
 
 		<poodllmp3recorder 
-		width="600"
-		height="400"
+		width="350"
+		height="200"
 		name="par"
 		id="par"
 		updatecontrol="${canvas.updatecontrol}"
@@ -57,11 +60,16 @@
 		component="${canvas.component}"
 		filearea="${canvas.filearea}"
 		itemid="${canvas.itemid}"
+		autosubmit="${canvas.autosubmit=='true'}"
 		/>
 
 	
 	 
-	 	<view name="thespinner" id="thespinner" resource="spinner2.swf" stretches="both" align="center" options="ignorelayout: true" visible="false" width="$once{0.8*(Math.min(canvas.height,canvas.width))}" height="$once{0.8*(Math.min(canvas.height,canvas.width))}">
+	 	<view name="thespinner" id="thespinner" bgcolor="0xccffff" stretches="both" align="center" options="ignorelayout: true" x="${(parent.par.width - this.width) / 2}" y="${(parent.par.height - this.height) / 2}" visible="false" width="75" height="75">
+			<simplelayout axis="y" spacing="3" />
+ 			<attribute name="caption" value="'converting'" />
+			<view name="spindle" resource="spinner2.swf" stretches="both" align="center" width="60" height="60" />
+			<text text="${parent.caption}" align="center"/>
 			<method name="hidespinner" args="ignore=null">
 				this.setAttribute("visible",false);
 			</method>

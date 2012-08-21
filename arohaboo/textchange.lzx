@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Setup our canvas -->
+<canvas width="600" height="600">
+	<!-- Play background Audio via HTML5  -->
+	<audionode name="backgroundaudio"  src="resources/squawk.mp3" autoplay="true" loopplay="false" />
+	<text name="foo" text="howdy" x="10" y="10" />
+	<text name="bar" text="onclick" x="10" y="30">
+		<handler name="onclick">
+		parent.backgroundaudio.play();
+		parent.foo.setAttribute("text", "onclick");
+		Debug.write("click:");
+		
+		</handler>
+	</text>
+	<text name="anotherbar" text="onmousedown" x="10" y="60">
+		<handler name="onclick">
+		parent.backgroundaudio.play();
+		parent.foo.setAttribute("text", "onmousedown");
+		Debug.write("mousedown:");
+		
+		</handler>
+	</text>
+	
+	<!-- An html5 audionode -->
+<class name="audionode" extends="text">
+	<attribute name="autoplay" value="false" />
+	<attribute name="loopplay" value="false" />
+	<attribute name="src" type="text" />
+	<attribute name="divid" type="text" value="$once{'lzaudio_' + this.name + '_' + Math.random(10000000)}" />
+	<handler name="oninit">
+		this.resetNode();
+		Debug.write("this.name:" ,this.name )
+	</handler>
+	
+	<method name="resetNode">
+		<![CDATA[
+		var autoplayString = '';
+		var loopplayString = '';
+		if (this.autoplay) {autoplayString=" autoplay='true'"};
+		if (this.loopplay) {loopplayString=" loop='true'"};
+		this.setAttribute("text","<audio id='" + this.divid + "' src='" + this.src + "'" + autoplayString + loopplayString + " />");
+		Debug.write("text:", this.text);
+		]]>
+	</method>
+	<method name="play">
+		lz.Browser.loadJS("document.getElementById('" + this.divid + "').play()");
+	</method>
+	<method name="stop">
+		lz.Browser.loadJS("document.getElementById('" + this.divid + "').stop()");
+	</method>
+
+</class>
+	
+</canvas>
+
+

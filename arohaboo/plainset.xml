@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="utf-8"?>
+<questionset font="Marker Felt" fontcolor="0xFFFFFF" bgcolor="0x000000" bgsound="plainset/backloop.mp3" bgimage="plainset/blacksquare.png">
+      <question qname="tmpBtnYN" qback="ZZZZZ" >
+            <prompt bcolor="0x000000" prompttext="Is it tomorrow yet?" promptaudio="plainset/tomorrow.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" animtime="500" starty="30" endy="30" endx="20" name="yesbutton" startx="-150" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="back" ftext="Yes" width="15" fcolor="0x00FF00" fsize="4" height="15" />
+            </button>
+            <button framecount="0" animtime="500" starty="60" endy="60" endx="60" name="nobutton" startx="120" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="next" ftext="No" width="15" fcolor="0xFF0000" fsize="9" height="15" />
+            </button>
+      </question>
+      <question qname="tmpBtn1of4" qback="ZZZZZ" >
+            <prompt bcolor="0x000000" prompttext="Which is the smallest of these countries?" promptaudio="plainset/smallestcountry.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" starty="25" name="abutton" startx="25" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="back" ftext="Japan" width="15" fcolor="0x00FF00" fsize="4" height="15" />
+            </button>
+            <button framecount="0" starty="75" name="bbutton" startx="25" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="back" ftext="New Zealand" width="15" fcolor="0xFF0000" fsize="4" height="15" />
+            </button>
+            <button framecount="0" starty="25" name="cbutton" startx="75" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="back" ftext="Italy" width="15" fcolor="0x00FF00" fsize="4" height="15" />
+            </button>
+            <button framecount="0" starty="65" name="dbutton" startx="65" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="next" ftext="Great Britain" width="15" fcolor="0xFF0000" fsize="4" height="15" />
+            </button>
+      </question>
+      <question qback="ZZZZZ"  qname="tmpBtnFrm" timer="10000" timerarg="back">
+            <prompt bcolor="0x000000" prompttext="What do cows drink?" promptaudio="plainset/cowsdrink.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="1" animtime="500" starty="60" timer="5000" endy="70" endx="20" name="abutton" startx="-100" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="back" ftext="Milk" width="15" fcolor="0x33FF00" fsize="4" height="15" />
+                  <frame bstate="1" src="plainset/borderred.png" type="button" action="back" ftext="MILK" width="15" fcolor="0x33FF00" fsize="4" height="15" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="30" endx="20" name="bbutton" startx="120" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="back" ftext="Coffee" width="15" fcolor="0xFF00FF" fsize="9" height="15" />
+                  <frame bstate="1" src="plainset/borderred.png" type="button" action="back" ftext="COFFEE" width="15" fcolor="0x33FF00" fsize="4" height="15" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" timer="3000" endy="50" endx="40" name="cbutton" startx="120" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="next" ftext="Water" width="15" fcolor="0xFF0033" fsize="3" height="15" />
+                  <frame bstate="1" src="plainset/borderred.png" type="button" action="next" ftext="WATER" width="15" fcolor="0xFF0033" fsize="3" height="15" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="70" endx="70" name="dbutton" startx="120" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="back" ftext="Juice" width="15" fcolor="0xFF00FF" fsize="3" height="15" />
+                  <frame bstate="1" src="plainset/borderred.png" type="button" action="back" ftext="JUICE" width="15" fcolor="0xFF00FF" fsize="3" height="15" />
+            </button>
+      </question>
+      <question qname="tmpBtnGrp" qback="ZZZZZ" >
+            <prompt bcolor="0x000000" prompttext="Touch the countries in Europe." promptaudio="plainset/europeancountries.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" animtime="500" starty="60" endy="60" endx="20" name="abutton" startx="10" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="back" ftext="Japan" width="15" fcolor="0x00FF00" fsize="4" height="15" />
+            </button>
+            <button framecount="0" animtime="500" starty="60" endy="60" endx="65" name="bbutton" startx="90" clicksound="button-9.wav">
+                  <frame args="0" bstate="0" src="plainset/borderred.png" type="button" action="back" ftext="New Zealand" width="15" fcolor="0xFF0000" fsize="4" height="15" />
+            </button>
+            <button framecount="1" animtime="500" starty="160" endy="25" endx="20" name="cbutton" startx="-100" clicksound="button-9.wav">
+                  <frame args="1" bstate="0" src="plainset/borderred.png" type="button" action="grpvalidate" ftext="Italy" width="15" fcolor="0x00FF00" fsize="4" height="15" />
+            </button>
+            <button framecount="1" animtime="500" starty="160" endy="25" endx="65" name="dbutton" startx="420" clicksound="button-9.wav">
+                  <frame args="1" bstate="0" src="plainset/borderred.png" type="button" action="grpvalidate" ftext="Great Britain" width="15" fcolor="0xFF0000" fsize="4" height="15" />
+            </button>
+      </question>
+      <question qback="ZZZZZ"  qname="tmpBtnSeq" timer="20000" timerarg="back">
+            <prompt bcolor="0x000000" prompttext="Touch the vegetables in alphabetical order." promptaudio="plainset/vegetables.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="1" animtime="500" starty="60" endy="60" endx="10" name="carrotbutton" startx="-100" clicksound="button-9.wav">
+                  <frame args="1" bstate="0" src="plainset/borderred.png" type="button" action="seqvalidate" ftext="carrot" width="15" fcolor="0x00FF00" fsize="4" height="15" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="70" endx="25" name="tomatobutton" startx="150" clicksound="button-9.wav">
+                  <frame args="3" bstate="0" src="plainset/borderred.png" type="button" action="seqvalidatenext" ftext="tomato" width="15" fcolor="0xFF0000" fsize="18" height="15" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="25" endx="30" name="cabbagebutton" startx="-100" clicksound="button-9.wav">
+                  <frame args="0" bstate="0" src="plainset/borderred.png" type="button" action="seqvalidate" ftext="cabbage" width="15" fcolor="0x00FF00" fsize="3" height="15" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="50" endx="20" name="onionbutton" startx="150" clicksound="button-9.wav">
+                  <frame args="2" bstate="0" src="plainset/borderred.png" type="button" action="seqvalidate" ftext="onion" width="15" fcolor="0xFF0000" fsize="2" height="15" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="70" endx="40" name="applebutton" startx="150" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="back" ftext="apple" width="15" fcolor="0xFF0000" fsize="4" height="15" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="70" endx="65" name="orangebutton" startx="150" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="back" ftext="orange" width="15" fcolor="0xFF0000" fsize="9" height="15" />
+            </button>
+      </question>
+      <question qname="tmpTxtYN" qback="ZZZZZ" >
+            <prompt bcolor="0x000000" prompttext="Is it tomorrow yet?" promptaudio="plainset/tomorrow.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" animtime="500" starty="30" endy="30" endx="20" name="yesbutton" startx="-150" clicksound="button-9.wav">
+                  <frame ftext="Yes" bstate="0" action="back" type="text" fcolor="0x00FF00" fsize="4" />
+            </button>
+            <button framecount="0" animtime="500" starty="60" endy="60" endx="60" name="nobutton" startx="120" clicksound="button-9.wav">
+                  <frame ftext="No" bstate="0" action="next" type="text" fcolor="0xFF0000" fsize="9" />
+            </button>
+      </question>
+      <question qname="tmpTxt1of4" qback="ZZZZZ" >
+            <prompt bcolor="0x000000" prompttext="Which is the smallest of these countries?" promptaudio="plainset/smallestcountry.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" starty="25" name="abutton" startx="25" clicksound="button-9.wav">
+                  <frame ftext="Japan" bstate="0" action="back" type="text" fcolor="0x00FF00" fsize="4" />
+            </button>
+            <button framecount="0" starty="75" name="bbutton" startx="25" clicksound="button-9.wav">
+                  <frame ftext="New Zealand" bstate="0" action="back" type="text" fcolor="0xFF0000" fsize="4" />
+            </button>
+            <button framecount="0" starty="25" name="cbutton" startx="75" clicksound="button-9.wav">
+                  <frame ftext="Italy" bstate="0" action="back" type="text" fcolor="0x00FF00" fsize="4" />
+            </button>
+            <button framecount="0" starty="65" name="dbutton" startx="65" clicksound="button-9.wav">
+                  <frame ftext="Great Britain" bstate="0" action="next" type="text" fcolor="0xFF0000" fsize="4" />
+            </button>
+      </question>
+      <question qback="ZZZZZ"  qname="tmpTxtFrm" timer="10000" timerarg="back">
+            <prompt bcolor="0x000000" prompttext="What do cows drink?" promptaudio="plainset/cowsdrink.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="1" animtime="500" starty="60" timer="5000" endy="70" endx="20" name="abutton" startx="-100" clicksound="button-9.wav">
+                  <frame ftext="Milk" bstate="0" action="back" type="text" fcolor="0x33FF00" fsize="4" />
+                  <frame ftext="MILK" bstate="1" action="back" type="text" fcolor="0x33FF00" fsize="4" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="30" endx="20" name="bbutton" startx="120" clicksound="button-9.wav">
+                  <frame ftext="Coffee" bstate="0" action="back" type="text" fcolor="0xFF00FF" fsize="9" />
+                  <frame ftext="COFFEE" bstate="1" action="back" type="text" fcolor="0x33FF00" fsize="4" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" timer="3000" endy="50" endx="40" name="cbutton" startx="120" clicksound="button-9.wav">
+                  <frame ftext="Water" bstate="0" action="next" type="text" fcolor="0xFF0033" fsize="3" />
+                  <frame ftext="WATER" bstate="1" action="next" type="text" fcolor="0xFF0033" fsize="3" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="70" endx="70" name="dbutton" startx="120" clicksound="button-9.wav">
+                  <frame ftext="Juice" bstate="0" action="back" type="text" fcolor="0xFF00FF" fsize="3" />
+                  <frame ftext="JUICE" bstate="1" action="back" type="text" fcolor="0xFF00FF" fsize="3" />
+            </button>
+      </question>
+      <question qname="tmpTxtGrp" qback="ZZZZ" >
+            <prompt bcolor="0x000000" prompttext="Touch the countries in Europe." promptaudio="plainset/europeancountries.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" animtime="500" starty="60" endy="60" endx="20" name="abutton" startx="10" clicksound="button-9.wav">
+                  <frame ftext="Japan" bstate="0" action="back" type="text" fcolor="0x00FF00" fsize="4" />
+            </button>
+            <button framecount="0" animtime="500" starty="60" endy="60" endx="65" name="bbutton" startx="90" clicksound="button-9.wav">
+                  <frame args="0" bstate="0" action="back" type="text" ftext="New Zealand" fcolor="0xFF0000" fsize="4" />
+            </button>
+            <button framecount="1" animtime="500" starty="160" endy="25" endx="20" name="cbutton" startx="-100" clicksound="button-9.wav">
+                  <frame args="1" bstate="0" action="grpvalidate" type="text" ftext="Italy" fcolor="0x00FF00" fsize="4" />
+            </button>
+            <button framecount="1" animtime="500" starty="160" endy="25" endx="65" name="dbutton" startx="420" clicksound="button-9.wav">
+                  <frame args="1" bstate="0" action="grpvalidate" type="text" ftext="Great Britain" fcolor="0xFF0000" fsize="4" />
+            </button>
+      </question>
+      <question qback="ZZZZ"  qname="tmpTxtSeq" timer="20000" timerarg="back">
+            <prompt bcolor="0x000000" prompttext="Touch the vegetables in alphabetical order." promptaudio="plainset/vegetables.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="1" animtime="500" starty="60" endy="60" endx="10" name="carrotbutton" startx="-100" clicksound="button-9.wav">
+                  <frame args="1" bstate="0" action="seqvalidate" type="text" ftext="carrot" fcolor="0x00FF00" fsize="4" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="70" endx="25" name="tomatobutton" startx="150" clicksound="button-9.wav">
+                  <frame args="3" bstate="0" action="seqvalidatenext" type="text" ftext="tomato" fcolor="0xFF0000" fsize="18" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="25" endx="30" name="cabbagebutton" startx="-100" clicksound="button-9.wav">
+                  <frame args="0" bstate="0" action="seqvalidate" type="text" ftext="cabbage" fcolor="0x00FF00" fsize="3" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="50" endx="20" name="onionbutton" startx="150" clicksound="button-9.wav">
+                  <frame args="2" bstate="0" action="seqvalidate" type="text" ftext="onion" fcolor="0xFF0000" fsize="2" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="70" endx="40" name="applebutton" startx="150" clicksound="button-9.wav">
+                  <frame ftext="apple" bstate="0" action="back" type="text" fcolor="0xFF0000" fsize="4" />
+            </button>
+            <button framecount="1" animtime="500" starty="60" endy="70" endx="65" name="orangebutton" startx="150" clicksound="button-9.wav">
+                  <frame ftext="orange" bstate="0" action="back" type="text" fcolor="0xFF0000" fsize="9" />
+            </button>
+      </question>
+      <question qback="ZZZZZ"  qname="tmpImgYN" timer="10000" timerarg="back">
+            <prompt bcolor="0x000000" prompttext="What do cows drink?" promptaudio="plainset/cowsdrink.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" animtime="500" starty="60" endy="30" endx="20" name="bbutton" startx="120" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/sadcatorangeeyes.png" type="image" action="back" />
+            </button>
+            <button framecount="0" animtime="500" starty="60" endy="50" endx="40" name="cbutton" startx="120" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/sadcatblueeyes.png" type="image" action="next" />
+            </button>
+      </question>
+      <question qback="ZZZZZ"  qname="tmpImg1of4" timer="10000" timerarg="back">
+            <prompt bcolor="0x000000" prompttext="What do cows drink?" promptaudio="plainset/cowsdrink.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" animtime="500" starty="60" endy="70" endx="20" name="abutton" startx="-100" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/sadcatorangeeyes.png" type="image" action="back" />
+            </button>
+            <button framecount="0" animtime="500" starty="60" endy="30" endx="20" name="bbutton" startx="120" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/sadcatyelloweyes.png" type="image" action="back" />
+            </button>
+            <button framecount="0" animtime="500" starty="60" endy="50" endx="40" name="cbutton" startx="120" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/sadcatgreeneyes.png" type="image" action="next" />
+            </button>
+            <button framecount="0" animtime="500" starty="60" endy="70" endx="70" name="dbutton" startx="120" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/sadcatblueeyes.png" type="image" action="back" />
+            </button>
+      </question>
+      <question qback="ZZZZZ" qname="tmpImgFrm"  entryanim="none"  topbgimage="plainset/picmaxback2.jpg" bgimage="plainset/picmaxback2.jpg">
+            <prompt bcolor="0x000000" prompttext="Now surprise each cat once" promptaudio="plainset/sadcats.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="1" starty="60" name="b1" startx="20" clicksound="button-9.wav">
+                  <frame args="3" bstate="0" src="plainset/angrycatblueeyes.png" type="image" picspeed="1" src2="plainset/angrycatredeyes.png" action="grpvalidate" />
+                  <frame bstate="1" src="plainset/sadcatblueeyes.png" type="image" action="back" />
+            </button>
+            <button framecount="1" starty="20" name="b2" startx="60" clicksound="button-9.wav">
+                  <frame args="3" bstate="0" src="plainset/angrycatredeyes.png" type="image" src2="plainset/sadcatorangeeyes.png" action="grpvalidate" />
+                  <frame bstate="1" src="plainset/sadcatorangeeyes.png" type="image" action="back" />
+            </button>
+            <button framecount="1" starty="20" name="b3" startx="20" clicksound="button-9.wav">
+                  <frame args="3" bstate="0" src="plainset/angrycatgreeneyes.png" type="image" picspeed="2" src2="plainset/angrycatblueeyes.png" action="grpvalidate" />
+                  <frame bstate="1" src="plainset/sadcatgreeneyes.png" type="image" action="back" />
+            </button>
+            <button framecount="1" starty="60" name="b4" startx="60" clicksound="button-9.wav">
+                  <frame args="3" bstate="0" src="plainset/angrycatyelloweyes.png" type="image" action="grpvalidate" />
+                  <frame bstate="1" src="plainset/sadcatyelloweyes.png" type="image" action="back" />
+            </button>
+      </question>
+      <question qback="ZZZZZ" entryanim="up"  qname="tmpImgGrp">
+            <prompt bcolor="0x000000" prompttext="Touch all the blue cats" promptaudio="plainset/bluecats.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="1" starty="20" name="b1" startx="30" clicksound="button-9.wav">
+                  <frame args="2" bstate="0" src="plainset/angrycatblueeyes.png" type="image" action="grpvalidate" />
+            </button>
+            <button framecount="1" starty="60" name="b2" startx="60" clicksound="button-9.wav">
+                  <frame args="3" bstate="0" src="plainset/angrycatredeyes.png" type="image" action="back" />
+            </button>
+            <button framecount="1" starty="60" name="b3" startx="30" clicksound="button-9.wav">
+                  <frame args="2" bstate="0" src="plainset/angrycatblueeyes.png" type="image" action="grpvalidate" />
+            </button>
+            <button framecount="1" starty="20" name="b4" startx="60" clicksound="button-9.wav">
+                  <frame args="2" bstate="0" src="plainset/angrycatblueeyes.png" type="image" action="grpvalidate" />
+            </button>
+      </question>
+      <question qback="ZZZZZ" entryanim="none"  qname="tmpImgSeq" bgimage="plainset/back12.jpg">
+            <prompt bcolor="0x000000" prompttext="Touch the angry cats, yellow, blue, green then red" promptaudio="plainset/angrycats.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="1" starty="60" name="b1" startx="20" clicksound="button-9.wav">
+                  <frame args="1" bstate="0" src="plainset/angrycatblueeyes.png" type="image" action="seqvalidate" />
+            </button>
+            <button framecount="1" starty="60" name="b2" startx="50" clicksound="button-9.wav">
+                  <frame args="3" bstate="0" src="plainset/angrycatredeyes.png" type="image" action="seqvalidatenext" />
+            </button>
+            <button framecount="1" starty="30" name="b3" startx="20" clicksound="button-9.wav">
+                  <frame args="2" bstate="0" src="plainset/angrycatgreeneyes.png" type="image" action="seqvalidate" />
+            </button>
+            <button framecount="1" starty="30" name="b4" startx="50" clicksound="button-9.wav">
+                  <frame args="0" bstate="0" src="plainset/angrycatyelloweyes.png" type="image" action="seqvalidate" />
+            </button>
+      </question>
+      <question qback="options" entryanim="in" qname="start" bgimage="plainset/bluesky.jpg">
+            <prompt width="100" fcolor="0xFFFFFF" fsize="2" prompttext=" " y="0" />
+            <button framecount="0" starty="10" name="r1button" startx="15" clicksound="button-9.wav">
+                  <frame args="StartRound1" bstate="0" src="plainset/borderred.png" type="button" action="loader" ftext="1" width="15" fcolor="0xFFFFFF" fsize="3" height="15" />
+                  <frame bstate="99" src="plainset/bordergrey.png" type="button" ftext="1" width="15" fcolor="0xFFFFFF" fsize="3" height="15" />
+            </button>
+
+            <button slot="XAs5" framecount="0" starty="30" name="r5button" startx="45" clicksound="button-9.wav">
+                  <frame args="StartRound5" bstate="0" src="plainset/borderred.png" type="button" action="loader" ftext="5" width="15" fcolor="0xFFFFFF" fsize="3" height="15" />
+                  <frame bstate="99" src="plainset/bordergrey.png" type="button" ftext="5" width="15" fcolor="0xFFFFFF" fsize="3" height="15" />
+            </button>
+
+
+            <button slot="XAs9" framecount="0" starty="50" name="r9button" startx="70" clicksound="button-9.wav">
+                  <frame args="StartRound9" bstate="0" src="plainset/borderred.png" type="button" action="loader" ftext="9" width="15" fcolor="0xFFFFFF" fsize="3" height="15" />
+                  <frame bstate="99" src="plainset/bordergrey.png" type="button" ftext="9" width="15" fcolor="0xFFFFFF" fsize="3" height="15" />
+            </button>
+            <button framecount="0" starty="75" name="optionsbutton" startx="35" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/bordergreen.png" type="button" action="back" ftext="Options" width="30" fcolor="0xFFFFFF" fsize="3" height="20" />
+            </button>
+      </question>
+      <question qname="options" qback="start">
+            <prompt bcolor="0x000000" width="100" fsize="2" prompttext="Tough Quiz!" fcolor="0xFFFFFF" y="0" />
+            <button systemproperty="XAplaybacksound" framecount="1" starty="10" cantoggle="yes" name="bgaudiobutton" startx="20" clicksound="button-9.wav">
+                  <frame args="XAplaybacksound:no" bstate="0" src="plainset/borderred.png" type="button" action="systemproperty" ftext="Yes Bg Sound" width="25" fcolor="0x0000FF" fsize="18" height="20" />
+                  <frame args="XAplaybacksound:yes" bstate="1" src="plainset/borderred.png" type="button" action="systemproperty" ftext="No Bg Sound" width="25" fcolor="0x0000FF" fsize="18" height="20" />
+            </button>
+            <button systemproperty="XAplaysoundfx" framecount="1" starty="10" cantoggle="yes" name="soundfxbutton" startx="65" clicksound="button-9.wav">
+                  <frame args="XAplaysoundfx:no" bstate="0" src="plainset/borderred.png" type="button" action="systemproperty" ftext="Yes FX Sound" width="25" fcolor="0x0000FF" fsize="18" height="20" />
+                  <frame args="XAplaysoundfx:yes" bstate="1" src="plainset/borderred.png" type="button" action="systemproperty" ftext="No FX Sound" width="25" fcolor="0x0000FF" fsize="18" height="20" />
+            </button>
+            <button systemproperty="XAplayaudioprompt" framecount="1" starty="45" cantoggle="yes" name="audiopromptbutton" startx="20" clicksound="button-9.wav">
+                  <frame args="XAplayaudioprompt:no" bstate="0" src="plainset/borderred.png" type="button" action="systemproperty" ftext="Yes Play Prompt" width="40" fcolor="0x0000FF" fsize="18" height="20" />
+                  <frame args="XAplayaudioprompt:yes" bstate="1" src="plainset/borderred.png" type="button" action="systemproperty" ftext="No Mute Prompt" width="40" fcolor="0x0000FF" fsize="18" height="20" />
+            </button>
+            <button systemproperty="XAshowtextprompt" framecount="1" starty="45" cantoggle="yes" name="showpromptbutton" startx="65" clicksound="button-9.wav">
+                  <frame args="XAshowtextprompt:no" bstate="0" src="plainset/borderred.png" type="button" action="systemproperty" ftext="Yes Show Prompt" width="40" fcolor="0x0000FF" fsize="18" height="20" />
+                  <frame args="XAshowtextprompt:yes" bstate="1" src="plainset/borderred.png" type="button" action="systemproperty" ftext="No Hide Prompt" width="40" fcolor="0x0000FF" fsize="18" height="20" />
+            </button>
+            <button framecount="0" starty="70" name="returnbutton" startx="40" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/borderred.png" type="button" action="previous" ftext="Back to Start" width="40" fcolor="0x0000FF" fsize="18" height="20" />
+            </button>
+      </question>
+      <question qname="loader" timer="300" timerarg="next" entryanim="none" qnext="StartRound1" hidetimer="true" bgimage="plainset/blacksquare.png">
+            <prompt bcolor="0x000000" width="100" fsize="2" prompttext=" " fcolor="0xFFFFFF" y="0" />
+            <static framecount="0" starty="20" name="yesbutton" startx="20" clicksound="button-9.wav">
+                  <frame ftext="Loading" bstate="0" action="next" type="text" fcolor="0x00FF00" fsize="4" />
+            </static>
+            <static framecount="0" starty="60" name="continuebutton" startx="20" clicksound="button-9.wav">
+                  <frame bstate="0" src="plainset/loading_y.png" type="image" picspeed="1" width="25" src2="plainset/loading_w.png" action="next" height="10" />
+            </static>
+      </question>
+      <question qname="fail1" entryanim="in" qback="start">
+            <prompt bcolor="0x000000" prompttext="You failed .... " promptaudio="plainset/youfailed.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" starty="40" name="gobutton" startx="40" clicksound="button-9.wav">
+                  <frame ftext="try Round 1 again" bstate="0" action="next" type="text" fcolor="0xFF0000" fsize="9" />
+            </button>
+            <button framecount="0" starty="70" name="backtostartbutton" startx="40" clicksound="button-9.wav">
+                  <frame ftext="or .. back to start" bstate="0" action="back" type="text" fcolor="0xDDDD00" fsize="3" />
+            </button>
+            <button framecount="0" starty="60" name="showhint" startx="50" clicksound="button-9.wav">
+                  <frame ftext="Why?" bstate="0" action="showhint" type="text" fcolor="0xFF0000" fsize="9" />
+            </button>
+      </question>
+      <question preload="EndRound1,fail1" qback="fail1" hinttext="Don't do that again" topbgimage="plainset/backcanyon.jpg" qname="StartRound1" bgimage="plainset/backcanyon.jpg">
+            <prompt bcolor="0x000000" prompttext="Which is the smallest of these countries?" promptaudio="plainset/smallestcountry.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" starty="25" name="jpbutton" startx="25" clicksound="button-9.wav">
+                  <frame ftext="Japan" bstate="0" action="back" type="text" fcolor="0x00FF00" fsize="4" />
+            </button>
+            <button framecount="0" starty="75" name="nzbutton" startx="25" clicksound="button-9.wav">
+                  <frame ftext="New Zealand" bstate="0" action="back" type="text" fcolor="0xFF0000" fsize="4" />
+            </button>
+            <button framecount="0" starty="25" name="itbutton" startx="75" clicksound="button-9.wav">
+                  <frame ftext="Italy" bstate="0" action="back" type="text" fcolor="0x00FF00" fsize="4" />
+            </button>
+            <button framecount="0" starty="65" name="gbbutton" startx="65" clicksound="button-9.wav">
+                  <frame ftext="Great Britain" bstate="0" fsize="4" type="text" fcolor="0xFF0000">
+                        <action type="next" />
+                  </frame>
+            </button>
+      </question>
+      <question qname="banana" qback="fail1" hinttext="Don't do that again">
+            <prompt bcolor="0x000000" prompttext="Are you a banana?" promptaudio="plainset/abanana.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" animtime="500" starty="20" endy="20" endx="20" name="yesbutton" startx="-20" clicksound="button-9.wav">
+                  <frame ftext="Yes" bstate="0" action="back" type="text" fcolor="0x00FF00" fsize="4" />
+            </button>
+            <button framecount="0" animtime="500" starty="50" endy="50" endx="60" name="nobutton" startx="120" clicksound="button-9.wav">
+                  <frame ftext="No" bstate="0" fsize="9" type="text" fcolor="0xFF0000">
+                        <action type="next" />
+                  </frame>
+            </button>
+      </question>
+     
+      <question qback="start" entryanim="up" qname="EndRound1">
+            <prompt bcolor="0x000000" prompttext="Round 1 Complete" promptaudio="plainset/youfinished.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" starty="20" name="gobutton" startx="40" clicksound="button-9.wav">
+                  <frame args="StartRound2" bstate="0" action="loader" type="text" ftext="next round" fcolor="0xFF0000" fsize="9" />
+            </button>
+      </question>
+      <question qname="fail2" entryanim="in" qback="start">
+            <prompt bcolor="0x000000" prompttext="You failed .... " promptaudio="plainset/youfailed.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" starty="40" name="gobutton" startx="20" clicksound="button-9.wav">
+                  <frame ftext="Try Round 2 again ..." bstate="0" action="next" type="text" fcolor="0xFF0000" fsize="7" />
+            </button>
+            <button framecount="0" starty="70" name="tryagainbutton" startx="40" clicksound="button-9.wav">
+                  <frame ftext="or .. back to start" bstate="0" action="back" type="text" fcolor="0xDD00DD" fsize="3" />
+            </button>
+      </question>
+      <question qback="fail2" qname="StartRound2" preload="fail2,EndRound2" slot="XAs2" entryanim="none" topbgimage="plainset/backmountain.jpg" bgimage="plainset/backmountain.jpg">
+            <prompt bcolor="0x000000" prompttext="Touch the angry cats, yellow, blue, green then red" promptaudio="plainset/angrycats.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="1" starty="45" name="angrycatblue" startx="0" clicksound="button-9.wav">
+                  <frame args="1" bstate="0" src="plainset/angrycatblueeyes.png" type="image" action="seqvalidate" />
+            </button>
+            <button framecount="1" starty="44" name="angrycatred" startx="40" clicksound="button-9.wav">
+                  <frame args="3" bstate="0" src="plainset/angrycatredeyes.png" type="image" action="seqvalidatenext" />
+            </button>
+            <button framecount="1" starty="10" name="angrycatgreen" startx="15" clicksound="button-9.wav">
+                  <frame args="2" bstate="0" src="plainset/angrycatgreeneyes.png" type="image" action="seqvalidate" />
+            </button>
+            <button framecount="1" starty="10" name="angrycatyellow" startx="55" clicksound="button-9.wav">
+                  <frame args="0" bstate="0" src="plainset/angrycatyelloweyes.png" type="image" action="seqvalidate" />
+            </button>
+      </question>
+ 
+      <question qname="allfinished" entryanim="in" qback="start">
+            <prompt bcolor="0x000000" prompttext="You Won" promptaudio="plainset/youfinished.mp3" width="100" fcolor="0xFFFFFF" fsize="2" y="0" />
+            <button framecount="0" starty="40" name="gobutton" startx="40" clicksound="button-9.wav">
+                  <frame ftext="Back to Start" bstate="0" action="back" type="text" fcolor="0xFF0000" fsize="9" />
+            </button>
+      </question>
+</questionset>

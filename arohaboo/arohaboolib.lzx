@@ -1,0 +1,875 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	
+<!-- The top level arohaboo game classes, and a few other classes that don't go elsewhere  -->
+
+<include href="incubator/roundrect.lzx" />
+<include href="../utils/kmeixnertimer.lzx"/>
+<include href="audiolib.lzx" />
+<include href="frameslib.lzx" />
+<include href="questionslib.lzx" />
+<include href="loaderlib.lzx" />
+<include href="transitionlib.lzx" />
+
+<!--The main game panel -->
+<class  name="arohabooview" extends="view" >                    
+	
+	<!-- Dummy object to get past compiler, objections. Should never be accessed my flash or non ios runtime -->
+	<switch>
+		<unless property="$dhtml">			
+			<node id="navigator" />
+		</unless>
+	</switch>
+	
+	<!-- kick of the questions once initialised -->
+	<handler name="oninit">
+		this.startquestions();
+	</handler>
+			
+	
+	<method name="startquestions" args="ignore=null">	
+				//deebug("got some data");
+				//parent.pathview.setAttribute("visible",false);
+				if(this.initmerge){
+					this.mergedata();
+				}
+				
+				//to enable or disable phonegap
+				if(lz.Browser.getInitArg('disablephonegap')=='true'){
+					settings.setProperty("ZAdisablephonegap","true");
+				}else{
+					settings.setProperty("ZAdisablephonegap","false");
+				}
+			
+				//var dp = this.questions.getPointer();
+				var dp = canvas.questions.getPointer();
+				dp.setXPath("/questionset");
+				this.setAttribute("usefont", dp.getNodeAttribute("font"));
+				this.setAttribute("usefontcolor", dp.getNodeAttribute("fontcolor"));
+				this.setAttribute("backsound", dp.getNodeAttribute("bgsound"));
+				this.setAttribute("backimage", dp.getNodeAttribute("bgimage"));
+				this.setAttribute("backcolor",dp.getNodeAttribute("bgcolor"));
+				this.setAttribute("stickyquestions",dp.getNodeAttribute("stickyquestions"));
+				//deebug("usefont:" + this.usefont);
+				//deebug("backsound:" + this.backsound);
+				//deebug("backcolor:" + this.backcolor);	
+				
+				
+				
+				this.qholder.completeInstantiation();
+	</method>
+	
+	<!-- Merge Data if required -->
+	<method name="mergedata">
+		<![CDATA[
+
+		var pptr=canvas.datasets.questions.getPointer();  
+		pptr.selectChild();
+
+		var tpptr = canvas.datasets.templates.getPointer();
+		tpptr.selectChild();
+
+		var mpptr = canvas.datasets.merges.getPointer();
+		mpptr.selectChild();
+		mpptr.selectChild();
+
+		do {
+			var usetemplate=mpptr.getNodeAttribute("template");
+			if(usetemplate){
+				var query = "question[@template='" + usetemplate + "']";
+				var thetemp =  tpptr.xpathQuery(query);
+				if (thetemp){
+					var stringnode = thetemp.serialize();
+					var nodeAttrs = mpptr.getNodeAttributes();
+					
+					//make sure our answer template gets fixed
+					var answerbutton = mpptr.getNodeAttribute("answer");
+					//deebug("answerbutton:" + answerbutton);
+					//if(answerbutton){
+					//	deebug("answerbutton:" + answerbutton + " is recognised");
+					//	}
+					
+					//replace all variables from template
+					if(nodeAttrs){
+							for( var na in nodeAttrs){
+								//stringnode = stringnode.replace('/@' + na + '@/g', nodeAttrs[na]);
+								//e.g a="house" a_color="red" na->a or a_color nodeAttrs[na]=house or red
+								//stringnode = stringnode.replace('@' + na + '@', nodeAttrs[na]);
+								//stringnode = stringnode.replace('@' + na + '@', nodeAttrs[na]);
+								//stringnode = stringnode.replace('/@' + na + '@/g', nodeAttrs[na]);
+								stringnode = stringnode.split('@' + na + '@').join(nodeAttrs[na]);
+								
+								//if the attribute key we are changing starts with what is specified in answerbutton, it will change that part
+								//to Z and then replace that too. This is so that anything set to say @c@ or @c_args@ will also get set to @Z@ or @Z_args@
+								//for keeping answer key in line with template of answer button 
+								if(answerbutton && na.indexOf(answerbutton)==0){
+									stringnode = stringnode.replace('@' + na.replace(answerbutton,'Z') + '@', nodeAttrs[na]);
+								}
+							}
+					}
+					//deebug("new stringnode:" + stringnode);
+					var newQNode = pptr.p.appendChild(lz.DataElement.stringToLzData(stringnode));	
+
+					//if an answerbutton was specified, we need to do some replacing
+					if(answerbutton){
+					
+							//this rest of this is just making sure the right stuff is applied to correct answer	
+							var correctNode = newQNode.getLastChild();
+				
+							//fix up the correct answer
+							var tempDP = pptr.dupePointer();	
+							var qCount = tempDP.getNodeCount();					
+							tempDP.selectChild();
+							tempDP.selectNext(qCount-1);
+							//deebug("got temppointer");
+							//deebug("pointing:" + tempDP.p.serialize());	
+							
+							if(tempDP.setXPath("button[@name='" + answerbutton + "button']")){
+								//deebug("set xpath temppointer");
+
+								if(tempDP.p.hasAttr("endx")){
+									correctNode.setAttr("endx", tempDP.p.getAttr("endx"));
+								}
+								if(tempDP.p.hasAttr("endy")){
+									correctNode.setAttr("endy", tempDP.p.getAttr("endy"));
+								}
+								correctNode.setAttr("startx", tempDP.p.getAttr("startx"));
+								correctNode.setAttr("starty", tempDP.p.getAttr("starty"));
+								
+							
+								newQNode.removeChild(tempDP.p);	
+							}
+					
+					//}else{
+						//deebug(stringnode);
+					}
+				}
+			}	
+			
+		}while(mpptr.selectNext());
+	
+		]]>
+	</method>
+	
+	<!-- merge data from templates into main questions dataset if required-->
+	<attribute  name="initmerge" value="false" />
+	
+	<!-- to tell if we use pooling or not. -->
+	<attribute  name="pooling" value="true" />
+
+	<!-- settings to set initially for app, defaults I guess  -->
+	<attribute name="initsettings" type="string"/>
+	
+	<!-- to tell if we embed resources or not. -->
+	<attribute  name="embedres" value="false" />
+	
+	
+	
+	<!-- the top reference to our game settings object  xprop:xvalue|yprop:yvalue -->
+	<gamesettings id="settings" name="settings" initsettings="${parent.initsettings}" />
+
+	<attribute name="backimage" />
+	<attribute name="backsound" />
+	<attribute name="stickyquestions" />
+	<attribute name="disabletimer" />
+	<attribute name="backcolor" value="0x000000"/>
+	
+	 <!-- This is the smart loader which regulates the loading of images -->
+	<!-- adjust throttle size to tune it to your site -->
+	<!-- set useresources to true to "compile in" resources (deploy time) -->
+	<smartloader id="superloader" imageprofiling="false" loadprofiling="false" useresources="$once{this.parent.embedres}" throttlesize="50" />
+	
+
+
+	<!-- view name="qholder"  -->
+	<!-- view name="qholder"   width="${parent.width}" height="${parent.height}" clickable="true" -->
+	<!-- view name="qholder"  initstage="defer" font="${parent.usefont}" fgcolor="${parent.usefontcolor}" width="${parent.width}" height="${parent.height}" clickable="true" -->
+	<view name="qholder"  initstage="defer" font="${parent.usefont}" fgcolor="${parent.usefontcolor ? Number(parent.usefontcolor) : 0}" width="${parent.width}" height="${parent.height}" clickable="true" >
+	
+		<!-- qholder reference to gamesettings. -->
+		<attribute  name="settings" value="${classroot.settings}" />
+		
+		<!-- to tell if we use pooling or not. -->
+		<attribute  name="pooling" value="${classroot.pooling}" />
+		
+		<!--  a timer done event for the canvas to use -->
+		<event name="bigtimerdone" />
+		
+		
+		
+		<!-- Play background Audio -->
+		<audionode name="backgroundaudio" useresources="$once{superloader.useresources}" audiosrc="${classroot.backsound}" autoplay="false" loopplay="true" mute="${classroot.settings.XAplaybacksound != 'yes'}"/>
+		<handler name="onXAplaybacksound" reference="this.settings">
+			deebug("seting playsound");
+			switch (this.settings.XAplaybacksound){
+				case 'yes':	this.backgroundaudio.play();
+							break;
+				default:	this.backgroundaudio.stop();
+							break;
+			}
+		</handler>
+		
+		<!-- Initialise our question cache -->
+		<questioncache name="qcache" qholder="${this}" stickyquestions="${classroot.stickyquestions}"/>
+		
+		
+		<!-- Audio Prompt Audio -->
+		<audionode name="promptaudio" useresources="$once{superloader.useresources}" autoplay="false" loopplay="false" mute="${classroot.settings.XAplayaudioprompt != 'yes'}"/>
+
+		<!-- Next Audio / Back Audio -->
+		<simpleaudionode name="nextbackaudio" useresources="$once{superloader.useresources}" autoplay="false" loopplay="false" mute="${classroot.settings.XAplaysoundfx != 'yes'}"/>
+		
+		<!--Button Click Audio -->
+		<!--Reinstate this if stability from button clicks is an issue -->
+		<!-- audionode name="soundfxaudio" autoplay="false" loopplay="false" mute="false" -->
+		
+		<!--This is the main game loop. it fires a loopevent every 500ms. 
+			Use this event for animations and non specific interval checking
+		  -->
+		<gameloop name="thegameloop" timer_resolution="500" oninit="this.startTimer()"/>
+	
+		<!-- This is a countdown timer for countdown type individual questions -->
+		<countdowntimer name="littletimer" inittime="0" >
+			<handler name="countevent">
+				//Debug.write(this.showsec);
+				settings.setProperty("ZAlittletimer",this.showsec);
+		
+			</handler>
+			<handler name="oninit">
+				this.resetTimer();
+			</handler>
+			<handler name="ontimer_state">
+				switch (this.timer_state){
+				
+					case "STOPPED":	//classroot.displayview.doorbell.play();
+									//Debug.write("Timer is stopped");					
+									break;
+					case "PAUSED":	//Debug.write("Timer is paused");					
+									break;
+					case "COUNTING"://	Debug.write("Timer is counting");					
+									break;
+					case "READY":	//Debug.write("Timer is ready");					
+									break;
+				
+				}
+				
+			</handler>
+		</countdowntimer>
+		
+		<!-- This is a countdown timer for countdown type individual questions -->
+		<countdowntimer name="bigtimer" inittime="0" >
+			<handler name="countevent">
+				//Debug.write(this.showsec);
+				//classroot.displayview.timeDisplay.format('%02d:%02d:%02d',this.showhour,this.showmin,this.showsec);
+				//classroot.displayview.milliDisplay.format('%03d',this.showmilli);
+				settings.setProperty("ZAbigtimer",this.showsec);
+				//parent.ltimer.showsec &lt; 10 ? '0' + parent.ltimer.showsec : parent.ltimer.showsec
+			</handler>
+			<handler name="oninit">
+				this.resetTimer();
+			</handler>
+			<handler name="ontimer_state">
+				switch (this.timer_state){
+				
+					case "STOPPED": parent.bigtimerdone.sendEvent();						
+									break;
+					default: break;
+				
+				}
+			</handler>
+			
+		</countdowntimer>
+
+		<!--The background image : should be able to change this from dataset data really.-->	
+		<smartimage name="backgroundimage" smartsrc="$once{parent.parent.backimage}" sloader="${superloader}" bgcolor="${parent.parent.backcolor ? Number(parent.parent.backcolor) : null}" stretches="both" width="${parent.width}" oninit="this.sendToBack()" height="${parent.height}" />
+		
+		<!--Handle for the current question -->
+		<attribute name="nowquestion" />
+		<attribute name="prevquestion" />
+		<!-- handle for the previous acction call. may not be the same as prevquestion 
+			cos if loader we'd keep coming back again.-->
+		<attribute name="prevactiontarget" value="'start'"/>
+		
+		<!--The name of the current question -->
+		<!-- for the standalone flash demo we use a splash screen as first show -->
+		
+		<!-- attribute name="currentqname" value="'previewsplash'" -->
+		<attribute name="currentqname" value="$once{classroot.embedres ? 'previewsplash' : 'loader'}" />
+		
+		<!-- This is a holder to tell loader question its next question -->
+		<!-- I know this is a hacky way to pass the data around ... -->
+		<attribute name="postloaderqname" value="'start'"/>
+		
+		
+		<!--Delegates we call to switch over questions -->
+		<attribute name="switchDel" />
+		<attribute name="handoverDel" />
+		
+		<!--
+			Evaluated a cond string XAprop1:cond1:result1|XAprop2:cond2:result2|default 
+		
+		-->
+		<method name="evalCondition" args="args">
+			var conditions= args.split('|');
+			for (var key in conditions) {
+				var parts = conditions[key].split(':');
+				if (parts.length > 2){
+					if(settings.getProperty(parts[0])==parts[1]){
+						return parts[2];
+					}
+				}else{
+					return parts[0];
+				}
+			}
+			
+		</method>
+		
+		<!--Methods we call to proportion sizes -->
+		<!-- used for x and width calls -->
+		<method name="fetchX" args="rawX">
+		<![CDATA[
+			if(rawX != null && rawX != 'undefined'){
+				//return (Math.round(rawX * 0.01 * this.width));
+				return Math.round((rawX *  this.width) / 100);
+			}else{
+				return null;
+			}
+			]]>
+		</method>
+		<method name="fetchW" args="rawW">
+			<![CDATA[
+			if(!rawW || rawW == 0){
+				return null;
+			}else{
+				//return (Math.round(rawW * 0.01 * this.width));
+				return Math.round((rawW *  this.width) / 100);
+			}
+			]]>
+		</method>
+		
+		<!--Methods we call to proportion sizes -->
+		<!-- used for y and height calls -->
+		<method name="fetchY" args="rawY">
+		<![CDATA[
+			if(rawY != null && rawY != 'undefined'){
+				return Math.round((rawY *  this.height) / 100);
+			}else{
+				return null;
+			}
+			]]>
+		</method>
+		<method name="fetchH" args="rawH">
+			<![CDATA[
+			if(!rawH || rawH == 0){
+				return null;
+			}else{
+				return Math.round((rawH *  this.height) / 100);
+			}
+			]]>
+		</method>	
+		
+		<method name="shuffle" args="shuffleargs">
+			<![CDATA[
+				var pptr=canvas.datasets.questions.getPointer();  
+				var pptrend=canvas.datasets.questions.getPointer();  
+				var shuffleptr=canvas.datasets.questions.getPointer();
+			
+				//get the names of the beginning and end nodes between which to shuffle
+				var shuffleArg=shuffleargs.split('|');;
+				
+				//fetch the end node before which we will shuffle
+				pptrend.setXPath("questions:/questionset/question[@qname='" + shuffleArg[1] + "']/text()");
+				var endnode = pptrend.p;
+				
+				
+				//fetch the start node after which we will shuffle
+				pptr.setXPath("questions:/questionset/question[@qname='" + shuffleArg[0] + "']/text()");				
+		
+
+				//add a "shuffle" node as a temp workspace
+				shuffleptr.setXPath("questions:/questionset/text()");
+				var shufflenode =  shuffleptr.addNode("shuffle");
+				shuffleptr.setPointer(shufflenode);
+				
+			
+				//remove all the nodes and add to temp "shuffle" subnode
+				pptr.selectNext();
+				while ( pptr.p && !pptr.comparePointer(pptrend)){
+					//deebug("moving:" + pptr.p.getAttr("qname"));
+					shuffleptr.addNodeFromPointer(pptr);
+					pptr.deleteNode();
+				}
+			
+				//Initially tried here to sort the subnodes and before moving them back up a level
+				//but laszlo got screwed trying to find after that in removeChild.
+				// so used a randmozise further down.
+				//shufflenode.childNodes.sort(function() {return (Math.random() > 0.5) ? 1  : -1});
+				//shufflenode.childNodes.sort();
+				
+				//Set pptr to one level up from the end location of the shuffled nodes
+				pptr.setXPath("questions:/questionset/text()");
+				//init our result value
+				var result= true;
+				while(result && shufflenode.hasChildNodes()){
+					var achild = shufflenode.childNodes[Math.floor(Math.random() * shufflenode.childNodes.length)];
+					//deebug("replacing:" + achild.getAttr("qname"));
+					result = pptr.p.insertBefore(shufflenode.removeChild(achild),endnode);
+				}
+				
+				
+				//remove the shufflenode we added
+				pptr.setPointer(shufflenode);
+				pptr.deleteNode();
+				]]>
+				
+			
+		</method>
+	
+		
+		<!--method that is called to switch the active question, via the new questions index -->
+		<method name="switchQuestion" args="newqname,pausetime">
+			<![CDATA[
+				this.setAttribute("currentqname", newqname);
+				//deebug("pausetime:" + pausetime);
+				if(pausetime==0){
+					//we need to pass an argument(0) here, but we don't use it
+					this.switchDel.execute(0);
+				}else{
+					lz.Timer.addTimer(this.switchDel, pausetime);
+				}
+			]]>
+		</method>
+		
+		<!-- here we do the actual switch  and the admin stuff before we jump -->
+		<method name="doSwitch" args="ignore=null">
+		<![CDATA[
+				
+			//var preload='none';
+			//var preload='set';
+			var preload='nextonly';
+			
+			
+				//if we somehow have two timer delegates going, lets cancel the second or we will jump two questions
+				lz.Timer.removeTimer(this.switchDel);
+				if(this.nowquestion){
+				lz.Timer.removeTimer(this.nowquestion.nextDel);
+				lz.Timer.removeTimer(this.nowquestion.backDel);
+				lz.Timer.removeTimer(this.nowquestion.prevDel);
+				lz.Timer.removeTimer(this.nowquestion.audioPromptDel);
+				}
+				//printtime("removetimers");
+				
+				//Lets also stop our visible timer if we have one
+				this.littletimer.resetTimer();
+
+				//if we are playing our audio prompt we should quit it
+				//if(this.nowquestion){this.nowquestion.promptaudio.stop();}
+				this.promptaudio.stop();
+
+			
+			//Set up  the new question and rehandle the old one	
+			this.setAttribute("prevquestion",this.nowquestion);
+			if(this.prevquestion && this.prevquestion.qname !='loader'){
+				//save an entry to jump to via the "previous" action
+				this.prevactiontarget = this.prevquestion.qname;	
+			}
+
+			//If the new question is not cached, swith to loader
+			//otherwise set it to the now question
+			if(this.currentqname!='loader' && this.qcache.getCacheIndex(this.currentqname)==-1){
+				this.setAttribute('postloaderqname', this.currentqname);
+				this.setAttribute('currentqname', 'loader');
+			}
+			this.setAttribute("nowquestion",this.qcache.getQuestion(this.currentqname));
+			
+	
+		
+			//If the next question is loader,we need to set its next question attribute
+			if(this.currentqname=='loader'){
+				this.nowquestion.setAttribute('qnext', this.postloaderqname);
+			}
+			
+			
+			//This logic starts question AFTER preloading
+			//++++++++++++++++++++++++++++
+			if(this.prevquestion){
+				//disallow clicking since we are transitioning
+				this.prevquestion.setAttribute("canclick",false);
+			}
+			
+			
+			
+			//if we have preloads or we are goin in for first time, lets preload
+			if(preload=='set' && (this.nowquestion.preload || !(this.prevquestion))){
+				if(!this.handoverDel){this.handoverDel = new lz.Delegate(this,"performHandover")};
+				//this.handoverDel.register(this.qcache, "onloadcomplete");
+				this.handoverDel.register(superloader, "emptyevent");
+				deebug("registered startQ del");	
+				
+				//preload any questions we need as jumps from this question
+				preloadQuestions();
+			
+		
+				
+			}else if(preload=='nextonly'){
+					if(!this.handoverDel){this.handoverDel = new lz.Delegate(this,"performHandover")};
+					
+					// Old preload next shori
+					//this.handoverDel.register(superloader, "emptyevent");
+					//preloadNext();
+					
+					//new preload next. This is more stable
+					//begins preload 500ms after question has loaded, roughly allowing animations to finish.
+					//and final sound of prev q toplay out. 
+					this.performHandover();
+					if(this.currentqname=='loader'){
+						this.loadPreloadNext(200);
+					}else{
+						this.loadPreloadNext(500);
+					}
+					
+			}else if(preload=='none'){
+					this.performHandover();
+						
+			}else{
+				//regular questions are probably safe to not pause
+				//preloaded questions need a 500 or so pause before starting, hence the timer dlegate loadhandover
+				//if need to can do that here also bu toggling the comment on the calls below
+				this.performHandover();
+				//this.loadHandover();
+			}
+			//++++++++++++++++++++++++++++
+						
+			
+			
+			
+
+		
+		]]>
+		</method>
+		
+		
+		
+		<!-- Perform Handover -->
+		<method name="performHandover" args="ignore=null" >
+			this.handoverDel.unregisterAll();
+			if(this.prevquestion){
+				//deebug("stopping" + this.prevquestion.qname);
+				//we also pass in the "animate out" to use
+				this.prevquestion.stopQuestion(this.nowquestion.entryanim);
+			}
+			//deebug("starting" + this.nowquestion.qname);
+			this.nowquestion.startQuestion();
+			
+		</method>
+		<method name="loadHandover" args="ignore=null" >
+			lz.Timer.addTimer( new lz.Delegate(this,"performHandover"), 500);
+		</method>
+		<method name="loadPreloadNext" args="pausetime" >
+			lz.Timer.addTimer( new lz.Delegate(this,"preloadNext"), pausetime);
+		</method>
+	
+		
+		<!-- preloading strategies -->
+				<method name="preloadQuestions" args="ignore=null">				
+					
+					//deebug("to preload");
+					var prevqname = 'none';
+					if(this.prevquestion) prevqname=this.prevquestion.qname;
+					this.qcache.loadQuestions(this.nowquestion.preload, this.nowquestion.qname,prevqname);
+				</method>
+				<!-- Method we used for flash : identical?
+				<method name="preloadQuestions" args="ignore=null">
+					var prevqname = 'none';
+					var preloadstring = 'none';
+					if(this.prevquestion) prevqname=this.prevquestion.qname;
+					if(this.nowquestion.preload) preloadstring= this.nowquestion.preload;
+					this.qcache.loadQuestions(preloadstring, this.nowquestion.qname, prevqname);
+				</method>
+				-->
+				
+				<method name="preloadNext" args="ignore=null">
+					var prevqname = 'none';
+					var preloadstring = 'none';
+					if(this.prevquestion) prevqname=this.prevquestion.qname;
+					preloadstring= this.nowquestion.getNext() + "," + this.nowquestion.qback;
+					
+					this.qcache.loadQuestions(preloadstring, this.nowquestion.qname, prevqname);
+				</method>
+		
+		
+		<!-- On view init we set up the delegate for switching -->
+		<handler name="oninit">
+			//init our questioncache
+			//deebug("initing cache");
+			this.qcache.initCache();
+			
+		
+			
+			//deebug("switchdel");
+			if( typeof this.switchDel == "undefined" )  {
+				this.switchDel = new lz.Delegate( this, "doSwitch"); 
+				//set up our first question load
+				deebug("doing switch");
+				this.doSwitch();
+				//begin playing the background audio
+				if (this.settings.XAplaybacksound =='yes'){
+					deebug("doing initial background play");
+					deebug("audiosrc=" + this.backgroundaudio.audiosrc);
+					this.backgroundaudio.play();
+				}
+			}      
+		</handler>
+
+	</view>
+
+</class>
+
+
+<!-- The Main Game Loop. 
+		Set timer_resolution to 500 to fire every 500ms
+-->
+<class name="gameloop" extends="loopingtimer">
+	<attribute name="loopinterval" />
+	<attribute name="eventcount" value="0" />
+	<event name="loopevent" />
+	<method name="reactToTimeChange" args="theTime">
+		this.setAttribute("eventcount", eventcount+1);
+		//this operation could be optimised but at present it may raise the 
+		//the event several times, because 4 event is also a 2 event
+		var speed=0;
+		if ((eventcount % 2)==0){this.loopevent.sendEvent(1);}
+		if ((eventcount % 3)==0){this.loopevent.sendEvent(2);}
+		if ((eventcount % 4)==0){this.loopevent.sendEvent(3);}
+		if ((eventcount % 5)==0){this.loopevent.sendEvent(4);}
+	</method>
+</class>
+	
+
+<!-- For handling visual coutndowns -->	
+<class name="countdowntimer" extends="loopingtimer">
+
+		<event name="countevent" />
+		<event name="stopevent" />
+
+		<attribute name="inittime" value="0" />
+		<attribute name="progresstime" value="0" />
+		<attribute name="showmilli" value="0" />
+		<attribute name="showsec" type="number" value="0" />
+		<attribute name="showmin" type="number" value="0" />
+		<attribute name="showhour" type="number" value="0" />
+		<method name="reactToTimeChange" args="theTime">
+			this.setAttribute('progresstime' ,  theTime);
+			  if(progresstime > inittime){
+				this.stopTimer();
+				this.setAttribute('progresstime' ,  inittime);
+			        this.stopevent.sendEvent();	 
+			  }
+				
+			//set hours
+			var rawtime = (this.inittime - this.progresstime) % (60 * 60 * 1000);
+			var remainder = rawtime;
+			var quotient =  (this.inittime - this.progresstime - remainder) / (60 * 60 * 1000);
+			this.setAttribute('showhour', quotient );
+
+			//set minutes
+			remainder = rawtime % (60 * 1000);
+			quotient = (rawtime - remainder) / (60 * 1000);
+			rawtime = remainder;
+			this.setAttribute('showmin', quotient );
+
+			//set seconds
+			remainder = rawtime % 1000;
+			quotient = (rawtime - remainder) / 1000;
+			rawtime = remainder;
+			this.setAttribute('showsec', quotient );
+
+			//set milliseconds
+			this.setAttribute('showmilli', rawtime );
+		
+			//let anyone listening know about this
+			this.countevent.sendEvent();
+
+	    </method>
+	</class>
+	
+	
+	<!-- Local Storage Basic Level Class -->
+	<switch>
+		<when property="$dhtml">
+			<class name="localdata" extends="node">
+				<attribute name="settings" value="${this.parent}" />
+				<attribute name="enabled" value="false" />
+				<method name="init">					
+					if (typeof(sessionStorage) == 'undefined' || typeof(localStorage) == 'undefined') {
+						deebug('local and session storage not supported by this browser.');
+						this.setAttribute("enabled", false);
+					}else{
+						this.setAttribute("enabled", true);
+						deebug('localstorageok');
+					}					
+					super.init();
+				</method>
+				<method name="clear">
+					if(!this.enabled) return;
+					localStorage.clear();
+				</method>
+				<method name="removeProperty" args="propname">
+						 if(!this.enabled) return;
+						 localStorage.removeItem(propname);
+				</method>
+				<method name="getProperty" args="propname">
+						if(!this.enabled) return;
+						 return localStorage.getItem(propname);
+				</method>
+				<method name="setProperty" args="propname, propvalue">				 	
+						 
+						 //deebug("setting:" + propname + ":" + propvalue);
+						 if(!this.enabled) return;
+						 localStorage.setItem(propname,propvalue);
+						// deebug("set:" + propname + ":" + propvalue);
+				</method>
+
+				<method name="haveProperty" args="propname">
+						if(!this.enabled) return this.settings[propname];
+						 if(localStorage.getItem(propname)){
+							return true;
+						}else{
+							return false;
+						}	
+				</method>
+			</class>
+		</when>
+		<otherwise>
+			<class name="localdata" extends="node">
+				<attribute name="settings" value="${this.parent}"/>
+				<attribute name="enabled" value="false" />
+				<method name="init">					
+					deebug('local and session storage not supported by this runtime.');
+					this.setAttribute("enabled", false);									
+					super.init();
+				</method>
+				<method name="clear">
+					if(!this.enabled) return;
+				</method>
+				<method name="removeProperty" args="propname">
+						 if(!this.enabled) return;
+				</method>
+				<method name="getProperty" args="propname">
+						if(!this.enabled) return;
+				</method>
+				<method name="setProperty" args="propname, propvalue">				 	
+						 this.settings.setAttribute(propname,propvalue);
+						 if(!this.enabled) return;
+				</method>
+
+				<method name="haveProperty" args="propname">
+						if(!this.enabled) return this.settings[propname];	
+				</method>
+			</class>
+		</otherwise>
+	</switch>
+	
+	<!-- Settings for all aspects of game, probably store in db. -->
+	<class name="gamesettings" extends="node">
+		<method name="init">
+		//we only use prefix XA to make it easy to distinguish our attributes from junk stuff
+		//when setting attributes from defaults declared in code.
+		//the slot attributes on xml menu buttons and their questions MATCH and that is why they works
+		//It should be possible to apply constraints to them at runtime too
+		
+		//Use this when debugging to clear the local settings
+		//this.ld.clear();
+		
+		
+		
+		var iAttr;
+		for (iAttr in this)
+		{
+			if(iAttr.indexOf('XA') == 0){
+				deebug("got XA:" + iAttr);
+				var propvalue = ld.getProperty(iAttr);
+				//if we got a value, good, otherwise setProperty which will do both store and runtime attr
+				if (propvalue){
+					//deebug("pvalue:" + propvalue);
+					this.setAttribute(iAttr,propvalue);
+				}else{
+					this.setProperty(iAttr,this[iAttr]);
+				}
+				
+				deebug(this[iAttr]);
+			}
+		} 
+		
+		
+		//Here we ensure that the inital setting is set at first run,
+		//but not set again  if it was changed by app
+		//deebug("this.initsettings:" + this.initsettings);
+		if(this.initsettings){
+			var settings = this.initsettings.split('|');
+			for (var asetting in settings){
+				deebug("asetting:" + settings[asetting]);
+				var propval = settings[asetting].split(':');
+				if(!ld.getProperty(propval[0])){
+					this.setProperty(propval[0],propval[1]);
+					deebug("set:" + propval[0] + ':' + propval[1]);
+				}else{
+					this.setAttribute(propval[0],propval[1]);
+				}
+			}
+		}
+		
+		super.init();
+		</method>
+		
+
+		
+		<!-- Convenience class to set properties to local storage -->
+		<localdata name="ld"  />
+		
+		<!-- Defaults for option settings -->
+		<attribute name="XAplaybacksound" value="'yes'" />
+		<attribute name="XAplaysoundfx" value="'yes'" />
+		<attribute name="XAplayaudioprompt" value="'yes'" />
+		<attribute name="XAshowtextprompt" value="'no'" />
+		<attribute name="XAusepooling" value="'yes'" />
+		<attribute name="initsettings"  />
+	
+		<method name="setProperty" args="propname,propvalue,persist=true">
+			this.setAttribute(propname,propvalue);
+			//if this is a persistable property, store it
+			if(persist){
+				this.ld.setProperty(propname,propvalue);
+				}
+		</method>
+		<method name="getProperty" args="propname">
+			<![CDATA[
+			//return the prop value or init to 'false' if it has never been inited
+			if(!this[propname]){
+				var propvalue = this.ld.getProperty(propname);
+				if(propvalue!=null){
+					this.setAttribute(propname, propvalue);
+					return propvalue;
+				}else{
+					//we use naming convention to ZA to indicate non persistent storage
+					//notably ZAlittletimer
+					if(propname.indexOf('ZA')!=0){
+						this.setProperty(propname,'false',true);
+						return 'false';
+					}else{
+						this.setProperty(propname,'0',false);
+						return '0';
+					}
+				}
+			}else{
+				return this[propname];
+			}
+			]]>
+		</method>
+		
+
+	</class>
+	
+	
+
+</library>

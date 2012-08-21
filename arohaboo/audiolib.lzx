@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	
+<!-- The audio class definitions -->
+
+<include href="incubator/roundrect.lzx" />
+<include href="../utils/kmeixnertimer.lzx"/>
+
+<switch>
+    <when property="'native-phonegap-dhtml'">
+	<class name="simpleaudionode" >
+			<attribute name="autoplay" value="false" />
+			<attribute name="loopplay" value="false" />
+			<attribute name="loops" value="'{numberOfLoops:1}'" />
+			<attribute name="audiosrc" type="text" />
+			<attribute name="mediafile" />
+			<attribute name="mute" value="true" />
+			<attribute name="useresources" value="false" />
+			
+			
+			<method name="fetchaudiosrc">
+				return this.audiosrc;
+				//bypass the following while testing FinchPlug
+				if(this.audiosrc){
+					if (lz.Browser.getOS().indexOf('iP')>-1) {
+						return(this.audiosrc + ".caf");
+					}else{
+						return(this.audiosrc + ".wav");
+					}
+				}else{
+					return null;
+				}
+			
+			</method>
+			
+			<method name="play" args="ignore=null">
+			
+				<![CDATA[
+				//deebug("palying clic sound");
+				if (!this.audiosrc) return;	
+				//deebug("auidiosrc ok");
+				if (lz.Browser.getOS().indexOf('iP')<0) return;
+				if (settings.getProperty("ZAdisablephonegap")=='true') return;
+				//deebug("browserok");
+				if (this.mute)return;
+				//deebug("no mute");
+				 var usesrc= this.fetchaudiosrc();
+				if(usesrc !=null){
+						PhoneGap.exec("FinchPlug.play", usesrc);
+				}
+				]]>
+			</method>
+			<method name="init">
+			<![CDATA[
+				if (!this.audiosrc) return;	
+				if (this.mute)return;
+				if (settings.getProperty("ZAdisablephonegap")=='true') return;
+				if (lz.Browser.getOS().indexOf('iP')>-1){
+					var usesrc= this.fetchaudiosrc();
+					if(usesrc !=null){
+						deebug("src=:notnull");
+						deebug("src=:" + usesrc);
+						PhoneGap.exec("FinchPlug.prepare", usesrc);
+					}
+				}
+				super.init();
+				]]>
+			</method>
+	</class>
+	<!-- A phonegap audionode -->
+		<class name="audionode" >
+			<attribute name="autoplay" value="false" />
+			<attribute name="loopplay" value="false" />
+			<attribute name="loops" />
+			<attribute name="audiosrc" type="text" />
+			<attribute name="mediafile" />
+			<attribute name="mute" value="true" />
+			<attribute name="useresources" value="false" />
+			
+			<handler name="onaudiosrc">
+				if(this.audiosrc){
+					if (this.audiosrc.indexOf('.mp3')>-1 ) {
+						deebug("leaving audio alone as mp3");
+					}else if(lz.Browser.getOS().indexOf('iP')>-1) {
+						this.audiosrc=this.audiosrc + ".aifc";
+						//this had little effect
+						//this.audiosrc=this.audiosrc + ".caf";
+					}else{
+						this.audiosrc=this.audiosrc + ".wav";
+					}
+					
+					//replace up to four spaces with _ (only replaces first instance at least in dhtml ..)
+					//hence we do it  four times
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					
+				}
+				this.initaudio();
+			</handler>
+			
+			
+			<handler name="oninit">
+				this.initaudio();
+			</handler>
+			<handler name="ondata">
+				this.initaudio();
+			</handler>
+			<method name="initaudio" args="ignore=null">
+				<![CDATA[
+				/*
+				*	only while figuring it out set the attribute from here
+				*	there should be a calback from the phonegaploaded event ... but i think laszlo 
+				*	loads too late anyway so the whole thing is meaningless...
+				*
+				if(!callback.phonegapready) {
+					deebug("delaying start node:" + callback.phonegapready);
+					lz.Timer.addTimer( new lz.Delegate( this, "initaudios"),500); 				
+					return;										
+				}
+				*/
+				
+				
+				if (!this.audiosrc) {
+					return
+				}
+					
+					
+				this.stop();
+				this.resetNode();
+				var myDictionary = new Object();
+				if(loopplay){
+					myDictionary["numberOfLoops"] = 9999;
+					
+				}else{
+					myDictionary["numberOfLoops"] = 1;
+				}
+				this.setAttribute('loops',myDictionary);
+				if(autoplay){this.play();}
+				]]>
+			</method>
+			<method name="resetNode">
+				<![CDATA[
+				if (!this.audiosrc) return;	
+				//When debuging this will get in the way when not using phonegap so we check for that here.
+				//Debug.write("canvas.mute=",canvas.mute );
+				if (settings.getProperty("ZAdisablephonegap")=='true') return;
+				if (lz.Browser.getOS().indexOf('iP')<0) return;
+				if (this.mute)return;
+				//return;
+				this.mediafile = new Media(this.audiosrc, 
+                    function() {
+						deebug("succeeded making media");
+                        this.gotsuccess;
+                    }, 
+					function (error) {
+						deebug("failed making media");
+						this.goterror(error.message);
+						
+					});
+				]]>
+			</method>
+			<method name="goterror" args="err=null">
+				 deebug("Error making media:" + this.audiosrc + ":" + err);
+			</method>
+			<method name="gotsuccess" args="success=null">
+				deebug("success making media");
+			</method>
+			<method name="play" args="ignore=null">
+			
+				<![CDATA[	
+				
+				if (this.mute || !this.audiosrc){return;}
+				//It might be null if user has toggled mute on and off.
+				if (!this.mediafile){
+					this.initaudio();
+				}
+				if (this.mediafile){
+					this.mediafile.play(this.loops);
+				}
+				
+				]]>
+			</method>
+			<method name="pause" args="ignore=null">	
+				<![CDATA[
+				if (this.mediafile != null ){
+					this.mediafile.pause();
+				}
+				]]>
+			</method>
+			<method name="stop" args="ignore=null">
+				<![CDATA[
+				if (this.mediafile != null ){
+					this.mediafile.stop();
+				}
+				]]>
+			</method>
+
+		</class>	
+		
+	</when>
+	<when property="'html5audioview-dhtml'">
+		<!-- This is a fall through to simpleaudionode -->
+		<class name="audionode" extends="simpleaudionode" />
+		
+		<!-- An html5 audionode -->
+		<class name="simpleaudionode" autoplay="false" extends="html5audioview">
+			<attribute name="loopplay" value="false" />
+			<attribute name="audiosrc" type="text" />
+			<attribute name="mute" value="false"/>
+			<!-- these three attribute unused, but required to prevent errors -->
+			<attribute name="loops" value="'{numberOfLoops:1}'" />
+			<attribute name="mediafile" />
+			<attribute name="useresources" value="false" />
+		
+			<handler name="oninit">
+				this.resetNode();
+				//Debug.write("this.name:" ,this.name )
+			</handler>
+			<handler name="onaudiosrc">
+				this.resetNode();
+			</handler>
+			<handler name="ondata">
+				this.resetNode();
+			</handler>
+			
+			<method name="resetNode">
+				<![CDATA[
+				if(this.mute) return;
+				if (!this.audiosrc) return;	
+				
+				//need to append .mp3 here because we don't always have .mp3
+				//we might later differentiate extensions so we can play on firefox too
+				if(this.audiosrc.indexOf(".mp3") < 0){
+					this.audiosrc=this.audiosrc + ".mp3";
+				}
+
+				this.setAttribute("src",this.audiosrc);
+				if (this.autoplay) {this.play()};
+				//Debug.write("text:", this.text);
+				]]>
+			</method>
+		</class>	
+	</when>
+	<when property="$dhtml">
+	
+		<!-- This is a fall through to simpleaudionode -->
+		<class name="audionode" extends="simpleaudionode" />
+		
+		<!-- An html5 audionode -->
+		<class name="simpleaudionode" extends="text">
+			<attribute name="autoplay" value="false" />
+			<attribute name="loopplay" value="false" />
+			<attribute name="audiosrc" type="text" />
+			<attribute name="mute" value="false"/>
+			<!-- these three attribute unused, but required to prevent errors -->
+			<attribute name="loops" value="'{numberOfLoops:1}'" />
+			<attribute name="mediafile" />
+			<attribute name="useresources" value="false" />
+			<!-- -->
+			
+			<attribute name="divid" type="text" value="$once{'lzaudio_' + this.name + '_' + Math.random(10000000)}" />
+			<handler name="oninit">
+				this.resetNode();
+				//Debug.write("this.name:" ,this.name )
+			</handler>
+			<handler name="onaudiosrc">
+				this.resetNode();
+			</handler>
+			<handler name="ondata">
+				this.resetNode();
+			</handler>
+			
+			<method name="resetNode">
+				<![CDATA[
+				if(this.mute) return;
+				if (!this.audiosrc) return;	
+				
+				//need to append .mp3 here because we don't always have .mp3
+				//we might later differentiate extensions so we can play on firefox too
+				if(this.audiosrc.indexOf(".mp3") < 0){
+					this.audiosrc=this.audiosrc + ".mp3";
+				}
+				var autoplayString = '';
+				var loopplayString = '';
+				if (this.autoplay) {autoplayString=" autoplay='true'"};
+				if (this.loopplay) {loopplayString=" loop='true'"};
+				this.setAttribute("text","<audio id='" + this.divid + "' src='"  + this.audiosrc + "'" + autoplayString + loopplayString + " />");		
+				if (this.autoplay) {this.play()};
+				//Debug.write("text:", this.text);
+				]]>
+			</method>
+			<method name="load" args="ignore=null">
+				<![CDATA[
+				if(this.mute) return;
+				if (this.audiosrc != null && this.audiosrc !=""){
+					lz.Browser.loadJS("document.getElementById('" + this.divid + "').load()");
+				}
+				]]>
+			</method>
+			<method name="play" args="ignore=null">
+			
+				<![CDATA[
+				if(this.mute) return;
+				if (this.audiosrc != null && this.audiosrc !=""){
+					this.load();
+					lz.Browser.loadJS("document.getElementById('" + this.divid + "').play()");
+				}
+				]]>
+			</method>
+			<method name="stop" args="ignore=null">
+				<![CDATA[
+				if(this.mute) return;
+				if (this.audiosrc != null && this.audiosrc !=""){
+					lz.Browser.loadJS("document.getElementById('" + this.divid + "').stop()");
+				}
+				]]>
+			</method>
+
+		</class>	
+	</when>
+	<otherwise>
+		<!-- If it is flash set up resource based sound nodes -->
+		
+		<!-- This is a simple node for soundfx, in flash no different to regular audionode -->
+		<class name="simpleaudionode" extends="audionode" />
+		
+		<!-- This flash audionode -->
+		<class name="audionode" extends="view">
+			<attribute name="audiosrc" type="text" />
+			<attribute name="mute" value="true" />
+			<attribute name="raninit" value="false" />
+			<attribute name="autoplay" value="false" />	
+			<attribute name="loopplay" value="false" />	
+			<attribute name="useresources" value="false" />
+			
+			<handler name="onaudiosrc">
+				<![CDATA[
+				//this a possibility we might append .flv to .flv to .flv here
+				//if that happens need to add logic or mve this to a setter
+				//initally used setter but it worked poorly
+				if(this.audiosrc && this.audiosrc.indexOf(".mp3") < 0){
+					this.audiosrc=this.audiosrc + ".mp3";
+				}
+				this.initaudio();
+				]]>
+			</handler>
+			<handler name="oninit">
+				this.initaudio();
+			</handler>
+			<handler name="ondata">
+				this.initaudio();
+			</handler>
+			<handler name="onmute">
+				<![CDATA[
+				if(this.raninit && this.mute){
+					deebug('stopping');
+					//added justin 2011 07 to make bgm toggle immediate
+					super.stop(null,false);
+				}
+				]]>
+			</handler>
+			<method name="initaudio">
+			<![CDATA[
+				if(this.mute) return;
+				
+			
+				if (!this.audiosrc) {
+					return;
+				}	
+				//had problems where this method somehow called itself relentlessly
+				//so be careful on the timing with the raninit attribute
+				this.setAttribute("raninit",true);
+				
+				//we massage the audio source a little if embedded or not.
+				//deebug("useresources:" + this.useresources);
+				if(this.useresources){
+					//use these to use compiled in resources
+					var namestring = this.audiosrc.replace("/","_");
+					namestring = namestring.replace(".","_");
+					namestring = namestring.replace(" ","_");
+					
+					//deebug("namestring:" + namestring);
+					this.setAttribute("resource",namestring);				
+				}else if(this.src != ("http:" + this.audiosrc)){
+					//replace up to four spaces with _ (only replaces first instance at least in dhtml ..)
+					//hence we do it  four times
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.audiosrc = this.audiosrc.replace(" ","_");
+					this.setSource("http:" + this.audiosrc);
+				}
+				
+				this.setAttribute("loop",this.loopplay);
+				if(!this.autoplay){
+					this.stop();
+				}
+				]]>
+			</method>
+			<method name="play" args="f=null, rel:Boolean = false" returns="void">
+				<![CDATA[
+				//if mute or no src dont play, beware pooling remnants pooling remnants
+				if(!this.mute && this.audiosrc){
+					if(!this.raninit){this.initaudio();}
+					
+					super.play(f,rel);
+				}
+				]]>
+			</method>
+			<method name="stop" args="f=null, rel:Boolean = false" returns="void">
+			<![CDATA[
+				if(!this.mute && this.audiosrc){
+					if(!this.raninit){this.initaudio();}  
+					super.stop(f,rel);
+				}
+				]]>
+			</method>
+			<handler name="onlastframe">
+				if (this.loopplay){
+					this.play(1);
+				}
+			</handler>
+		</class>
+	</otherwise>
+</switch>
+
+
+
+</library>

@@ -31,6 +31,7 @@ Currently the best way to change them at runtime is to apply a &lt;style&gt;.
     <attribute name="borderWidth" value="2" />
 	<attribute name="enabled" value="true" />
 	<attribute name="resourcename"  type="text" />
+	<attribute name="fontheight" value="false"  />
 	
 
 
@@ -49,9 +50,9 @@ Currently the best way to change them at runtime is to apply a &lt;style&gt;.
     <text name="_label" 
          clickable="false"
          resize="true"
-         x="${parent.width * 0.5}" valign="middle"
+         x="${classroot.fontheight ? parent.width * 0.3 : parent.width * 0.5}" valign="middle"
          text="${classroot.text}"
-		 fontsize="${parent.height * 0.2}"
+		 fontsize="${classroot.fontheight ? classroot.fontheight : parent.height * 0.2}"
 		 fontstyle="bold"
 		 fgcolor= "${classroot.enabled ? classroot.fgcolor : '#CCCCCC'}" 
      />   

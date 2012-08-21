@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mergeset>
+	<mdata name="200901satLq1" template="TL1"  
+			a="Sign a new book." b="Find a book publisher." c="Recommend a book." d="Write a new book." answer="a" /> 
+			
+	<mdata name="200901satLq2" template="TL1"  
+			a="He took a swimming lesson." b="He worked outdoors." c="He travelled during summer vacation." d="He went to a tanning salon." answer="b"  />
+			
+	<mdata name="200901satLq3" template="TL1"  
+			a="Order a gift catalog." b="Help his mother buy a gift." c="Ask the woman for a gift idea." d="Look for a gift somewhere else." answer="d"  />
+			
+	<mdata name="200901satLq4" template="TL1"  
+			a="His wife will be late." b="His wife's birthday is today." c="He likes to cook." d="He wants to try his new oven." answer="a"  	/>	
+			
+	<mdata name="200901satLq5" template="TL1"  
+			a="Finding a job at an airline company." b="Becoming a police officer." c="Keeping people safe at the airport." d="Giving speeches to office workers." answer="c"  />			
+
+	<mdata name="200901satLq6" template="TL1"  
+			a="She goes there every winter." b="She works there on weekends." c="It is open for skiing." d="It is always crowded." answer="c"  />
+					
+	<mdata name="200901satLq7" template="TL1"  
+			a="She went shopping with her friends." b="She made a lot of food." c="She visited Ken." d="She had a party at home." answer="d"  />		
+			
+	<mdata name="200901satLq8" template="TL1"  
+			a="Help her make a cake." b="Come to a bake sale." c="Take her to Springfield." d="Watch a football game." answer="b"  />
+
+	<mdata name="200901satLq9" template="TL1"  
+			a="To find out if her son is in school." b="To speak with her son." c="To say that her son will be late." d="To ask about her son's homework." answer="d"  />
+
+		
+</mergeset>

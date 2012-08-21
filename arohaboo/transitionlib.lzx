@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+	
+<!-- The transitions library-->
+
+
+
+<class name="transitionview" extends="view">
+	
+	<!-- transition attributes -->
+	<attribute name="transdur" value="0" />
+	<attribute name="transeffect" value="'linear'" />
+	
+	<!-- important event for managing CSS internal and OL states -->
+	<event name="transitionover" />
+	
+	<!-- convert incoming % coords to abs coords -->
+	<method name="absX" args="percentX">
+		<![CDATA[
+		var proc = Math.round((this.parent.width * percentX) / 100);
+		return proc;
+		]]>
+	</method>
+	<method name="absY" args="percentY">
+		return Math.round((this.parent.height * percentY) / 100);
+	</method>
+	
+	<!-- convert incoming abs coords to percent coords -->
+	<method name="percentX" args="absX">
+	<![CDATA[
+		var usewidth = this.parent.width;
+		
+		//we protect ourselves from a div by zero error
+		//it does occur, its weird ..
+		if(usewidth==0){
+			deebug("got a 0 at percentX");
+			return 0;
+		}else{
+			return (absX / usewidth) * 100;
+		}
+		/* use this to debug the source of the parent.width = 0
+		var proc = (absX / this.parent.width) * 100;
+		if(isNaN(proc)){
+			deebug("NAN:" + absX + ":" + this.parent.width + ":" + proc);
+			Debug.inspect(this);
+		}
+		return proc;
+		*/
+		]]>
+	</method>
+	<method name="percentY" args="absY">
+		var useheight = this.parent.height;
+		
+		//we protect ourselves from a div by zero error
+		//it does occur, its weird ..
+		if(useheight==0){
+			deebug("got a 0 at percentY");
+			return 0;
+		}else{
+			return (absY / useheight) * 100;
+		}
+	</method>
+	
+	
+	<switch>
+			<when property="$dhtml">
+			
+				<attribute name="tempVal" value="''" />
+				<attribute name="tempX" value="''" />
+				<attribute name="tempY" value="''" />
+				<attribute name="tempO" value="''" />
+				
+				<handler name="oninit">
+					this.sprite.__LZdiv.style["webkitTransitionProperty"]= "webkitTransform, opacity";
+					this.sprite.__LZdiv.style["webkitTransitionTimingFunction"]= this.transeffect;
+					
+					//delegates used internally to tidy up and notify OL after a webkit transform transition
+					this.resyncxDel = new LzDelegate(this,"resyncX");
+					this.resyncyDel = new LzDelegate(this,"resyncY");
+					this.resyncxyDel = new LzDelegate(this,"resyncXY");
+			
+					
+					//set up a way to notify clients (incl. this class) that a webkit transition is over
+					var daview = this;
+					this.sprite.__LZdiv.addEventListener('webkitTransitionEnd', function(e) {
+							daview.transitionover.sendEvent();
+							//deebug("tranny over");
+						}, false);
+						
+				</handler>
+		
+				<method name="resetTransAttr" args="prop, val">
+					//at times we do not want transition to occur, here set property and value
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]="0s";
+					
+					if(prop=='opacity'){
+							this.sprite.__LZdiv.style["opacity"]=val;
+					}else{
+					
+						 
+						switch(prop){
+							case 'x': 
+								var newX = absX(val);
+								this.setAttribute(prop,val);
+								doResyncX(newX);
+								break;
+							case 'y':
+								var newY = absY(val);
+								this.setAttribute(prop,val);
+								doResyncY(newY);
+								break;
+						}
+					}
+					
+				</method>
+				<method name="setTransAttr" args="prop, val">
+					//You can't just reset a transition and start it again straight away don't you know. 
+					//You need to call a timer in the middle or rely on a callback function. grrr
+					//(otherwise the reset just seems to get overwritten)
+					
+					//If we have had a reset then add the timer delay
+					if(this.sprite.__LZdiv.style["webkitTransitionDuration"]!=this.transdur + "ms"){
+						switch (prop){
+							case 'x':
+									var newX = val;
+									this.setAttribute("tempX",newX);
+									lz.Timer.addTimer( new LzDelegate( this, "completeTransitionX" ), 50);
+									break;
+							case 'y':
+									var newY = val;
+									this.setAttribute("tempY",newY);
+									lz.Timer.addTimer( new LzDelegate( this, "completeTransitionY" ), 50);
+									break;
+							case 'opacity':this.setAttribute("tempO",val);
+									lz.Timer.addTimer( new LzDelegate( this, "completeTransitionO" ), 50);
+									break;
+						}
+
+					//If we are coming back from a timer delay, or there was no reset, just set our transitions	
+					}else{
+						//deebug("setting after timer prop:val:" + prop + ":" + val);
+						if(prop=='opacity'){
+							this.sprite.__LZdiv.style["opacity"]=val;
+						//}else if(prop){
+						//	this.setAttribute(prop,val);
+							
+						//The translate transitions are hardware accelerated, but we need to integrate them with laszlo
+						//which gets confused by where things are. After the transition if we call simlar code to that in 
+						//lzSprite.setX .setY we can probably do it. Code is messy and delicate, but works ... be careful altering it.
+						}else if(prop=='x'){
+							this.sprite.__LZdiv.style["webkitTransform"]="translate(" + (absX(val) -this.x) + "px,0px)";
+							//after transition need to tidy up
+							this.setAttribute("tempX",val);
+							this.resyncxDel.register(this,"transitionover");
+						}else if(prop=='y'){
+							this.sprite.__LZdiv.style["webkitTransform"]="translate(0px," + (absY(val) -this.y)  + "px)";
+							//after transition need to tidy up
+							this.setAttribute("tempY",val);
+							this.resyncyDel.register(this,"transitionover");
+						}else{
+							
+							this.setAttribute(prop,val);
+						}
+					}
+				</method>
+				
+			
+				
+				
+				<method name="resetTranslateAttr" args="valX, valY">
+						//we want to ensure animation does not occur when resetting
+						//this.resyncxyDel.register(this,"transitionover");
+						
+						this.sprite.__LZdiv.style["webkitTransitionDuration"]="0s";
+						
+						
+						var newX = absX(valX);
+						
+						this.setAttribute("x",valX);
+						/*
+						if(this.title=="onionbutton"){
+							deebug("resetTranslateAttr:" + valX + ":" + this.x);
+						}
+						*/
+						//untoggle these synvcs if you have cant click etc poroblems
+						//doResyncX(newX);
+
+				
+						var newY = absY(valY);
+						this.setAttribute("y",valY);
+						//untoggle these synvcs if you have cant click etc poroblems
+						//doResyncY(newY);
+							
+					
+					
+				</method>
+				
+		
+				<method name="setTranslateAttr" args="valX, valY">
+					//broswer check
+					if(true){
+						
+					
+							//You can't just reset a transition and start it again straight away don't you know. 
+							//You need to call a timer in the middle or rely on a callback function. grrr
+							//(otherwise the reset just seems to get overwritten)
+							
+							//If we have had a reset then add the timer delay
+							if(this.sprite.__LZdiv.style["webkitTransitionDuration"]!=this.transdur + "ms"){
+						
+							
+							
+								this.setAttribute("tempX",valX);
+								this.setAttribute("tempY",valY);
+								lz.Timer.addTimer( new LzDelegate( this, "completeTransitionTranslate" ), 50);
+								
+
+							//If we are coming back from a timer delay, or there was no reset, just set our transitions	
+							}else{
+								//deebug("setting after timer prop:val:" + valX + ":" + valY);
+									//we set all these vals to abs (not percent)
+								    valY = absY(valY);
+								    valX = absX(valX);
+									
+									this.sprite.__LZdiv.style["webkitTransform"]="translate(" + (valX -this.x) + "px," + (valY -this.y) + "px)";
+									//after transition need to tidy up
+									this.setAttribute("tempX",valX);
+									this.setAttribute("tempY",valY);
+									this.resyncxyDel.register(this,"transitionover");
+							 }
+					
+					
+					
+					}else{
+						setTransAttr("x",valX);
+						setTransAttr("y",valY);
+					}
+				
+				</method>
+				
+				
+				<!-- to sync the webkit transform translated x coord with OL -->
+				<!-- you see webkit leaves the original left as is and combines it
+					with the translate to make a use coord. But OL expects the "left" to rep x -->
+				<method name="resyncX" args="ignore=null">
+					<![CDATA[
+					//deebug("resyncing x");
+					//first of all clear the transition over event registration
+					this.resyncxDel.unregisterAll();
+					
+					//We wil be restting some stuff but we don't want it to be visible
+					//so lets set our trans duration back to 0
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]="0s";
+					
+					
+					
+					this.__poscacheid = -1;
+					this.sprite._xoffset = this.sprite.xoffset;
+					var x= this.tempX;
+					
+					
+					
+					//here we reset the translate and the left coords
+					this.sprite.__LZdiv.style["webkitTransform"]="translate(0px,0px)";
+					
+					//not sure which of these is stable J 20110513
+					//convert abs back to percent
+					this.setAttribute("x", percentX(tempX));
+					
+				
+					
+					
+					
+			]]>
+				</method>
+				<method name="doResyncX" args="newX">
+					<![CDATA[
+					if(this.sprite._x !=  newX){this.sprite._x=newX;}
+					
+					if(this.sprite.__LZclickcontainerdiv && this.sprite.__LZclickcontainerdiv.style ){
+						if(this.sprite.__LZclickcontainerdiv.style.left !=  newX){this.sprite.__LZclickcontainerdiv.style.left=newX;}
+					}
+					
+					if(this.sprite.__LZcontextcontainerdiv && this.sprite.__LZcontextcontainerdiv.style){
+						if(this.sprite.__LZcontextcontainerdiv.style.left !=  newX){this.sprite.__LZcontextcontainerdiv.style.left=newX;}
+					}
+					]]>
+				</method>
+				
+				
+				<!-- to sync the webkit transform translated y coord with OL -->
+				<method name="resyncY" args="ignore=null">
+					<![CDATA[
+					//deebug("resyncing y");
+					//first of all clear the transition over event registration
+					this.resyncyDel.unregisterAll();
+					
+					//We wil be resetting some stuff but we don't want it to be visible
+					//so lets set our trans duration back to 0
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]="0s";
+					
+					
+					
+					this.__poscacheid = -1;
+					this.sprite._yoffset = this.sprite.yoffset;
+					var y= this.tempY;
+					
+					//here we reset the translate and the left coords
+					this.sprite.__LZdiv.style["webkitTransform"]="translate(0px,0px)";
+					
+					//not sure which of these is stable .. ja 20110513
+					//convert absolute back to percent
+					this.setAttribute("y", percentY(tempY));
+					
+					//this.sprite.__LZdiv.style.top=y;
+					//doResyncY(y);
+					
+					
+					
+					]]>
+					
+				</method>
+				<method name="doResyncY" args="newY">
+					<![CDATA[
+					if(this.sprite._y !=  newY){this.sprite._y=newY;}
+					if(this.sprite.__LZclickcontainerdiv && this.sprite.__LZclickcontainerdiv.style ){
+						if(this.sprite.__LZclickcontainerdiv.style.top !=  newY){this.sprite.__LZclickcontainerdiv.style.top=newY;}
+					}
+					if(this.sprite.__LZcontextcontainerdiv && this.sprite.__LZcontextcontainerdiv.style){
+						if(this.sprite.__LZcontextcontainerdiv.style.top !=  newY){this.sprite.__LZcontextcontainerdiv.style.top=newY;}
+					}
+					]]>
+				</method>
+						<!-- to sync the webkit transform translated x coord with OL -->
+				<!-- you see webkit leaves the original left as is and combines it
+					with the translate to make a use coord. But OL expects the "left" to rep x -->
+				<method name="resyncXY" args="ignore=null">
+					<![CDATA[
+					//deebug("resyncing xy");
+					//first of all clear the transition over event registration
+					this.resyncxyDel.unregisterAll();
+					
+					//We wil be restting some stuff but we don't want it to be visible
+					//so lets set our trans duration back to 0
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]="0s";
+					
+					
+					
+					this.__poscacheid = -1;
+					var x= this.tempX;
+					var y= this.tempY;
+					
+					
+					
+					//here we reset the translate and the left coords
+					this.sprite.__LZdiv.style["webkitTransform"]="translate(0px,0px)";
+				
+					//convert absolutes back to percents
+					this.setAttribute("x", percentX(tempX));
+					this.setAttribute("y", percentY(tempY));
+					
+					
+					
+					
+			]]>
+				</method>
+				
+				
+				<!-- timer delegate callback functions to separate reset and set of anim coords by a short interval 
+					can fail if you don't do this.
+				-->
+				<method name="completeTransitionTranslate" args="ignore=null">
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]=this.transdur + "ms";
+					this.setTranslateAttr(tempX,tempY);	
+						
+				</method>
+				<method name="completeTransitionX" args="ignore=null">
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]=this.transdur + "ms";
+					this.setTransAttr("x",tempX);		
+				</method>
+				<method name="completeTransitionY" args="ignore=null">
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]=this.transdur + "ms";
+					this.setTransAttr("y",tempY);		
+				</method>
+				<method name="completeTransitionO" args="ignore=null">
+					this.sprite.__LZdiv.style["webkitTransitionDuration"]=this.transdur + "ms";
+					this.setTransAttr("opacity",tempO);		
+				</method>
+				
+				<!-- this is required because dhtml pooling remnants sometimes 
+				require us to force a zero translate when there should already be one
+				Very hard to fathom, hacky I know. -->
+				<method name="forceZeroTranslate" args="ignore=null">
+					this.sprite.__LZdiv.style["webkitTransform"]="translate(0px,0px)";
+				</method>
+				
+				
+			</when>
+			
+			
+			<!--  The flash transition code. much much simpler. --> 
+			<otherwise>			
+				<method name="setTranslateAttr" args="valX, valY">
+					//set the transition
+					var tstring = "x " + (this.transdur/1000) + "s " + this.transeffect + ",y " + (this.transdur/1000) + "s " + this.transeffect; 
+					//deebug("setTransition:" + tstring);
+					this.setAttribute("transition",tstring);
+					
+					//set the x and y coords (set abs to true to accept abs values)
+					this.setAttribute("absolute",true);
+					this.setAttribute("x",absX(valX));
+					this.setAttribute("y",absY(valY));
+					lz.Timer.addTimer( new LzDelegate( this, "removeTransition" ), this.transdur + 50);
+				</method>
+				<method name="resetTranslateAttr" args="valX, valY">
+					//clear the transition
+					//deebug("resetTranslateAttr:title" + this.title + ":" + valX + ":" + valY);
+					var tstring = "x 0s, y 0s "; 
+					this.setAttribute("transition",tstring);
+					
+					//set the x and y coords. (clear abs, so can accept relative values)
+					this.setAttribute("absolute",false);
+					this.setAttribute("x",valX);
+					this.setAttribute("y",valY);
+				</method>
+				<method name="resetTransAttr" args="prop, val">
+					
+					//Set the transition string
+					//deebug("resetTransAttr:" + prop + ":" + val);
+					var tstring = prop + " 0s "; 
+					this.setAttribute("transition",tstring);
+					
+					//Set the property. for x and y we reset the absolute flag to false
+					switch (prop){
+							case 'x':
+									this.setAttribute("absolute",false);
+									this.setAttribute("x",val);		
+									break;
+							case 'y':
+									this.setAttribute("absolute",false);
+									this.setAttribute("y",val);
+									break;
+							case 'opacity':
+									this.setAttribute("opacity",val);
+					}
+					
+				</method>
+				<method name="setTransAttr" args="prop, val">
+					//deebug("setTransition:" + prop + " " + this.transdur + "ms " + this.transeffect);
+					//deebug("setTransAttr:" + prop + " : " + val);
+					this.setAttribute("transition", prop + " " + (this.transdur / 1000) + "s " + this.transeffect);
+					
+					//For X and Y we toggle the view's absolute property and pass an absolute value
+					//other wise flash will recursively absolutify the already absolute value in th view's overridden x y setters 
+					//we have to remove this and the transition at some point, currently do it during resetTransAttr
+					switch (prop){
+							case 'x':
+									this.setAttribute("absolute",true);
+									this.setAttribute("x",absX(val));
+									break;
+							case 'y':
+									this.setAttribute("absolute",true);
+									this.setAttribute("y",absY(val));
+									break;
+							case 'opacity':
+									this.setAttribute("opacity",val);
+					}
+					//deebug("trandur + 50:" + (this.transdur + 50));
+					lz.Timer.addTimer( new LzDelegate( this, "removeTransition" ), this.transdur + 50);
+				</method>
+				
+				<method name="removeTransition" args="ignore=null" >
+					//deebug("removing transition");
+					this.setAttribute("absolute",false);
+					this.setAttribute("transition","");
+					transitionover.sendEvent();
+				</method>
+				<method name="forceZeroTranslate" args="ignore=null">
+					//no action required for flash
+					return;
+				</method>
+			
+			
+			</otherwise>
+	</switch>
+	
+</class>
+
+
+</library>

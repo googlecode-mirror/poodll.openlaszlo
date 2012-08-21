@@ -56,6 +56,30 @@
 <view name="scribbleview"  width="${canvas.width}" height="${canvas.height}" bgcolor="green">
 	<simplelayout axis="x" spacing="5" inset="10"/>
 	
+	
+	<!-- This is the scribble pad itself -->
+	<scribblepalette name="scribble" y="10" rtmpc="${canvas.rtmpc}" imageurl="${canvas.imageurl}" width="${parent.width-parent.scribbleCP.width - 25}" height="${parent.height-20}"  >
+		<method name="restart" args="ignore=null">
+			this.api.clear();
+			this.api.connectSO(canvas.boardname);
+			Debug.write("so connecting");
+		</method>
+		<handler name="onmouseup">
+			this.setAttribute("saved",false);
+			Debug.write("setting saved to false");
+		</handler>
+		<!-- If the Picture has been saved, highlight the button by animating its size slightly -->
+		<handler name="onsaved">
+			if(this.saved){
+				parent.scribbleCP.sizeanimate.stop();
+				parent.scribbleCP.saveButton.setAttribute("fgcolor",'0x0');
+			}else{
+				parent.scribbleCP.sizeanimate.doStart();
+				parent.scribbleCP.saveButton.setAttribute("fgcolor",'0xFF0000');
+			}
+		</handler>
+	</scribblepalette>	
+	
 	<!-- This is the control panel -->
 	<scribblecpanel name="scribbleCP" y="10" showsubmitbutton="true" rooms="${canvas.rooms == '' ? null : canvas.rooms}" 
 					width="180" height="${parent.height-20}" 
@@ -70,17 +94,11 @@
 		<!-- this is the handler for the cpanel bigbutton that saves the image on server -->
 		<handler name="onclick" reference="this.saveButton">
 			canvas.sendImageToServer(this.parent.scribble);
+			parent.scribble.setAttribute("saved",true);
 		</handler>
 	</scribblecpanel>
 	
-	<!-- This is the scribble pad itself -->
-	<scribblepalette name="scribble" y="10" rtmpc="${canvas.rtmpc}" imageurl="${canvas.imageurl}" width="${parent.width-parent.scribbleCP.width - 25}" height="${parent.height-20}"  >
-		<method name="restart" args="ignore=null">
-			this.api.clear();
-			this.api.connectSO(canvas.boardname);
-			Debug.write("so connecting");
-		</method>
-	</scribblepalette>	
+	
 
 </view>
 

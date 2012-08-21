@@ -1,0 +1,730 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<library>
+
+	<include href="../42recorder/PoodLLTeachersRecorderLib.lzx"/>
+	<include href="arohaboolib.lzx" />
+	<include href="../colorpalette/components/color_picker.lzx"></include>
+    <include href="../colorpalette/components/color_field.lzx"></include>
+	
+	
+	
+	<!-- Dataset for frame types -->
+	<dataset name="frametypes">
+              <type value="image" text="image" />
+              <type value="rect" text="rect" />
+              <type value="button" text="button" />
+              <type value="text" text="text" />
+	</dataset>
+	<!-- Dataset for anim types -->
+	<dataset name="animtypes">
+              <type value="none" text="none" />
+              <type value="in" text="in" />
+              <type value="left" text="left" />
+              <type value="right" text="right" />
+			  <type value="up" text="up" />
+	</dataset>
+	<!-- Dataset for action types -->
+	<dataset name="actiontypes">
+              <type value="none" text="none" />
+              <type value="systemproperty" text="systemproperty" />
+              <type value="tempproperty" text="tempproperty" />
+              <type value="systemcommand" text="systemcommand" />
+			  <type value="showhint" text="showhint" />
+			  <type value="next" text="next" />
+			  <type value="loader" text="loader" />
+			  <type value="prompttext" text="prompttext" />
+			  <type value="promptaudio" text="promptaudio" />
+			  <type value="bumpAnother" text="bumpAnother" />
+			  <type value="previous" text="previous" />
+			  <type value="pausenext" text="pausenext" />
+			  <type value="start" text="start" />
+			  <type value="back" text="back" />
+			  <type value="jump" text="jump" />
+			  <type value="seqvalidate" text="seqvalidate" />
+			  <type value="seqvalidatenext" text="seqvalidatenext" />
+			 <type value="grpvalidate" text="grpvalidate" />	
+			<type value="grpvalidatepause" text="grpvalidatepause" />			 
+	</dataset>
+	<!-- Dataset for node templates -->
+	<dataset name="templatenodes">
+		<static name="somestatic" framecount="0" starty="88" startx="88">
+                  <frame fsize="5" fcolor="0xEEEEEE" width="12" bstate="0" height="12" action="next" type="button" src="resources/blurrydot.png" ftext="ZAtimer" />
+        </static>
+		<button name="somebutton" framecount="1" animtime="500" endx="65" startx="150" endy="70" clicksound="button-9" starty="60">
+                  <frame fsize="9" action="back" type="text" fcolor="0xFF0000" ftext="leek" bstate="0" />
+        </button>
+		<action type="prompttext" args="Touch the banana" />
+	</dataset>
+	
+	
+<class name="arohaboobuilder" width="100%" height="100%" clip="true" extends="view">
+	
+	<!-- stub to give us some control of resource load path -->
+	<!-- attribute name="basefile" value="'http://poodll.com:443/ol49/my-apps/arohaboo'" -->
+	<attribute name="basefile" value="''" />
+	<attribute name="red5url" value="''" />
+	<attribute name="course" value="''" />
+	<attribute name="prefmic" value="''" />	
+	<attribute name="embedres" value="false"/> 
+
+
+	<vscrollbar />
+	<view name="scrollcontainer">
+	<simplelayout axis="y" spacing="5" />
+	<view id="mainpanel" name="mainpanel" height="320" width="480">
+		<simplelayout axis="x" spacing="5" />
+		
+		<!-- The Game Preview -->
+		<arohabooview id="gameview" width="480" height="320" embedres="${classroot.embedres}"  disabletimer="${disableTimersCheck.value}" />
+		
+		<!--The List of Questions -->
+		<list id="questionlist" shownitems="18" dataoption="lazy">
+				<attribute name="currentq" />
+				<textlistitem datapath="questions:/questionset/question" text="$path{'@qname'}">
+					<handler name="onclick">
+						qform.datapath.setAttribute('p', this.datapath.p);	
+						gameview.qholder.qcache.unsetQuestion(this.text);
+						if(!disablePreview.value){
+							gameview.qholder.switchQuestion(this.text,0);	
+						}
+						sourcetext.setAttribute("text", this.datapath.data);	
+						parent.setAttribute("currentq", this.datapath.p);				
+					</handler>
+				</textlistitem>
+		</list>
+		
+		<!-- The Dataset loading View -->
+		<view name="httpcontrolview">
+			<simplelayout axis="y" spacing="5" />
+			<!-- These two buttons allow you to move a q up and down -->
+			<button name="upq" text="move UP">
+				<handler name="onclick" >
+					if(questionlist.currentq){
+						var pptr=canvas.datasets.questions.getPointer();  
+						pptr.setPointer(questionlist.currentq);
+						if(pptr.selectPrev()){
+							var baseNode = pptr.p;
+							pptr.selectParent();
+							pptr.p.insertBefore(pptr.p.removeChild(questionlist.currentq),baseNode);
+						}
+						
+					}
+					
+				</handler>
+			</button>
+			<button name="downq" text="move DOWN">
+				<handler name="onclick" >
+					if(questionlist.currentq){
+						var pptr=canvas.datasets.questions.getPointer();  
+						pptr.setPointer(questionlist.currentq);
+						if(pptr.selectNext()){
+							if(pptr.selectNext()){
+								var baseNode = pptr.p;
+								pptr.selectParent();
+								pptr.p.insertBefore(pptr.p.removeChild(questionlist.currentq),baseNode);
+							}
+						}
+						
+					}
+					
+				</handler>
+			</button>
+			<!-- These load a dataset file from http -->
+			<inputtext name="httpload" bgcolor="0xCCCCCC" width="200" />
+			<button name="updatebutton" text="reset datasource" enabled="${parent.httpload.text != ''}">
+					<handler name="onclick">
+						var md = new lz.mDialog;
+						md.setAttribute("caller",this);
+						md.open();														
+					</handler>
+					<method name="modalDo">
+						canvas.datasets.questions.setAttribute("src", "http:" + parent.httpload.text);
+						canvas.datasets.questions.doRequest();
+					</method>
+			</button>
+			
+			<!-- Delete the current question -->
+			<button name="deleteqbutton" text="DELETE question" enabled="${questionlist.currentq != null}">
+					<handler name="onclick">
+						var md = new lz.mDialog;
+						md.setAttribute("caller",this);
+						md.open();														
+					</handler>
+					<method name="modalDo">
+						var pptr=canvas.datasets.questions.getPointer();
+						pptr.selectChild();
+						pptr.p.removeChild(questionlist.currentq)
+					</method>
+			</button>
+			
+				<button name="xmltidybutton" text="fetch tidy xml">
+					<handler name="onclick">
+						var pptr=canvas.datasets.questions.getPointer();  
+						pptr.selectChild();
+						//for swf
+						lz.Browser.setClipboard(pptr.p.serialize());
+						//for dhtml (lz.Browser.setClipboard wont work on dhtml
+						sourcetext.setAttribute("text", pptr.p.serialize());
+						lz.Browser.loadURL('http://www.bytechaser.com/en/resources/tp9h7nivzr/free-online-xml-formatting-tool.aspx', '_blank');					
+					</handler>
+				</button>
+				<button name="xmlcopybutton" text="copy xml to clipboard">
+					<handler name="onclick">
+						var pptr=canvas.datasets.questions.getPointer();  
+						pptr.selectChild();
+						//for swf
+						lz.Browser.setClipboard(pptr.p.serialize());
+						//for dhtml (lz.Browser.setClipboard wont work on dhtml
+						sourcetext.setAttribute("text", pptr.p.serialize());
+						//lz.Browser.loadURL('http://www.bytechaser.com/en/resources/tp9h7nivzr/free-online-xml-formatting-tool.aspx', '_blank');					
+					</handler>
+				</button>
+
+				<button name="mkimgresbutton" text="Make Image Resource">
+					<handler name="onclick">
+						<![CDATA[
+						var tempObject = new Object();
+						var output="<library>\n";
+						var pptr=canvas.datasets.questions.getPointer();  
+						pptr.selectChild();
+						
+						
+						//This collects button and static frame images
+						var result = pptr.xpathQuery("question/*/frame[@src]");
+						var path;
+						//Debug.inspect(pptr);
+						for (var key in result) {
+							if (result[key].hasAttr("src")) {
+								path = result[key].getAttr("src");
+								tempObject["PIC" + path] =path;
+
+							}
+							if (result[key].hasAttr("src2")) {
+								path = result[key].getAttr("src2");
+								tempObject["PIC" + path] =path;
+
+							}
+						}
+						
+						//this collects questionimages
+						result = pptr.xpathQuery("question[@bgimage]");
+						for (var key in result) {
+							if (result[key].hasAttr("bgimage")) {
+								path = result[key].getAttr("bgimage");
+								tempObject["PIC" + path] =path;
+
+							}
+							if (result[key].hasAttr("topbgimage")) {
+								path = result[key].getAttr("topbgimage");
+								tempObject["PIC" + path] =path;
+							}
+						}
+						
+						for (x in tempObject)
+						{
+							var namestring = tempObject[x].replace("/","_");
+							namestring = namestring.replace(".","_");
+							output += "<resource name='" + namestring + "' src='" + tempObject[x] + "' />\n";
+							//deebug(tempObject[x]);
+						}
+						output +="</library>";
+						sourcetext.setAttribute("text", output);
+						
+						]]>
+					</handler>
+				</button>
+				<button name="mkaudresbutton" text="Make Audio Resource">
+					<handler name="onclick">
+						<![CDATA[
+						var tempObject = new Object();
+						var output="<library>\n";
+						var pptr=canvas.datasets.questions.getPointer();  
+						pptr.selectChild();
+						//Debug.inspect(pptr);
+						var path='';
+						
+						//this collects background sound
+						if (pptr.p.hasAttr('bgsound')){
+							path = pptr.p.getAttr('bgsound');
+							tempObject["AUD" + path] =path;						
+						}
+						
+						//This collects prompt audio
+						var result = pptr.xpathQuery("question/prompt[@promptaudio]");
+						var path;
+						
+						for (var key in result) {
+							if (result[key].hasAttr("promptaudio")) {
+								path = result[key].getAttr("promptaudio");
+								tempObject["AUD" + path] =path;
+
+							}
+							
+						}
+						
+						//this collects button sounds
+						result = pptr.xpathQuery("question/button[@clicksound]");
+						for (var key in result) {
+							if (result[key].hasAttr("clicksound")) {
+								path = result[key].getAttr("clicksound");
+								tempObject["AUD" + path] =path;
+
+							}
+							if (result[key].hasAttr("topbgimage")) {
+								path = result[key].getAttr("topbgimage");
+								tempObject["PIC" + path] =path;
+							}
+						}
+						
+						
+						
+						//Add the mp3 extension and then massage it and the 
+						for (x in tempObject)
+						{
+							tempObject[x]= tempObject[x] + '.mp3';	
+							var namestring = tempObject[x].replace("/","_");
+							namestring = namestring.replace(".","_");													 
+							output += "<resource name='" + namestring + "' src='" + tempObject[x] + "' />\n";
+							//deebug(tempObject[x]);
+						}
+						output +="</library>";
+						sourcetext.setAttribute("text", output);
+						
+						]]>
+					</handler>
+				</button>
+				
+				
+				<checkbox id="disableTimersCheck" text="Disable Timer"/>
+				<checkbox id="disablePreview" text="Disable Preview"/>
+			
+		</view>
+		
+	</view>
+	
+	<!-- The view containg all the editing features -->
+	<view name="editorpanel">
+		<simplelayout axis="x" spacing="5" />
+		
+		<view name="editpanel">
+			<simplelayout axis="y" spacing="5" />
+			
+			<view name="actionbuttons">
+				<simplelayout axis="x" spacing="10" />
+				<button name="updatebutton" text="update">
+					<handler name="onclick">
+						Debug.write("clicked");
+						this.parent.parent.qform.datapath.updateData();
+						this.parent.parent.qform.traverseAndTidy(this.parent.parent.qform.datapath.dupePointer());
+						//gameview.qholder.switchQuestion(this.text,0);
+					</handler>
+				</button>
+				<inputtext name="newqname" width="80" bgcolor="0xCCCCCC" />
+				<button name="copyQ" text="copy as new" enabled="${parent.newqname.text!=''}">
+					<handler name="onclick">
+						var pptr=canvas.datasets.questions.getPointer();  
+						pptr.selectChild();
+						var newPtr = pptr.addNodeFromPointer(this.parent.parent.qform.datapath);
+						newPtr.setNodeAttribute("qname",parent.newqname.text);	
+						parent.newqname.setAttribute("text","");										
+					</handler>
+				</button>				
+			</view>
+					
+			<view name="qform" id="qform" width="1000" height="700">
+					<method name="deleteNullAttributes" args="pptr">
+						//deebug("pptr is null:" + pptr==null);
+						var nodeAttrs = pptr.getNodeAttributes();
+						if(nodeAttrs){
+							for( var na in nodeAttrs){
+								if(nodeAttrs[na]=='null' || nodeAttrs[na]=='' ){
+									pptr.deleteNodeAttribute(na);
+									nodeAttrs[na]=='null';
+								}
+							}
+						}
+						
+					</method>
+					<method name="traverseAndTidy" args="pptr">
+					 do {
+							this.deleteNullAttributes(pptr);
+							var root = pptr.dupePointer();
+							
+							// If this node has children,
+							// and descend one level.
+							if (root.selectChild()) {
+							  traverseAndTidy(root)
+							}
+
+						} while (pptr.selectNext())
+
+					</method>
+					<datapath />
+					<tabs>
+					<tabpane text="Question" width="1000" height="400">
+						<view name="qattrs" width="950">
+							<simplelayout axis="y" spacing="2"/>
+							<view>
+								<simplelayout axis="x" spacing="2" />
+								<text text="qname:" bgcolor="0xCCCC" /><inputtext width="80" name="qname" bgcolor="0xCCCCCC" text="$path{'@qname'}" />
+								<text text="qback:" bgcolor="0xCCCC" /><inputtext width="80"  bgcolor="0xCCCCCC" text="$path{'@qback'}" />
+								<text text="qnext:" bgcolor="0xCCCC"  /><inputtext width="80" bgcolor="0xCCCCCC" text="$path{'@qnext'}" />
+								<text text="preload:" bgcolor="0xCCCC" /><inputtext width="250" bgcolor="0xCCCCCC" text="$path{'@preload'}" />
+							</view>
+							<view>
+								<simplelayout axis="x" spacing="2" />
+								<text text="entryanim:" bgcolor="0xCCCC" />
+								<inputtext width="150" bgcolor="0xCCCCCC" text="$path{'@entryanim'}" />
+								<!--
+								<combobox id="animcombo" width="150" name="animtype" shownitems="5" defaulttext="$path{'@entryanim'}" editable="false" text="$path{'@entryanim'}" >		
+										<textlistitem name="animtypes" datapath="animtypes:/type" text="$path{'@text'}" value="$path{'@value'}"/>
+								</combobox>
+								<button name="combocrap" text="ref.anim">
+									<handler name="onclick" >
+											if (animcombo.text=='null'){
+													animcombo.selectItem('none');
+												}else{
+													animcombo.selectItem(animcombo.text);
+												}
+												deebug("animcombo:" + this.text);
+												
+										</handler>
+								</button>
+								-->
+								<text text="bgimage:" bgcolor="0xCCCC" /><inputtext width="200" bgcolor="0xCCCCCC" text="$path{'@bgimage'}" />
+								<text text="topbgimage:" bgcolor="0xCCCC" /><inputtext width="200" bgcolor="0xCCCCCC" text="$path{'@topbgimage'}" />
+							</view>
+							<view>
+								<simplelayout axis="x" spacing="2" />
+								<text text="slot:" bgcolor="0xCCCC" /><inputtext width="60" bgcolor="0xCCCCCC" text="$path{'@slot'}" />
+								<text text="timer:" bgcolor="0xCCCC" /><inputtext width="60" bgcolor="0xCCCCCC" text="$path{'@timer'}" />
+								<text text="timerarg:" bgcolor="0xCCCC" /><inputtext width="60" bgcolor="0xCCCCCC" text="$path{'@timerarg'}" />
+								<text text="hidetimer:" bgcolor="0xCCCC" /><inputtext width="60"  bgcolor="0xCCCCCC" text="$path{'@hidetimer'}" />
+								<text text="hinttext:" bgcolor="0xCCCC" /><inputtext width="250" bgcolor="0xCCCCCC" text="$path{'@hinttext'}" />
+							</view>
+
+						</view>
+					</tabpane>
+					<tabpane text="Prompt" width="1000" height="400">
+						<datapath xpath="prompt" />
+						<simplelayout axis="y" />	
+						<view name="promptattrs" width="950">
+						<wrappinglayout axis="x" />						
+						<text text="prompttext:" bgcolor="0xCCCC" /><inputtext width="200" name="prompttext" bgcolor="0xCCCCCC" text="$path{'@prompttext'}" resize="false"/>
+						<text text="promptaudio:" bgcolor="0xCCCC" /><inputtext width="150"  name="promptaudio" bgcolor="0xCCCCCC" text="$path{'@promptaudio'}" resize="false"/>
+						<text text="y:" bgcolor="0xCCCC"  /><inputtext width="30" bgcolor="0xCCCCCC" text="$path{'@y'}" resize="false"/>
+						<text text="width:" bgcolor="0xCCCC" /><inputtext width="30" bgcolor="0xCCCCCC" text="$path{'@width'}" resize="false"/>
+						<text text="fsize:" bgcolor="0xCCCC" /><inputtext width="30" bgcolor="0xCCCCCC" text="$path{'@fsize'}" resize="false"/>
+						<text text="bcolor:" bgcolor="0xCCCC" /><colorfield width="40" minimode="true" hex="$path{'@bcolor'}" colorval="${this.hex}"  />
+						<text text="fcolor:" bgcolor="0xCCCC" /><colorfield width="40" minimode="true" hex="$path{'@fcolor'}" colorval="${this.hex}"  />					
+						</view>
+						<switch>
+							<unless property="$dhtml">
+								<view name="recorder" >
+									<poodllteachersrecorder name="recorder" 
+										red5url="${classroot.red5url}" 
+										filename="${parent.parent.promptattrs.promptaudio.text + '.flv'}" 
+										course="${classroot.course}" 
+										prefmic="${classroot.prefmic}"
+										gShowing="false"
+										capturewidth="320"
+										captureheight="240"
+										bandwidth="0"
+										picqual="8"
+										capturefps="17"
+										width="700" 
+										height="400" 
+										bgcolor="0xDDDDDD"
+										/>
+										
+								</view>
+							</unless>
+						</switch>
+					</tabpane>
+					<tabpane text="buttons" width="1000" height="400">
+						<view name="buttoninfo" width="950" height="350" clip="true">
+							<scrollbar />
+							<view name="innerbuttoninfo">							
+								<simplelayout axis="y" spacing="1" />								
+								<view name="buttonlist" bgcolor="0xCCCC00" >
+									
+									<simplelayout axis="y" spacing="2" />
+									<datapath xpath="button"  />
+									<view name="abutton">
+										<simplelayout axis="x" />
+										<text text="name:" /><inputtext bgcolor="0x00CCCC" text="$path{'@name'}"  resize="true"/>
+										<text text="framecount:" /><inputtext width="25" bgcolor="0x00CCCC" text="$path{'@framecount'}" resize="false"/>
+										<text text="startx:" /><inputtext width="35" bgcolor="0x00CCCC" text="$path{'@startx'}"  resize="false"/>
+										<text text="starty:" /><inputtext width="35" bgcolor="0x00CCCC" text="$path{'@starty'}"  resize="false"/>
+										<text text="endx:" /><inputtext width="35" bgcolor="0x00CCCC" text="$path{'@endx'}"  resize="false"/>
+										<text text="endy:" /><inputtext width="35" bgcolor="0x00CCCC" text="$path{'@endy'}"  resize="false"/>
+										<text text="animtime:" /><inputtext bgcolor="0x00CCCC" text="$path{'@animtime'}"  resize="true"/>
+										<text text="clicksound:" /><inputtext bgcolor="0x00CCCC" text="$path{'@clicksound'}"  resize="true"/>
+										<text text="timer:" /><inputtext bgcolor="0x00CCCC" text="$path{'@timer'}"  resize="true"/>
+										<button text="Copy">
+											<handler name="onclick">
+												var md = new lz.mDialog;
+												md.setAttribute("caller",this);
+												md.open();														
+											</handler>
+											<method name="modalDo">
+												var parentPtr = parent.parent.datapath.dupePointer();
+												parentPtr.selectParent();
+												var newPtr= parentPtr.addNodeFromPointer(parent.parent.datapath);
+												newPtr.setNodeAttribute("name",newPtr.getNodeAttribute("name") + "NEW");
+												deebug("copied question as:" + newPtr.getNodeAttribute("name"));
+											</method>										
+										</button>
+										<button text="Delete">
+											<handler name="onclick">
+												var md = new lz.mDialog;
+												md.setAttribute("caller",this);
+												md.open();														
+											</handler>
+											<method name="modalDo">
+												parent.parent.datapath.deleteNode();
+											</method>
+										</button>
+									</view>		
+									<view name="framelist" bgcolor="${(this.pos % 2) ? 0xAACCAA: 0xCCAACC}">
+											<attribute name="pos" value="$path{'position()'}" />
+											<simplelayout axis="y" spacing="2" />
+											<datapath xpath="frame[@type]" />
+											<view name="Atier">
+												<simplelayout axis="x" spacing="2" />
+												<text text="bstate:" /><inputtext width="30" bgcolor="0xCCCCCC" text="$path{'@bstate'}"/>
+												<text text="width:" visible="${parent.parent.Btier.ft=='image' || parent.parent.Btier.ft=='button'}"  /><inputtext width="30" bgcolor="0xCCCCCC" text="$path{'@width'}" visible="${parent.parent.Btier.ft=='image' || parent.parent.Btier.ft=='button'}"/>
+												<text text="height:" visible="${parent.parent.Btier.ft=='image' || parent.parent.Btier.ft=='button'}" /><inputtext width="30" bgcolor="0xCCCCCC" text="$path{'@height'}" visible="${parent.parent.Btier.ft=='image' || parent.parent.Btier.ft=='button'}"/>
+												<text text="bdcolor:" visible="${parent.parent.Btier.ft=='rect'}" /><colorfield width="40" minimode="true" hex="$path{'@bdcolor'}" colorval="${this.hex}" visible="${parent.parent.Btier.ft=='rect'}" />
+												<text text="bgstart:" visible="${parent.parent.Btier.ft=='rect'}" /><colorfield width="40" minimode="true" hex="$path{'@bgstartcolor'}" colorval="${this.hex}" visible="${parent.parent.Btier.ft=='rect'}" />
+												<text text="bgstop:" visible="${parent.parent.Btier.ft=='rect'}" /><colorfield width="40" minimode="true" hex="$path{'@bgstopcolor'}" colorval="${this.hex}" visible="${parent.parent.Btier.ft=='rect'}" />
+												<text text="picspeed:" /><inputtext bgcolor="0xCCCCCC" text="$path{'@picspeed'}"  resize="true"/>
+												<text text="action:" />
+												<combobox width="150" name="actiontype" shownitems="6" defaulttext="$path{'@action'}" editable="true" text="$path{'@action'}"  >													
+													<textlistitem datapath="actiontypes:/type" text="$path{'@text'}" value="$path{'@value'}"/>
+												</combobox>
+												<text text="args:" /><inputtext width="150" bgcolor="0xCCCCCC" text="$path{'@args'}"  resize="true"/>
+												
+											</view>
+											<view name="Btier">
+												<simplelayout axis="x" spacing="2" />
+												<attribute name="ft" value="${this.frametype.text}" />
+												<text text="type:" />
+												<combobox width="70" name="frametype" shownitems="4" defaulttext="$path{'@type'}" editable="false" text="$path{'@type'}"  >													
+													<textlistitem datapath="frametypes:/type" text="$path{'@text'}" value="$path{'@value'}"/>
+												</combobox>												
+												<text text="ftext:" visible="${parent.ft!='image'}" /><inputtext width="65"  bgcolor="0xCCCCCC" text="$path{'@ftext'}" visible="${parent.ft!='image'}" />	
+												<text text="fsize:" visible="${parent.ft!='image'}" /><inputtext width="45" bgcolor="0xCCCCCC" text="$path{'@fsize'}" visible="${parent.ft!='image'}" />
+												<text text="fcolor:" visible="${parent.ft!='image'}" /><colorfield width="40" minimode="true" hex="$path{'@fcolor'}" colorval="${this.hex}" visible="${parent.ft!='image'}" />							
+												<text text="src:" visible="${parent.ft =='image' || parent.ft =='button'}"  /><inputtext width="175" bgcolor="0xCCCCCC" text="$path{'@src'}" visible="${parent.ft =='image' || parent.ft =='button'}" />
+												<text text="src2:" visible="${parent.ft =='image' || parent.ft =='button'}"  /><inputtext width="75" bgcolor="0xCCCCCC" text="$path{'@src2'}" visible="${parent.ft ==='image' || parent.ft =='button' }" />
+												<button text="Copy">
+													<handler name="onclick">
+														var md = new lz.mDialog;
+														md.setAttribute("caller",this);
+														md.open();														
+													</handler>
+													<method name="modalDo">
+														var parentPtr = parent.parent.datapath.dupePointer();
+														parentPtr.selectParent();
+														var newPtr= parentPtr.addNodeFromPointer(parent.parent.datapath);
+														newPtr.setNodeAttribute("bstate",'9');
+													</method>										
+												</button>
+												<button text="+Action">
+													<handler name="onclick">
+														var md = new lz.mDialog;
+														md.setAttribute("caller",this);
+														md.open();														
+													</handler>
+													<method name="modalDo">												
+														var thisPtr = parent.parent.datapath.dupePointer();
+														var templatePtr =canvas.datasets.templatenodes.getPointer();  
+														templatePtr.setXPath('templatenodes:/action[0]');
+														thisPtr.addNodeFromPointer(templatePtr);
+													</method>																					
+												</button>
+												<button text="Delete">
+													<handler name="onclick">
+														var md = new lz.mDialog;
+														md.setAttribute("caller",this);
+														md.open();														
+													</handler>
+													<method name="modalDo">
+															parent.parent.datapath.deleteNode();
+													</method>
+												</button>
+											</view>
+											<view bgcolor="0xFFAAFF">
+												<simplelayout axis="x" spacing="2" />
+												<datapath xpath="action[@type]" />
+												<text text="action:" />
+												<combobox width="150" name="actiontype" shownitems="6" defaulttext="$path{'@type'}" editable="true" text="$path{'@type'}"  >													
+													<textlistitem datapath="actiontypes:/type" text="$path{'@text'}" value="$path{'@value'}"/>
+												</combobox>
+											
+												<text text="args:" /><inputtext width="150" bgcolor="0xCCCCCC" text="$path{'@args'}"  />		
+												<button text="Delete">
+													<handler name="onclick">
+														var md = new lz.mDialog;
+														md.setAttribute("caller",this);
+														md.open();														
+													</handler>
+													<method name="modalDo">
+															parent.datapath.deleteNode();
+													</method>
+												</button>
+											</view>
+											
+									</view>
+									<!-- end of Button List -->
+								</view>
+								<button text="+Button" align="right">
+													<handler name="onclick">
+														var md = new lz.mDialog;
+														md.setAttribute("caller",this);
+														md.open();														
+													</handler>
+													<method name="modalDo">												
+														var thisPtr = qform.datapath.dupePointer();
+														var templatePtr =canvas.datasets.templatenodes.getPointer();  
+														templatePtr.setXPath('templatenodes:/button[0]');
+														thisPtr.addNodeFromPointer(templatePtr);
+													</method>																					
+								</button>
+							</view>
+						</view>
+					</tabpane>
+					<tabpane text="static" width="1000" height="400">
+						<view name="staticinfo" width="950" height="350" clip="true">
+							<scrollbar />
+							<view name="innerstaticinfo">	
+								<simplelayout axis="y" spacing="1" />							
+								<view name="staticlist" bgcolor="0xCCCC00">
+									<simplelayout axis="y" />
+									<datapath xpath="static" />
+									
+									<view name="astatic">
+										<simplelayout axis="x" />
+										<text text="name:" /><inputtext bgcolor="0x00CCCC" text="$path{'@name'}"  resize="true"/>
+										<text text="framecount:" /><inputtext width="25" bgcolor="0x00CCCC" text="$path{'@framecount'}"  resize="false"/>
+										<text text="startx:" /><inputtext width="35" bgcolor="0x00CCCC" text="$path{'@startx'}"  resize="false"/>
+										<text text="starty:" /><inputtext width="35" bgcolor="0x00CCCC" text="$path{'@starty'}"  resize="false"/>
+										<text text="endx:" /><inputtext width="35" bgcolor="0x00CCCC" text="$path{'@endx'}"  resize="false"/>
+										<text text="endy:" /><inputtext width="35" bgcolor="0x00CCCC" text="$path{'@endy'}"  resize="false"/>
+										<text text="animtime:" /><inputtext bgcolor="0x00CCCC" text="$path{'@animtime'}"  resize="true"/>
+									</view>		
+									<view name="framelist" bgcolor="0xAACCAA">
+											<simplelayout axis="y" spacing="2" />
+											<datapath xpath="frame[@type]" />		
+												<view name="Atier">
+													<simplelayout axis="x" spacing="2" />
+													<text text="bstate:" /><inputtext width="30" bgcolor="0xCCCCCC" text="$path{'@bstate'}"/>
+													<text text="width:" visible="${parent.parent.Btier.ft=='image' || parent.parent.Btier.ft=='button'}"  /><inputtext width="30" bgcolor="0xCCCCCC" text="$path{'@width'}" visible="${parent.parent.Btier.ft=='image' || parent.parent.Btier.ft=='button'}"/>
+													<text text="height:" visible="${parent.parent.Btier.ft=='image' || parent.parent.Btier.ft=='button'}" /><inputtext width="30" bgcolor="0xCCCCCC" text="$path{'@height'}" visible="${parent.parent.Btier.ft=='image' || parent.parent.Btier.ft=='button'}"/>
+													<text text="bdcolor:" visible="${parent.parent.Btier.ft=='rect'}" /><colorfield width="40" minimode="true" hex="$path{'@bdcolor'}" colorval="${this.hex}" visible="${parent.parent.Btier.ft=='rect'}" />
+													<text text="bgstart:" visible="${parent.parent.Btier.ft=='rect'}" /><colorfield width="40" minimode="true" hex="$path{'@bgstartcolor'}" colorval="${this.hex}" visible="${parent.parent.Btier.ft=='rect'}" />
+													<text text="bgstop:" visible="${parent.parent.Btier.ft=='rect'}" /><colorfield width="40" minimode="true" hex="$path{'@bgstopcolor'}" colorval="${this.hex}" visible="${parent.parent.Btier.ft=='rect'}" />
+													<text text="picspeed:" /><inputtext bgcolor="0xCCCCCC" text="$path{'@picspeed'}"  resize="true"/>
+													
+												</view>
+												<view name="Btier">
+													<simplelayout axis="x" spacing="2" />
+													<attribute name="ft" value="${this.frametype.text}" />
+													<text text="type:" />
+													<combobox width="70" name="frametype" shownitems="4" defaulttext="$path{'@type'}" editable="false" text="$path{'@type'}"  >													
+														<textlistitem datapath="frametypes:/type" text="$path{'@text'}" value="$path{'@value'}"/>
+													</combobox>												
+													<text text="ftext:" visible="${parent.ft!='image'}" /><inputtext width="65"  bgcolor="0xCCCCCC" text="$path{'@ftext'}" visible="${parent.ft!='image'}" />	
+													<text text="fsize:" visible="${parent.ft!='image'}" /><inputtext width="45" bgcolor="0xCCCCCC" text="$path{'@fsize'}" visible="${parent.ft!='image'}" />
+													<text text="fcolor:" visible="${parent.ft!='image'}" /><colorfield width="40" minimode="true" hex="$path{'@fcolor'}" colorval="${this.hex}" visible="${parent.ft!='image'}" />
+													<text text="src:" visible="${parent.ft =='image' || parent.ft =='button'}"  /><inputtext width="175" bgcolor="0xCCCCCC" text="$path{'@src'}" visible="${parent.ft =='image' || parent.ft =='button'}" />
+													<text text="src2:" visible="${parent.ft =='image' || parent.ft =='button'}"  /><inputtext width="75" bgcolor="0xCCCCCC" text="$path{'@src2'}" visible="${parent.ft ==='image' || parent.ft =='button' }" />
+													<button text="Copy">
+														<handler name="onclick">
+															var md = new lz.mDialog;
+															md.setAttribute("caller",this);
+															md.open();														
+														</handler>
+														<method name="modalDo">
+															var parentPtr = parent.parent.datapath.dupePointer();
+															parentPtr.selectParent();
+															var newPtr= parentPtr.addNodeFromPointer(parent.parent.datapath);
+															newPtr.setNodeAttribute("bstate",'9');
+														</method>										
+													</button>
+													<button text="Delete">
+														<handler name="onclick">
+															var md = new lz.mDialog;
+															md.setAttribute("caller",this);
+															md.open();														
+														</handler>
+														<method name="modalDo">
+																parent.parent.datapath.deleteNode();
+														</method>
+													</button>
+											<!-- end of b tier -->
+											</view>
+									</view>
+									<!-- end of staticlist -->
+								</view>
+								<button text="+Static" align="right">
+														<handler name="onclick">
+															var md = new lz.mDialog;
+															md.setAttribute("caller",this);
+															md.open();														
+														</handler>
+														<method name="modalDo">	
+															var thisPtr = qform.datapath.dupePointer();
+															var templatePtr =canvas.datasets.templatenodes.getPointer();  
+															templatePtr.setXPath('templatenodes:/static[0]');
+															thisPtr.addNodeFromPointer(templatePtr);
+														</method>																					
+								</button>
+							<!-- End of inner static info -->
+							</view>
+						<!-- End of static info -->
+						</view>
+					</tabpane>
+					<tabpane text="source" width="1000" height="400">
+						<inputtext name="sourcetext" id="sourcetext" width="950" height="350" bgcolor="0xDDDDDD" multiline="true"/>
+					</tabpane>
+					</tabs>
+			</view>
+			<!-- end of editpanel -->
+		</view>
+		<!-- end of editortpanel -->
+	</view>
+	<!-- End of scrollcontainer view -->
+	</view>
+	<!-- End of arohaboobuilderlib view -->
+</class>
+
+<!-- inputtext class -->
+	<class name="datainputtext" extends="inputtext">
+		<method name="getText">
+
+			if(this.text=='null'){
+				return '';
+			}else{
+				return super.getText();
+			}
+		</method>
+	</class>
+	
+	<!-- modal dialog -->
+	  <class name="mDialog" extends="modaldialog" width="300" height="200">
+		<text>Are you really sure you want to do this?</text>
+		<attribute name="caller" />
+		<view align="right" layout="axis:x; spacing:20">
+		  <button onclick="parent.parent.close()" isdefault="true">Cancel</button>
+		  <button text="Really Do it?">
+			<handler name="onclick">
+				classroot.caller.modalDo();
+				parent.parent.close();
+			</handler>
+		  </button>
+		</view>
+		<simplelayout spacing="5"/>
+  </class>
+</library>

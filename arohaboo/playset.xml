@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="utf-8"?>
+<questionset fontcolor="0xFFFFFF" font="Marker Felt" bgsound="resources/backloop" bgcolor="0x000000" bgimage="resources/blacksquare.png">
+      <question entryanim="in" qback="options" bgimage="resources/bluesky.jpg" qname="start">
+            <prompt fsize="2" width="100" fcolor="0xFFFFFF" prompttext=" " y="0" />
+            <button startx="15" starty="10" name="r1button" clicksound="button-9" framecount="0">
+                  <frame args="StartRound1" fcolor="0xFFFFFF" bstate="0" ftext="1" src="resources/borderred.png" action="loader" fsize="3" width="15" type="button" height="15" />
+                  <frame fcolor="0xFFFFFF" bstate="99" ftext="1" src="resources/bordergrey.png" fsize="3" width="15" type="button" height="15" />
+            </button>
+            <button slot="XAs2" starty="10" framecount="0" name="r2button" clicksound="button-9" startx="45">
+                  <frame args="StartRound2" fcolor="0xFFFFFF" bstate="0" ftext="2" src="resources/borderred.png" action="loader" fsize="3" width="15" type="button" height="15" />
+                  <frame fcolor="0xFFFFFF" bstate="99" ftext="2" src="resources/bordergrey.png" fsize="3" width="15" type="button" height="15" />
+            </button>
+            <button slot="XAs3" starty="10" framecount="0" name="r3button" clicksound="button-9" startx="70">
+                  <frame args="StartRound3" fcolor="0xFFFFFF" bstate="0" ftext="3" src="resources/borderred.png" action="loader" fsize="3" width="15" type="button" height="15" />
+                  <frame fcolor="0xFFFFFF" bstate="99" ftext="3" src="resources/bordergrey.png" fsize="3" width="15" type="button" height="15" />
+            </button>
+            <button slot="XAs4" starty="30" framecount="0" name="r4button" clicksound="button-9" startx="15">
+                  <frame args="StartRound4" fcolor="0xFFFFFF" bstate="0" ftext="4" src="resources/borderred.png" action="loader" fsize="3" width="15" type="button" height="15" />
+                  <frame fcolor="0xFFFFFF" bstate="99" ftext="4" src="resources/bordergrey.png" fsize="3" width="15" type="button" height="15" />
+            </button>
+            <button slot="XAs5" starty="30" framecount="0" name="r5button" clicksound="button-9" startx="45">
+                  <frame args="StartRound5" fcolor="0xFFFFFF" bstate="0" ftext="5" src="resources/borderred.png" action="loader" fsize="3" width="15" type="button" height="15" />
+                  <frame fcolor="0xFFFFFF" bstate="99" ftext="5" src="resources/bordergrey.png" fsize="3" width="15" type="button" height="15" />
+            </button>
+            <button slot="XAs6" starty="30" framecount="0" name="r6button" clicksound="button-9" startx="70">
+                  <frame args="StartRound6" fcolor="0xFFFFFF" bstate="0" ftext="6" src="resources/borderred.png" action="loader" fsize="3" width="15" type="button" height="15" />
+                  <frame fcolor="0xFFFFFF" bstate="99" ftext="6" src="resources/bordergrey.png" fsize="3" width="15" type="button" height="15" />
+            </button>
+            <button slot="XAs7" starty="50" framecount="0" name="r7button" clicksound="button-9" startx="15">
+                  <frame args="StartRound7" fcolor="0xFFFFFF" bstate="0" ftext="7" src="resources/borderred.png" action="loader" fsize="3" width="15" type="button" height="15" />
+                  <frame fcolor="0xFFFFFF" bstate="99" ftext="7" src="resources/bordergrey.png" fsize="3" width="15" type="button" height="15" />
+            </button>
+            <button slot="XAs8" starty="50" framecount="0" name="r8button" clicksound="button-9" startx="45">
+                  <frame args="StartRound8" fcolor="0xFFFFFF" bstate="0" ftext="8" src="resources/borderred.png" action="loader" fsize="3" width="15" type="button" height="15" />
+                  <frame fcolor="0xFFFFFF" bstate="99" ftext="8" src="resources/bordergrey.png" fsize="3" width="15" type="button" height="15" />
+            </button>
+            <button slot="XAs9" starty="50" framecount="0" name="r9button" clicksound="button-9" startx="70">
+                  <frame args="StartRound9" fcolor="0xFFFFFF" bstate="0" ftext="9" src="resources/borderred.png" action="loader" fsize="3" width="15" type="button" height="15" />
+                  <frame fcolor="0xFFFFFF" bstate="99" ftext="9" src="resources/bordergrey.png" fsize="3" width="15" type="button" height="15" />
+            </button>
+            <button startx="35" starty="75" name="optionsbutton" clicksound="button-9" framecount="0">
+                  <frame fcolor="0xFFFFFF" bstate="0" ftext="Options" src="resources/borderred.png" action="back" fsize="3" width="30" type="button" height="20" />
+            </button>
+      </question>
+      <question qback="start" qname="options">
+           <prompt y="0" width="100" bcolor="0x000000" prompttext="Tough Quiz!" fcolor="0xFFFFFF" fsize="2" />
+            <button cantoggle="yes" framecount="1" systemproperty="XAplaybacksound" clicksound="button-9" startx="20" name="bgaudiobutton" starty="10">
+                  <frame args="XAplaybacksound:no" fcolor="0x0000FF" src="resources/borderred.png" type="button" action="systemproperty" width="25" ftext="Yes Bg Sound" bstate="0" height="20" fsize="18" />
+                  <frame args="XAplaybacksound:yes" fcolor="0x0000FF" src="resources/borderred.png" type="button" action="systemproperty" width="25" ftext="No Bg Sound" bstate="1" height="20" fsize="18" />
+            </button>
+            <button cantoggle="yes" framecount="1" systemproperty="XAplaysoundfx" clicksound="button-9" startx="65" name="soundfxbutton" starty="10">
+                  <frame args="XAplaysoundfx:no" fcolor="0x0000FF" src="resources/borderred.png" type="button" action="systemproperty" width="25" ftext="Yes FX Sound" bstate="0" height="20" fsize="18" />
+                  <frame args="XAplaysoundfx:yes" fcolor="0x0000FF" src="resources/borderred.png" type="button" action="systemproperty" width="25" ftext="No FX Sound" bstate="1" height="20" fsize="18" />
+            </button>
+            <button cantoggle="yes" framecount="1" systemproperty="XAplayaudioprompt" clicksound="button-9" startx="0" name="audiopromptbutton" starty="45">
+                  <frame args="XAplayaudioprompt:no" fcolor="0x0000FF" src="resources/borderred.png" type="button" action="systemproperty" width="30" ftext="Play Prompt" bstate="0" height="20" fsize="18" />
+                  <frame args="XAplayaudioprompt:yes" fcolor="0x0000FF" src="resources/borderred.png" type="button" action="systemproperty" width="30" ftext="Mute Prompt" bstate="1" height="20" fsize="18" />
+            </button>
+            <button cantoggle="yes" framecount="1" systemproperty="XAshowtextprompt" clicksound="button-9" startx="35" name="showpromptbutton" starty="45">
+                  <frame args="XAshowtextprompt:no" fcolor="0x0000FF" src="resources/borderred.png" type="button" action="systemproperty" width="30" ftext="Show Prompt" bstate="0" height="20" fsize="18" />
+                  <frame args="XAshowtextprompt:yes" fcolor="0x0000FF" src="resources/borderred.png" type="button" action="systemproperty" width="30" ftext="Hide Prompt" bstate="1" height="20" fsize="18" />
+            </button>
+			 <button cantoggle="yes" framecount="1" systemproperty="XAusepooling" clicksound="button-9" startx="70" name="showpromptbutton" starty="45">
+                  <frame args="XAusepooling:no" fcolor="0x0000FF" src="resources/borderred.png" type="button" action="systemproperty" width="30" ftext="Yes Pool" bstate="0" height="20" fsize="18" />
+                  <frame args="XAusepooling:yes" fcolor="0x0000FF" src="resources/borderred.png" type="button" action="systemproperty" width="30" ftext="No Pool" bstate="1" height="20" fsize="18" />
+            </button>
+            <button framecount="0" startx="40" clicksound="button-9" name="returnbutton" starty="70">
+                  <frame fcolor="0x0000FF" src="resources/borderred.png" bstate="0" action="previous" width="40" ftext="Back to Start" type="button" height="20" fsize="18" />
+            </button>
+      </question>
+      <question timerarg="next" qnext="StartRound1" bgimage="resources/blacksquare.png" qname="loader" hidetimer="true" qback="fail1" timer="300" entryanim="none">
+            <prompt y="0" fsize="2" width="100" fcolor="0xFFFFFF" prompttext=" " bcolor="0x000000" />
+            <static startx="20" starty="20" name="yesbutton" clicksound="button-9" framecount="0">
+                  <frame action="next" fsize="4" fcolor="0x00FF00" bstate="0" type="text" ftext="Loading" />
+            </static>
+            <static startx="20" starty="60" name="continuebutton" clicksound="button-9" framecount="0">
+                  <frame type="image" bstate="0" action="next" width="25" picspeed="1" src2="resources/loading_w.png" height="10" src="resources/loading_y.png" />
+            </static>
+      </question>
+      <question preload="r12,r13,r14,r15,r16,r17,r18,r19,r110" topbgimage="resources/btexture.jpg" bgimage="resources/btexture.jpg" qname="StartRound1" qback="start" hinttext="Don't do that again">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button startx="25" clicksound="button-9" name="abutton" starty="25" framecount="0">
+                  <frame type="button" fcolor="0xFF00" src="resources/borderred.png" action="back" bstate="0" fsize="4" width="15" height="15" ftext="Japan" />
+            </button>
+            <button startx="25" clicksound="button-9" name="bbutton" starty="75" framecount="0">
+                  <frame type="button" fcolor="0xFF0000" src="resources/borderred.png" action="back" bstate="0" fsize="4" width="15" height="15" ftext="New Zealand" />
+            </button>
+            <button startx="75" clicksound="button-9" name="cbutton" starty="25" framecount="0">
+                  <frame type="button" fcolor="0xFF00" src="resources/borderred.png" action="back" bstate="0" fsize="4" width="15" height="15" ftext="Italy" />
+            </button>
+            <button startx="65" clicksound="button-9" name="dbutton" starty="65" framecount="0">
+                  <frame type="button" fcolor="0xFF0000" src="resources/borderred.png" action="next" bstate="0" fsize="4" width="15" height="15" ftext="Great Britain" />
+            </button>
+      </question>
+      <question qback="start" qname="r12">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button startx="25" starty="25" name="abutton" clicksound="button-9" framecount="0">
+                  <frame fcolor="0x00FF00" bstate="0" ftext="Japan" src="resources/borderred.png" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button startx="25" starty="75" name="bbutton" clicksound="button-9" framecount="0">
+                  <frame fcolor="0xFF0000" bstate="0" ftext="New Zealand" src="resources/borderred.png" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button startx="75" starty="25" name="cbutton" clicksound="button-9" framecount="0">
+                  <frame fcolor="0x00FF00" bstate="0" ftext="Italy" src="resources/borderred.png" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button startx="65" starty="65" name="dbutton" clicksound="button-9" framecount="0">
+                  <frame fcolor="0xFF0000" bstate="0" ftext="Great Britain" src="resources/borderred.png" action="next" fsize="4" width="15" type="button" height="15" />
+            </button>
+      </question>
+      <question qname="r13" qback="start">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" clicksound="button-9" name="abutton" startx="25" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Japan" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="bbutton" startx="25" starty="75">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="New Zealand" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="cbutton" startx="75" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Italy" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="dbutton" startx="65" starty="65">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="Great Britain" action="next" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+      </question>
+      <question qname="r14" qback="start">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" clicksound="button-9" name="abutton" startx="25" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Japan" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="bbutton" startx="25" starty="75">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="New Zealand" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="cbutton" startx="75" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Italy" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="dbutton" startx="65" starty="65">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="Great Britain" action="next" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+      </question>
+      <question qname="r15" qback="start">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" clicksound="button-9" name="abutton" startx="25" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Japan" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="bbutton" startx="25" starty="75">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="New Zealand" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="cbutton" startx="75" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Italy" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="dbutton" startx="65" starty="65">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="Great Britain" action="next" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+      </question>
+      <question qname="r16" qback="start">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" clicksound="button-9" name="abutton" startx="25" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Japan" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="bbutton" startx="25" starty="75">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="New Zealand" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="cbutton" startx="75" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Italy" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="dbutton" startx="65" starty="65">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="Great Britain" action="next" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+      </question>
+      <question qname="r17" qback="start">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" clicksound="button-9" name="abutton" startx="25" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Japan" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="bbutton" startx="25" starty="75">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="New Zealand" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="cbutton" startx="75" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Italy" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="dbutton" startx="65" starty="65">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="Great Britain" action="next" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+      </question>
+      <question qname="r18" qback="start">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" clicksound="button-9" name="abutton" startx="25" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Japan" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="bbutton" startx="25" starty="75">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="New Zealand" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="cbutton" startx="75" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Italy" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="dbutton" startx="65" starty="65">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="Great Britain" action="next" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+      </question>
+      <question qname="r19" qback="start">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" clicksound="button-9" name="abutton" startx="25" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Japan" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="bbutton" startx="25" starty="75">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="New Zealand" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="cbutton" startx="75" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Italy" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="dbutton" startx="65" starty="65">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="Great Britain" action="next" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+      </question>
+      <question qname="r110" qback="start">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" clicksound="button-9" name="abutton" startx="25" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Japan" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="bbutton" startx="25" starty="75">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="New Zealand" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="cbutton" startx="75" starty="25">
+                  <frame fcolor="0x00FF00" height="15" bstate="0" ftext="Italy" action="back" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+            <button framecount="0" clicksound="button-9" name="dbutton" startx="65" starty="65">
+                  <frame fcolor="0xFF0000" height="15" bstate="0" ftext="Great Britain" action="next" fsize="4" width="15" type="button" src="resources/borderred.png" />
+            </button>
+      </question>
+      <question preload="r22,r23,r24,r25,r26,r27,r28,r29,r210" topbgimage="resources/btexture.jpg" bgimage="resources/btexture.jpg" qname="StartRound2" qback="start" hinttext="Don't do that again">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button startx="25" starty="25" name="abutton" clicksound="button-9" framecount="0">
+                  <frame fcolor="0xFF00" type="button" src="resources/borderred.png" ftext="Japan" action="back" bstate="0" fsize="4" width="15" height="15" />
+            </button>
+            <button startx="25" starty="75" name="bbutton" clicksound="button-9" framecount="0">
+                  <frame fcolor="0xFF0000" type="button" src="resources/borderred.png" ftext="New Zealand" action="back" bstate="0" fsize="4" width="15" height="15" />
+            </button>
+            <button startx="75" starty="25" name="cbutton" clicksound="button-9" framecount="0">
+                  <frame fcolor="0xFF00" type="button" src="resources/borderred.png" ftext="Italy" action="back" bstate="0" fsize="4" width="15" height="15" />
+            </button>
+            <button startx="65" starty="65" name="dbutton" clicksound="button-9" framecount="0">
+                  <frame fcolor="0xFF0000" type="button" src="resources/borderred.png" ftext="Great Britain" action="next" bstate="0" fsize="4" width="15" height="15" />
+            </button>
+      </question>
+      <question qname="r22" qback="start">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button startx="25" clicksound="button-9" name="abutton" starty="25" framecount="0">
+                  <frame type="button" fcolor="0xFF00" src="resources/borderred.png" action="back" bstate="0" fsize="4" width="15" height="15" ftext="Japan" />
+            </button>
+            <button startx="25" clicksound="button-9" name="bbutton" starty="75" framecount="0">
+                  <frame type="button" fcolor="0xFF0000" src="resources/borderred.png" action="back" bstate="0" fsize="4" width="15" height="15" ftext="New Zealand" />
+            </button>
+            <button startx="75" clicksound="button-9" name="cbutton" starty="25" framecount="0">
+                  <frame type="button" fcolor="0xFF00" src="resources/borderred.png" action="back" bstate="0" fsize="4" width="15" height="15" ftext="Italy" />
+            </button>
+            <button startx="65" clicksound="button-9" name="dbutton" starty="65" framecount="0">
+                  <frame type="button" fcolor="0xFF0000" src="resources/borderred.png" action="next" bstate="0" fsize="4" width="15" height="15" ftext="Great Britain" />
+            </button>
+      </question>
+      <question qback="start" qname="r23">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" starty="25" name="abutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Japan" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="75" name="bbutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="New Zealand" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="25" name="cbutton" startx="75" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Italy" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="65" name="dbutton" startx="65" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="Great Britain" action="next" fsize="4" width="15" type="button" height="15" />
+            </button>
+      </question>
+      <question qback="start" qname="r24">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" starty="25" name="abutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Japan" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="75" name="bbutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="New Zealand" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="25" name="cbutton" startx="75" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Italy" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="65" name="dbutton" startx="65" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="Great Britain" action="next" fsize="4" width="15" type="button" height="15" />
+            </button>
+      </question>
+      <question qback="start" qname="r25">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" starty="25" name="abutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Japan" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="75" name="bbutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="New Zealand" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="25" name="cbutton" startx="75" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Italy" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="65" name="dbutton" startx="65" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="Great Britain" action="next" fsize="4" width="15" type="button" height="15" />
+            </button>
+      </question>
+      <question qback="start" qname="r26">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" starty="25" name="abutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Japan" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="75" name="bbutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="New Zealand" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="25" name="cbutton" startx="75" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Italy" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="65" name="dbutton" startx="65" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="Great Britain" action="next" fsize="4" width="15" type="button" height="15" />
+            </button>
+      </question>
+      <question qback="start" qname="r27">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" starty="25" name="abutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Japan" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="75" name="bbutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="New Zealand" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="25" name="cbutton" startx="75" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Italy" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="65" name="dbutton" startx="65" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="Great Britain" action="next" fsize="4" width="15" type="button" height="15" />
+            </button>
+      </question>
+      <question qback="start" qname="r28">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" starty="25" name="abutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Japan" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="75" name="bbutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="New Zealand" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="25" name="cbutton" startx="75" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Italy" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="65" name="dbutton" startx="65" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="Great Britain" action="next" fsize="4" width="15" type="button" height="15" />
+            </button>
+      </question>
+      <question qback="start" qname="r29">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" starty="25" name="abutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Japan" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="75" name="bbutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="New Zealand" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="25" name="cbutton" startx="75" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Italy" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="65" name="dbutton" startx="65" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="Great Britain" action="next" fsize="4" width="15" type="button" height="15" />
+            </button>
+      </question>
+      <question qback="start" qname="r210">
+            <prompt promptaudio="audio/smallestcountry" fcolor="0xFFFFFF" prompttext="Which is the smallest of these countries?" y="0" fsize="2" width="100" bcolor="0x000000" />
+            <button framecount="0" starty="25" name="abutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Japan" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="75" name="bbutton" startx="25" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="New Zealand" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="25" name="cbutton" startx="75" clicksound="button-9">
+                  <frame fcolor="0xFF00" bstate="0" src="resources/borderred.png" ftext="Italy" action="back" fsize="4" width="15" type="button" height="15" />
+            </button>
+            <button framecount="0" starty="65" name="dbutton" startx="65" clicksound="button-9">
+                  <frame fcolor="0xFF0000" bstate="0" src="resources/borderred.png" ftext="Great Britain" action="next" fsize="4" width="15" type="button" height="15" />
+            </button>
+      </question>
+</questionset>
