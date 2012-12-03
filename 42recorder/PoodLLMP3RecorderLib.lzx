@@ -6,6 +6,7 @@
 	<include href="explorerservicelib.lzx" />
 	<include href="bytearrayutils.lzx" />
 	<include href="../timers/stopwatchlib.lzx"/>
+	<include href="../timers/countdownlib.lzx"/>
 	<include href="lz" />
 <class name="poodllmp3recorder" extends="view">
 
@@ -44,7 +45,11 @@
 	<attribute name="status" value="'stopped'" />
 	<attribute name="saved" value="true" />
 	
+	<!-- total time attribute -->
 	<attribute name="totaltime" value="'00:00:00'" />
+	
+	<!-- time limit attribute -->
+	<attribute name="timelimit" value="0" />
 	
 	<!-- A flag to tell us if we should be overwriting files -->
 	<attribute name="overwritefile" />
@@ -91,16 +96,27 @@
 				lz.Browser.loadJS(somejs);					
 	</method>
 	
-	<!-- Our Recording Timer -->
-	<stopwatch name="rtimer"  >
+	<!-- Our Up Timer -->
+	<stopwatch name="uptimer"  >
 		<handler name="countevent">
 			classroot.recordinfo.infobar.totaltime.format('%02d:%02d:%02d',this.showhour,this.showmin,this.showsec);
 		</handler>
 		<handler name="oninit">
 			this.resetTimer();
 		</handler>
-		
 	</stopwatch>
+	<!-- Our countdown Timer -->
+    <countdowntimer name="downtimer" inittime="${classroot.timelimit * 1000}" >
+		<handler name="countevent">
+			classroot.recordinfo.infobar.totaltime.format('%02d:%02d:%02d',this.showhour,this.showmin,this.showsec);
+		</handler>
+		<handler name="stopevent">
+			classroot.buttonview.stopButton.stopAll();
+		</handler>
+		<handler name="oninit">
+			this.resetTimer();	
+		</handler>
+	</countdowntimer>
 	
 	<!-- for manipulating byte arrays -->
 	<bytearrayutils name="butils" poodllfilelib="${classroot.poodllfilelib}" 
@@ -171,13 +187,28 @@
 			this.sbytes.clear();
 			this.getmic().addEventListener(SampleDataEvent.SAMPLE_DATA, this.micSampleDataHandler); 
 			classroot.setAttribute('status', 'recording');
-			classroot.rtimer.resetTimer();
-			classroot.rtimer.startTimer();
+			//timer
+			if(classroot.timelimit==0){
+				classroot.uptimer.resetTimer();
+				classroot.uptimer.startTimer();
+			}else{
+				classroot.downtimer.resetTimer();
+				classroot.downtimer.startTimer();
+			}
+	
 		</method>
 		<method name="stopRec">
 			this.getmic().removeEventListener(SampleDataEvent.SAMPLE_DATA, this.micSampleDataHandler);
 			classroot.setAttribute('status', 'stopped');
-			classroot.rtimer.stopTimer();
+			//handle our timers
+			if(classroot.timelimit==0){
+				classroot.uptimer.stopTimer();
+			}else{
+				if (classroot.downtimer.timer_state!='STOPPED'){
+					classroot.downtimer.stopTimer();
+					classroot.downtimer.resetTimer();
+				}
+			}
 		</method>
 		<method name="playRec">
 			classroot.setAttribute('status', 'playing');
@@ -187,7 +218,7 @@
 			this.ochannel.addEventListener( Event.SOUND_COMPLETE, this.playbackComplete ); 
 		</method>
 		<method name="stopPlay">
-			this.osound.stop();
+			this.ochannel.stop();
 			this.osound.removeEventListener(SampleDataEvent.SAMPLE_DATA, this.playbackSampleHandler); 
 			classroot.setAttribute('status', 'stopped');
 		</method>
@@ -326,9 +357,10 @@
 				<!-- Talktime -->
 				<simplelayout axis="x" spacing="10" />
 				<!-- Talktime -->
-				<text name="totaltimelabel" text="talk time: " /> 
-				<text name="totaltime"  />
+				<text name="totaltimelabel" text="Time: " /> 
+				<text name="totaltime" fgcolor="${classroot.timelimit ? 0xFF0000 : 0x0}" />
 			</view>
+		
 			
 			<!-- Indicator for microphone level -->
 			<!-- The miclevel loading 1.8is just from trial and error -->			
@@ -376,7 +408,7 @@
 				</handler>
 				<view name="exporticon" width="${parent.height-4}" height="${parent.height-4}" opacity="${1 - (parent.enabled ? 0 : 0.8)}"  stretches="both" x="2" y="2"  resource="icons/32x32/save32.png" ></view>	
 	</button>	
-	<button name="settingsbutton" width="${classroot.recordinfo.height}" height="${classroot.recordinfo.height}" options="ignorelayout" y="${classroot.recordinfo.y}" x="${classroot.width - this.width}">
+	<button name="settingsbutton" width="${classroot.recordinfo.height}" height="${classroot.recordinfo.height}" options="ignorelayout" y="${classroot.recordinfo.y}" x="${classroot.width - this.width}" >
 				<handler name="onclick">
 					classroot.settingswindow.open();
 				</handler>

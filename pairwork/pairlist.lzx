@@ -14,6 +14,7 @@
 <attribute name="teacherpairstreamname" />
 <attribute name="coursedataurl" />
 <attribute name="courseid" />
+<attribute name="moodleid" />  
 <attribute name="mename" />    
 <attribute name="showvideo" />    
 
@@ -30,11 +31,12 @@
 <!-- pair member audiostreams -->
  <!-- streamset name="streams" rtmp="${classroot.paircon}" -->
 
-
   
 <!-- The server connection -->
 <!--rtmp connections -->
-<MessagingRtmpConnection name="paircon" userid="${classroot.mename}" appprofileid="${classroot.pairsidtag}" src="${unescape(classroot.red5url) + '/' + classroot.courseid + '/' + classroot.pairsidtag}" altsrc="${unescape(classroot.red5url) + '/' + classroot.courseid + '/' + classroot.pairsidtag}" debug="false" autoconnect="true">
+<MessagingRtmpConnection name="paircon" userid="${classroot.mename}" 
+	appprofileid="${classroot.pairsidtag}" src="${unescape(classroot.red5url) + '/' + classroot.moodleid +  '/' +  classroot.courseid +  '/' + classroot.pairsidtag}" 
+	altsrc="${unescape(classroot.red5url) + '/' + classroot.moodleid + '/' + classroot.courseid + '/' + classroot.pairsidtag}" debug="false" autoconnect="true">
 	<handler name="onpeermessage" args="message">
 		Debug.write("peermessage:",message);
 	</handler>

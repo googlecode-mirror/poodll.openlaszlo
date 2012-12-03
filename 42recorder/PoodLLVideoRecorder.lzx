@@ -51,6 +51,10 @@
 	<attribute name="filearea" value="lz.Browser.getInitArg('filearea')" />
 	<attribute name="itemid" value="lz.Browser.getInitArg('itemid')" />
 	
+	<!-- Time Limit info -->
+	<attribute name="timelimit" value="lz.Browser.getInitArg('timelimit')" />
+	
+	<attribute name="autotryports" value="lz.Browser.getInitArg('autotryports')" />
 	
 	<poodllvideorecorder name="recorder" 
 			red5url="${canvas.red5url}" 
@@ -78,6 +82,8 @@
 			component="${canvas.component}"
 			filearea="${canvas.filearea}"
 			itemid="${canvas.itemid}"
+			timelimit="$once{parent.timelimit ? Number(parent.timelimit) : 0}"
+			autotryports="$once{parent.autotryports ? parent.autotryports=='yes' : false}"	
 			width="${parent.width}" 
 			height="${parent.height}" />
 			

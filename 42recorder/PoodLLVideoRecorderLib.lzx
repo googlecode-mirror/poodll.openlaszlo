@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-
 <library>
-
 
 	<include href="VCLibrary.lzx"/>
 	<include href="../talkback/justinav/flashutils.lzx"/>
@@ -9,10 +7,10 @@
 	<include href="../talkback/justinav/videosettings.lzx" />
 	<include href="../talkback/justinav/mediadevicesettings.lzx" />
 	<include href="explorerservicelib.lzx" />
+	<include href="../timers/stopwatchlib.lzx"/>
+	<include href="../timers/countdownlib.lzx"/>
 	<include href="lz" />
-	
-
-		
+			
 <class name="poodllvideorecorder" extends="view">
 
 <!-- **************** These attributes are set from parent class ******************************* -->
@@ -42,6 +40,12 @@
 	<attribute name="silencelevel" value="10" />
 	<attribute name="echosuppression" value="false" />
 	<attribute name="loopback" value="true" />
+	
+	<!-- autotryports -->
+	<attribute name="autotryports" value="false" />
+	
+	<!-- timelimit attribute -->
+	<attribute name="timelimit" value="0" />
 	
 	<!-- Overwrite file or not ... depends on server -->
 	<attribute name="overwritefile"  />
@@ -92,11 +96,36 @@
 				lz.Browser.loadJS(somejs);					
 	</method>
 	
+	<!-- Our Counting Up Timer -->
+	<stopwatch name="uptimer"  >
+		<handler name="countevent">
+			if(classroot.timelimit == 0){
+				classroot.bottombar.timeview.talktime.format('%02d:%02d',this.showmin,this.showsec);
+			}
+		</handler>
+		<handler name="oninit">
+			this.resetTimer();
+		</handler>
+	</stopwatch>
+	 <!-- Our Counting Down Timer -->
+    <countdowntimer name="downtimer" inittime="${classroot.timelimit * 1000}" >
+		<handler name="countevent">
+			classroot.bottombar.timeview.talktime.format('%02d:%02d',this.showmin,this.showsec);
+		</handler>
+		<handler name="stopevent">
+			classroot.bottombar.buttonbar.stopButton.stopAll();
+		</handler>
+		<handler name="oninit">
+			this.resetTimer();	
+		</handler>
+	</countdowntimer>
+	
 	<!-- The server connection -->
 	<rtmpconnection name="rtmpc" src="${unescape(classroot.red5url)}"  debug="false">	
 	
 		<!-- reconnect timer delegate -->
 		<attribute name="timerdel" value="null" />
+		<attribute name="currentport" value="0" />
 	
 		<handler name="oninit" >
 			//This is to ensure that the savefilename gets set in onfilename handler
@@ -114,6 +143,28 @@
 		<method name="confirmconnected" args="ignore=null">
 			//if we are in a disconnected state, call connect
 			if(this.stage==0){
+				//the auto try ports if true, lets it try 2x on rec port, then begins cycling looking for an open port,1935 or 80
+				if(classroot.autotryports){
+					//Debug.write("autotryingports:currentport:" + this.currentport);
+					var newsrc="";
+					if(this.currentport==80){
+						newsrc = this.src.split(':80/').join(':1935/');
+						newsrc = newsrc.split('rtmpt://').join('rtmp://');
+						//Debug.write("newsrc:" + newsrc);
+						this.setAttribute("src",newsrc);
+						this.setAttribute("currentport",1935);
+					}else if(this.currentport==1935 || this.currentport==2){
+						newsrc = this.src.split(':1935/').join(':80/');
+						newsrc = newsrc.split('rtmp://').join('rtmpt://');
+						//Debug.write("newsrc:" + newsrc);
+						this.setAttribute("src",newsrc);
+						this.setAttribute("currentport",80);
+					}else{
+						this.setAttribute("currentport",currentport+1);
+						//Debug.write("currentport:" + currentport);
+					}
+					
+				}
 				this.connect();
 			}
 			//Debug.write("timer");
@@ -186,9 +237,18 @@
 	 
 	 <view name="bottombar" bgcolor="#bdbdbd" valign="middle" width="${classroot.vview_tslider.width}" height="${classroot.buttonwidth + 8}">
       <simplelayout axis="x" spacing="0"  />
-	<rtmpstatus name="statuslight" rtmpc="${classroot.rtmpc}" />		
-	<view name="buttonbar" width="${parent.width-parent.statuslight.width - parent.settingsbox.width}" height="${parent.height}" valign="middle" >	 
-        <simplelayout axis="x" spacing="5" inset="${(classroot.vview_tslider.width- parent.parent.statuslight.width - (classroot.buttonwidth * 3) - (5 * 2)) * 0.5}"  />
+	
+	<!-- Talktime -->
+	<!-- The maths is just to round the number to 1 place, and not throw errors on zero -->
+	<view name="timeview">
+		<simplelayout axis="x" />
+		<text name="talktimelabel" text="Time: "/> 
+		<text name="talktime" fgcolor="${classroot.timelimit ? 0xFF0000 : 0x0}" />	
+		<text name="talktimeunit" text=" "/> 
+	</view>	
+	<rtmpstatus name="statuslight" x="1" y="${parent.timeview.height + 5}" rtmpc="${classroot.rtmpc}" options="ignorelayout"/>
+	<view name="buttonbar" width="${parent.width - parent.timeview.width - parent.settingsbox.width}" height="${parent.height}" valign="middle" >	 
+        <simplelayout axis="x" spacing="5" inset="${((classroot.vview_tslider.width- (classroot.buttonwidth * 3) - (5 * 2)) * 0.5)- parent.parent.timeview.width }"  />
         <button name="recordButton" 
 			x="${(classroot.vview_tslider.width - (this.width * 3) - (5 * 2)) * 0.5}"
 			width="${classroot.buttonwidth}" height="${classroot.buttonwidth}"
@@ -207,6 +267,15 @@
         		classroot.ms.setAttribute("totaltime", 0);
 				classroot.vview_tslider.select(classroot.vview_tslider.record_tpane);
         		classroot.ms.record();
+				
+				//timer
+				if(classroot.timelimit==0){
+					classroot.uptimer.resetTimer();
+					classroot.uptimer.startTimer();
+				}else{
+					classroot.downtimer.resetTimer();
+					classroot.downtimer.startTimer();
+				}
 				
 				//record the url on the html page	
 				classroot.updatepage(classroot.filename);
@@ -239,6 +308,17 @@
 				}else if (classroot.ms.recording){
 					classroot.ms.stop();
 					Debug.write("stopped recording");
+					
+					//handle our timers
+					if(classroot.timelimit==0){
+						classroot.uptimer.stopTimer();
+					}else{
+						if (classroot.downtimer.timer_state!='STOPPED'){
+							classroot.downtimer.stopTimer();
+							classroot.downtimer.resetTimer();
+						}
+					}
+					
 					if(classroot.itemid){
 						if(classroot.saveformat=="mp4"){
 							var usefilename = classroot.filename.substr(0,classroot.filename.length - 3);
@@ -256,7 +336,7 @@
 			<view name="stopicon" width="32" height="32"  x="5" y="5" opacity="${0.2 + ((classroot.playstream.playing || classroot.ms.recording) ? 0.8 : 0)}" resource="icons/32x32/CircleBordered/Stop1NormalRed.png" ></view>	
         </button>			
 	</view>
-		
+
 	<!-- This works OK but the tabs don't resize properly after showing settings. tried and tried and tried .. -->
 	<checkbox  name="settingsbox" text="settings" value="false">
 		<handler name="onchanged">
@@ -269,6 +349,17 @@
 				}
 			Debug.write("tab height after:", classroot.vview_tslider.height);
 			Debug.write("tab height after:", classroot.vview_tslider.record_tpane.height);
+		</handler>
+	</checkbox>
+	<!-- Made it possible to set format on recorder itself -->
+	<checkbox  name="mp4box" text=".mp4" value="$once{classroot.saveformat=='mp4'}" options="ignorelayout" x="${parent.settingsbox.x}" y="${parent.settingsbox.height + 4}">
+		<handler name="onchanged">
+			if(this.value){
+					classroot.setAttribute("saveformat","mp4");					
+				}else{
+					classroot.setAttribute("saveformat","flv");
+				}
+			
 		</handler>
 	</checkbox>
     

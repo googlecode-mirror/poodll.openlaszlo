@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Setup our canvas -->
+<!-- this is testing loading xml at runtime -->
+<!-- iphonewidth and height -->
+<!-- canvas width="480" height="320" -->
+<canvas width="100%" height="100%" >
+
+	 
+	<include href="../arohaboo/arohaboolib.lzx" />
+	
+
+
+	
+	<switch>
+		<when property="$dhtml">
+			<script><![CDATA[
+				function deebug(message){
+					if (lz.Browser.getOS().indexOf('iP')>-1){
+						console.log(message);
+					}else{
+						Debug.write(message);
+					}
+					
+				}
+				function printtime(message){
+	
+					var d= new Date();
+					var pt = d.getMinutes() + ":" + d.getSeconds() + ":" + d.getMilliseconds();
+					if (lz.Browser.getOS().indexOf('iP')>-1){
+						console.log(message + ":" + pt) ;
+					}else{
+						Debug.write(message + ":" + pt);
+					}
+				
+				}
+				
+			]]>
+			</script>
+		</when>
+		<otherwise>
+			<script><![CDATA[
+				function deebug(message){
+						Debug.write(message);					
+				}
+				function printtime(message){
+					var d= new Date();
+					var pt = d.getMinutes() + ":" + d.getSeconds() + ":" + d.getMilliseconds();
+					Debug.write(message + ":" + pt);
+				}
+			]]>
+			</script>
+		
+		</otherwise>
+	
+		
+	</switch>
+	
+	
+	<!-- Our dataset of questions -->
+	<!-- dataset name="questions" src="./keisanset.xml" -->
+	<dataset name="questions" type="http" request="true" src="http:keisanset.xml" />
+	
+	<!-- Dataset for node templates -->
+	<!-- dataset name="templates" src="./keisantemplates.xml" -->	
+	<dataset name="templates" type="http" request="true" src="http:keisantemplates.xml" />		
+
+	<!-- Dataset for merging with templates to create questions -->
+	<!-- dataset name="merges" src="./keisanmerges.xml" -->
+	<dataset name="merges" type="http" request="true" src="http:keisanmerges.xml" >
+		<handler name="ondata">
+			//When fetching onload like this set mainpanel to initstage="defer"
+			//otherwise remove that tag
+			deebug("gotdata");
+			mainpanelholder.completeInstantiation();
+			//mainpanel.startquestions();
+			//canvas.postinit();
+		</handler>
+		
+	</dataset>
+	
+
+
+	
+	<!-- stub to give us some control of resource load path -->
+	<!-- attribute name="basefile" value="'http://poodll.com:443/ol49/my-apps/arohaboo'" -->
+	<attribute name="basefile" value="''" />
+
+	
+	 <node id="callback">
+		<attribute name="phonegapready" value="false" />
+	 	<method name="phoneGapLoaded" args="ignore=null">
+			this.setAttribute("phonegapready",true);
+			Debug.write("phonegaploaded");
+		</method>
+	 </node>
+
+		<!-- A list of application specific actions, and what they should do  -->
+		<method name="doaction" args="theaction,args">
+		<![CDATA[
+			//printtime("doaction");
+			switch (theaction){
+				case 'none': return;
+							break;
+				case 'xyz': return;
+							break;
+			}
+		]]>
+		</method>
+	
+	<!-- Load up our quiz palette -->
+	<!-- font name="sans">
+	   <face src="lzsans8.ttf"/> 
+	   <face style="bold" src="lzsans8b.ttf"/>
+	   <face style="italic" src="lzsans8i.ttf"/>
+	</font -->
+	<!-- unable to make this work on iphone .. perhaps css fonts ..
+		probably need to use a direct path to font file or something
+	-->
+	<!-- font name="squeaky chalk sound">
+		<face src="SqueakyChalkSound.ttf"/> 
+	</font -->
+	
+	
+	<simplelayout axis="y" spacing="0" />
+	<image src="resources/topbackground.png" width="100%" height="100%" stretches="both" options="ignorelayout" />
+	<view name="gamebar" width="100%" height="20%"   >
+		<image name="backtostart" visible="false" x="$once{(canvas.width / 100) * 3}" src="resources/back_button.png" y="$once{(canvas.height / 100) * 3}" stretches="both" width="70" height="70" >
+			<handler name="onclick">
+				deebug("gottaclick");
+				mainpanel.qholder.bigtimer.resetTimer();
+				mainpanel.qholder.switchQuestion("start",mainpanel.qholder.transitionTime);
+			</handler>
+		</image>
+		<itext name="score"  fontsize="3" fgcolor="0xFFFFFF" align="center" visible="false">
+			<handler name="oninit">
+				//setting this value from  the declaration seemed to skip the event handlers!
+				//so we do it on init
+				deebug("not setting zascore from oninit");
+				//this.setAttribute("text", 'ZAscore');
+			</handler>
+		</itext>
+		
+		<itext name="thetime" fontsize="4" x="${parent.width-75}" fgcolor="0xFF0000" visible="false" />
+		
+	
+	
+		<itext name="prompttext"  fgcolor="0x00" font="Marker Felt" fontsize="3" fontstyle="bold" align="center" valign="middle" visible="false" />
+		<itext name="howdy"  fgcolor="0xFFFF00" font="Marker Felt" fontsize="3" fontstyle="bold" align="center" valign="middle" visible="true">
+			<handler name="oninit">
+				this.setAttribute("text"," ");
+			</handler>
+		</itext>
+		
+		
+		<image name="reloadview" visible="false" x="$once{(canvas.width / 100) * 91}"  src="resources/reload.png" y="$once{(canvas.height / 100) * 3}" stretches="both" width="6%" height="${this.width}" >
+			<handler name="onclick">
+				deebug("gottaclick");
+				mainpanel.qholder.promptaudio.play();
+			</handler>
+		</image>
+		
+		
+		<method name="doConstraints" args="ignore=null">
+			<![CDATA[
+				
+			if(mainpanel.qholder.currentqname=='start'){
+				this.howdy.setAttribute("visible",true);
+				this.score.setAttribute("visible",false);
+				this.prompttext.setAttribute("visible",false);				
+				if(this.backtostart && this.backtostart.isinited){
+					this.backtostart.setAttribute("visible",false);
+				}
+				if(this.reloadview && this.reloadview.isinited){
+					this.reloadview.setAttribute("visible",false);
+				}
+				this.thetime.setAttribute("visible",false);
+				this.score.setAttribute("visible",false);
+				
+			}else{
+				this.prompttext.setAttribute("visible",true);
+				if(mainpanel.qholder.nowquestion){
+					
+					this.prompttext.setAttribute("text", mainpanel.qholder.nowquestion.prompttext.text);
+				}
+				this.howdy.setAttribute("visible",false);
+				//by default decided to hide this
+				//this.score.setAttribute("visible",true);
+				if(this.backtostart && this.backtostart.isinited){
+					this.backtostart.setAttribute("visible",true);
+					if(mainpanel.usefont && mainpanel.usefont != this.prompttext.font ){
+						this.prompttext.setAttribute("font",mainpanel.usefont);
+						this.howdy.setAttribute("font",mainpanel.usefont);
+					}
+				}
+				if(this.reloadview && this.reloadview.isinited){
+					this.reloadview.setAttribute("visible",true);
+				}
+				
+				if(mainpanel.qholder.currentqname.indexOf("_") > 0){
+					this.thetime.setAttribute("visible",true);
+					//by default decided to hide this
+					//this.score.setAttribute("visible",true);
+				}else{
+					this.thetime.setAttribute("visible",false);
+					//by default decided to hide this
+					//this.score.setAttribute("visible",false);
+				}
+			
+			}
+			]]>
+		</method>
+		
+	
+	</view>
+	
+	<!-- we had to get tricky on instantiation for runtime loading of xml, for designer outlay
+		we could remove the holding panel and need to defer/instantiate of we are compiling in -->
+		<!-- view name="mainpanelholder" width="92%" height="85%" initstage="defer" -->
+		<view name="mainpanelholder" width="100%" height="80%" initstage="defer" >
+	<!-- view name="mainpanelholder" width="100%" height="80%" -->
+		<arohabooview id="mainpanel" name="mainpanel" embedres="false" x="0" clip="true"  width="100%" height="100%" initsettings="XAhiscore:0" initmerge="true" >
+			<handler name="oninit">
+				//timer and score display updates
+				canvas.gamebar.score.setAttribute("text", 'ZAscore');
+				canvas.gamebar.thetime.setAttribute("text", 'ZAbigtimer');
+				canvas.gamebar.applyConstraintMethod("doConstraints", [mainpanel.qholder,"nowquestion"]);
+				
+				//timer event registration 
+				if(!this.sessionDel){this.sessionDel = new lz.Delegate(this,"sessioncomplete")};
+				this.sessionDel.register(mainpanel.qholder, "bigtimerdone");
+				
+				//make sure we are most visible
+				this.bringToFront();
+			</handler>
+			
+			<method name="sessioncomplete" args="ignore=null">
+				//mainpanel.qholder.bigtimer.resetTimer();	
+				if(mainpanel.qholder.settings.getProperty("ZAscore") > mainpanel.qholder.settings.getProperty("XAhiscore")){
+					mainpanel.qholder.settings.setProperty("XAhiscore", mainpanel.qholder.settings.getProperty("ZAscore"),true);
+				}
+				if(mainpanel.qholder.currentqname != 'scoreboard'){ 				
+					mainpanel.qholder.switchQuestion("scoreboard",mainpanel.qholder.transitionTime);
+				}
+			</method>
+		</arohabooview>
+	</view>
+	
+
+	
+		
+	
+	
+	
+	
+</canvas>

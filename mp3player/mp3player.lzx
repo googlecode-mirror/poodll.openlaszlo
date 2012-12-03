@@ -9,6 +9,17 @@ please do email. If you wish to help in the development, please do email :)
 -->
 
 <canvas proxied="false">
+<!--
+  <resource name="previous_btn" src="icons/previous_blue.png"/>	
+  <resource name="play_btn" src="icons/play_blue.png"/>
+  <resource name="pause_btn" src="icons/pause_blue.png"/>
+  <resource name="stop_btn" src="icons/stop_blue.png"/>
+  <resource name="next_btn" src="icons/next_blue.png"/>
+  <resource name="sound_low" src="icons/sound_low.png"/>
+  <resource name="sound_high" src="icons/sound_high.png"/>
+  <resource name="scrubber" src="icons/audio_scrubber.png"/>
+  <resource name="scrub_track" src="icons/audio_scrubtrack.png"/>
+  -->
 
   <!-- The MP3 player class -->
   <include href="player.lzx"/>
@@ -22,9 +33,11 @@ please do email. If you wish to help in the development, please do email :)
   <!-- This one always points to the currently playing track. It can be set either by play/next/previous 
        button or by clicking on the playlist item -->
   <datapointer id="currenttrack" xpath="favorite_list:/playlist[1]"/>
+  
+  <attribute name="playlistUrl" value="''" />
 
   <script>
-    favorite_list.setAttribute('src',playlistUrl);     
+    favorite_list.setAttribute('src','');     
   </script>
 
   <!-- All the player related functionality such as start/stop/pause etc -->

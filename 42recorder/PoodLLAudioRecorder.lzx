@@ -43,8 +43,15 @@
 	<attribute name="component" value="lz.Browser.getInitArg('component')" />
 	<attribute name="filearea" value="lz.Browser.getInitArg('filearea')" />
 	<attribute name="itemid" value="lz.Browser.getInitArg('itemid')" />
+	
+	<!-- Time Limit info -->
+	<attribute name="timelimit" value="lz.Browser.getInitArg('timelimit')" />
 
 
+	<!-- Auto Try Ports -->
+	<attribute name="autotryports" value="lz.Browser.getInitArg('autotryports')" />
+	
+	
     <simplelayout inset="10" axis="y" spacing="5"/>
 	<poodllaudiorecorder 
 		name="par"
@@ -70,6 +77,8 @@
 		component="${canvas.component}"
 		filearea="${canvas.filearea}"
 		itemid="${canvas.itemid}"
+		timelimit="$once{parent.timelimit ? Number(parent.timelimit) : 0}"
+		autotryports="$once{parent.autotryports ? parent.autotryports=='yes' : false}"	
 		/>
 	 
 	 	<view name="thespinner" id="thespinner" bgcolor="0xccffff" stretches="both" align="center" options="ignorelayout: true" x="${(parent.par.width - this.width) / 2}" y="${(parent.par.height - this.height) / 2}" visible="false" width="75" height="75">

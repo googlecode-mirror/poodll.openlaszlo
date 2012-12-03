@@ -5,6 +5,7 @@
 	<include href="../talkback/justinav/videosettings.lzx" />
 	<include href="../talkback/justinav/mediadevicesettings.lzx" />
 	<include href="lz" />
+	<include href="bytearrayutils.lzx" />
 	
 
 		
@@ -48,6 +49,17 @@
 	<attribute name="cameraviewactive" value="true"/>
 	<attribute name="haveSnapshot" value="false"/>
 	<attribute name="written" value="false"/>
+	
+	<!-- Whether we should submit auto or by button -->
+	<attribute name="autosubmit" value="false"  />
+
+	
+		<!-- Attributes required for writing directly to Moodle Draft Files Area -->
+	<attribute name="poodllfilelib"  />
+	<attribute name="contextid"  />
+	<attribute name="component"  />
+	<attribute name="filearea"  />
+	<attribute name="itemid"  />
 
 <!-- **************** The above atributes are set from parent class ******************************* -->
 
@@ -86,6 +98,43 @@
 				lz.Browser.callJS(somejs);
 */
 	</method>
+	
+	
+		<!-- for manipulating byte arrays -->
+	<bytearrayutils name="butils" poodllfilelib="${classroot.poodllfilelib}" 
+				contextid="${classroot.contextid}" 
+				component="${classroot.component}" 
+				filearea="${classroot.filearea}" 
+				itemid="${classroot.itemid}"
+				  >
+			
+		<handler name="oninit">
+			this.resetActions();
+		</handler>	
+				
+		<handler name="onActionComplete" args="message">
+			Debug.write("action complete:" + message);
+			thespinner.hidespinner();
+			classroot.setAttribute("written",true);
+			classroot.setAttribute("filename", message);					
+			classroot.updatepage(classroot.filename);
+			
+		</handler>
+		<handler name="onActionStart" args="message">
+			Debug.write("action Start:" + message);
+			thespinner.setAttribute("caption","uploading");
+			thespinner.showspinner();
+		</handler>
+		<handler name="onActionError" args="message">
+			Debug.write("action Error:" + message);
+			classroot.setAttribute("written",true);
+			thespinner.hidespinner();
+			
+		</handler>
+	</bytearrayutils>
+	
+	
+	
 	<flashutils name="futils" />
 	<simplelayout axis="y" spacing="5"/>
 	<tabslider name="vview_tslider" width="${parent.width}" height="${parent.height - (classroot.buttonwidth + 8) - 20}" spacing="2" slideduration="300">
@@ -145,20 +194,23 @@
 				}
 			</method>
         	<method name="snap">
+				//create snapshot view
 				classroot.captureAndCopyView(classroot.vview_tslider.webcam_tpane.webcamview,classroot.vview_tslider.playback_tpane.playview);
 				
+				//show the snapshot			
 				classroot.vview_tslider.select(classroot.vview_tslider.playback_tpane);
 				classroot.setAttribute("cameraviewactive",false);
 				classroot.setAttribute("written",false);
 				
-				
-				classroot.setAttribute("filename", Math.floor(Math.random()*1000000000000001) + ".jpg");					
-				//classroot.ms.setAttribute("url",classroot.savefilename);
-				classroot.vview_tslider.select(classroot.vview_tslider.playback_tpane);
+				//assign a filename. Too long
+				classroot.setAttribute("filename", Math.floor(Math.random()*10000001) + ".jpg");					
+				//i think this is redundant
+				//classroot.vview_tslider.select(classroot.vview_tslider.playback_tpane);
 
+				if(classroot.autosubmit){
+					classroot.writeImageToBrowser(classroot.vview_tslider.playback_tpane.playview);
+				}
 				
-				//record the url on the html page	
-				//classroot.updatepage(classroot.filename);
 				
         	</method>
 			<method name="resnap">
@@ -175,6 +227,7 @@
 			height="${classroot.buttonwidth}"
 			valign="middle"
 			enabled="${!classroot.cameraviewactive &amp;&amp; classroot.haveSnapshot}"
+			visible="${!classroot.autosubmit}"
 			onclick="submitSnapshot()">
        		<method name="submitSnapshot" args="">
 				classroot.writeImageToBrowser(classroot.vview_tslider.playback_tpane.playview);
@@ -217,8 +270,46 @@
 	
 				
 			]]>
-		</method>	
+		</method>
+		
+		
+			
 		<method name="writeImageToBrowser" args="snapshotView">
+		<![CDATA[
+			
+			if(!this.haveSnapshot) {return;}
+				
+				thespinner.setAttribute("caption","creating JPG");
+				thespinner.showspinner();
+				
+				
+				// Take the snapshot movieclip
+				var sketch_mc = snapshotView.getDisplayObject();
+				
+				// Get the image data from that
+				var jpgSource:BitmapData = new BitmapData(sketch_mc.width, sketch_mc.height);
+				jpgSource.draw(sketch_mc);
+				
+				// Create a Jpeg from the image data
+				var jpgEncoder:JPGEncoder = new JPGEncoder(85);
+				var jpgStream:ByteArray = jpgEncoder.encode(jpgSource);
+				Debug.write("jpeg stream created");
+				//Base 64 It
+				var jpgstring = this.butils.makeBase64String(jpgStream);
+				thespinner.setAttribute("caption","uploading");
+				
+				//submit it to server
+				var action = this.butils.getNewActionKey();
+				this.butils.registerAction(action,"JPG file upload");
+				this.butils.sendData(action,"uploadfile","",jpgstring, "jpg");
+
+			
+			
+		]]>
+		</method>
+		
+		<!--
+		<method name="oldWwriteImageToBrowser" args="snapshotView">
 		<![CDATA[
 			
 			if(this.haveSnapshot) {
@@ -270,6 +361,7 @@
 			this.updatepage(filename);
 			this.setAttribute("written",true);
 		</method>
+		-->
 
 </class>
 

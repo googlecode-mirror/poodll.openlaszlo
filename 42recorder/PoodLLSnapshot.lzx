@@ -25,6 +25,17 @@
 	<attribute name="picqual" value="lz.Browser.getInitArg('picqual')" />
 	<attribute name="capturefps" value="lz.Browser.getInitArg('capturefps')"  />
 	
+		<!-- Auto Submit: Upon stopping recording, auto convert and send-->
+	<attribute name="autosubmit" value="lz.Browser.getInitArg('autosubmit')" />
+	
+		<!--Moodle 2 File system info -->
+	<attribute name="poodllfilelib" value="lz.Browser.getInitArg('poodllfilelib')" />
+	<attribute name="contextid" value="lz.Browser.getInitArg('contextid')" />
+	<attribute name="component" value="lz.Browser.getInitArg('component')" />
+	<attribute name="filearea" value="lz.Browser.getInitArg('filearea')" />
+	<attribute name="itemid" value="lz.Browser.getInitArg('itemid')" />
+
+	
 	<!-- The Moodle URL -->
 	<attribute name="moodlewww" value="lz.Browser.getInitArg('moodlewww')" />
 	
@@ -44,7 +55,31 @@
 			capturefps="canvas.capturefps"	
 			width="${parent.width}" 
 			moodlewww="canvas.moodlewww"
-			height="${parent.height}" />
+			height="${parent.height}"
+			poodllfilelib="${canvas.poodllfilelib}"
+			contextid="${canvas.contextid}"
+			component="${canvas.component}"
+			filearea="${canvas.filearea}"
+			itemid="${canvas.itemid}"
+			autosubmit="${canvas.autosubmit=='true'}"
+		/>
+			
+		<view name="thespinner" id="thespinner" bgcolor="0xccffff" stretches="both" align="center" options="ignorelayout: true" x="${(parent.snapper.width - this.width) / 2}" y="${(parent.snapper.height - this.height) / 2}" visible="false" width="75" height="75">
+			<simplelayout axis="y" spacing="3" />
+ 			<attribute name="caption" value="'converting'" />
+			<view name="spindle" resource="spinner2.swf" stretches="both" align="center" width="60" height="60" />
+			<text text="${parent.caption}" align="center"/>
+			<method name="hidespinner" args="ignore=null">
+				this.setAttribute("visible",false);
+			</method>
+			<method name="showspinner" args="ignore=null">
+				this.bringToFront();
+				this.setAttribute("visible",true);
+			</method>
+			<handler name="onclick">
+				this.hidespinner();
+			</handler>
+		</view>
 			
 
 </canvas>

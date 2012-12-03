@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<canvas>
+<canvas aaactive="true" aaname="MP3 Recorder" accessible="true" focusable="true">
 	
 	<include href="../42recorder/PoodLLMP3RecorderLib.lzx"/>
 
 	
 	<!-- The size of the buttons et al. -->
 	<attribute name="iconsize" value="100" />
-
+	<!-- The size of the buttons et al. -->
+	<attribute name="deleteok" value="100" />
 
 	<!-- The filename of the streamed file (must be unique) -->
 	<attribute name="filename" value="lz.Browser.getInitArg('filename')" />
@@ -40,6 +41,9 @@
 	<attribute name="component" value="lz.Browser.getInitArg('component')" />
 	<attribute name="filearea" value="lz.Browser.getInitArg('filearea')" />
 	<attribute name="itemid" value="lz.Browser.getInitArg('itemid')" />
+	
+	<!-- Time Limit info -->
+	<attribute name="timelimit" value="lz.Browser.getInitArg('timelimit')" />
 
 		<poodllmp3recorder 
 		width="350"
@@ -60,6 +64,7 @@
 		component="${canvas.component}"
 		filearea="${canvas.filearea}"
 		itemid="${canvas.itemid}"
+		timelimit="$once{parent.timelimit ? Number(parent.timelimit) : 0}"
 		autosubmit="${canvas.autosubmit=='true'}"
 		/>
 

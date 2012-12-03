@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<canvas>
+<canvas medialoadtimeout="180000">
 		
 		<include href="lz"/>
 		<include href="incubator/roundrect.lzx" />
 		<!-- includes : the flv/mp3 player component-->
 		<include href="uniplayerlib.lzx"/>
 		
+			<!-- image resources -->
+			<resource name="play_btn" src="icons/MiniPlayIcon32.png"/>
+
+  
 		<!-- The border color -->
 		<attribute name="playerbordercolor" value="0x0000FF" />
 
@@ -46,6 +50,16 @@
 								}
 						</handler>
 					</text>
+					  <!-- These are the only visible components -->
+					  <basebutton name="playBtn" width="32" height="32" align="center" stretches="both" resource="play_btn" opacity="${canvas.havestarted ? 0.2 : 0.8}">
+						<handler name="onclick">
+							if(!canvas.havestarted){
+									parent.uplayer.playTrack();
+									canvas.setAttribute("havestarted",true);
+							};
+						</handler>
+					  </basebutton>
+					 
 					<!-- text align="center" fontsize="${canvas.height * 0.08}" fgcolor="0x0000FF" name="currentfile" text="${canvas.currentfilename}" -->
 					<!--
 					<view name="volumeview" align="center" bgcolor="0xCCCCCC" >
@@ -73,7 +87,7 @@
 				<handler name="onnow_playing">
 					if(this.now_playing){
 						canvas.setAttribute("havestarted",true);
-					}else if(canvas.havestarted){
+					}else if(canvas.havestarted &amp;&amp; this.audioloaded){
 						canvas.setAttribute("havefinished",true);
 					}
 				</handler>

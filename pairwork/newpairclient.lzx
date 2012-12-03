@@ -13,6 +13,7 @@
 <attribute name="mename" value="lz.Browser.getInitArg('mename')" />    
 <attribute name="mefullname" value="lz.Browser.getInitArg('mefullname')" /> 
 <attribute name="courseid" value="lz.Browser.getInitArg('courseid')" /> 
+<attribute name="moodleid" value="lz.Browser.getInitArg('moodleid')" />  
 <attribute name="mepictureurl" value="lz.Browser.getInitArg('mepictureurl')" />
 <attribute name="red5url" value="lz.Browser.getInitArg('red5url')" />   
 <attribute name="teacherallstreamname" value="lz.Browser.getInitArg('teacherallstreamname')" />
@@ -20,13 +21,15 @@
 <attribute name="whiteboard" value="lz.Browser.getInitArg('whiteboard')" />
 <attribute name="whiteboardback" value="lz.Browser.getInitArg('whiteboardback')" />
 <attribute name="showvideo" value="lz.Browser.getInitArg('showvideo')" />    
-<attribute name="useroles" value="lz.Browser.getInitArg('useroles')" />    
+<attribute name="useroles" value="lz.Browser.getInitArg('useroles')" />   
+ 
 
 	<!--object that handle communications with adminconsole  -->
 	<canvasheadercommunications 
 			name="headercomm" 
 			mename="${canvas.mename}" 
 			courseid="${canvas.courseid}" 
+			moodleid="${canvas.moodleid}" 
 			red5url="${canvas.red5url}" 
 			headeridtag="'header01'" />
 			
@@ -35,6 +38,7 @@
 	mename="${canvas.mename}"
 	mefullname="${canvas.mefullname}"
 	courseid="${canvas.courseid}"
+	moodleid="${canvas.moodleid}"
 	mepictureurl="${canvas.mepictureurl}"
 	red5url="${canvas.red5url}"
 	showvideo="${canvas.showvideo}"

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mergeset>
+	<mdata template="TFAIL" name="FailEasy" prompt="you failed" back="StartEasy" />
+	<mdata template="TFAIL" name="FailMedium" prompt="you failed" back="StartMedium" />
+	<mdata template="TFAIL" name="FailHard" prompt="you failed" back="StartHard" />
+	<mdata template="TSTART" name="StartEasyPlus" milliseconds="60000" />
+	<mdata template="TM"  name="1_d1" q="0 + 1" answer="1"   />
+	<mdata template="TM"  name="1_d2" q="1 + 1" answer="2"  />
+	<mdata template="TM"  name="1_d3" q="1 + 2" answer="3"  />
+	<mdata template="TM"  name="1_d4" q="1 + 3" answer="4"  />
+	<mdata template="TM"  name="1_d5" q="1 + 4" answer="5"  />
+	<mdata template="TM"  name="1_d6" q="1 + 5" answer="6"  />
+	<mdata template="TM"  name="1_d7" q="1 + 6" answer="7"  />>
+	<mdata template="TM"  name="1_d8" q="1 + 7" answer="8"  />
+	<mdata template="TM"  name="1_d9" q="1 + 8" answer="9"  />
+	<mdata template="TM"  name="1_d10" q="2 + 1" answer="3"  />
+	<mdata template="TM"  name="1_d11" q="2 + 2" answer="4"  />
+	<mdata template="TM"  name="1_d12" q="2 + 3" answer="5"  />
+	<mdata template="TM"  name="1_d13" q="2 + 4" answer="6"  />
+	<mdata template="TM"  name="1_d14" q="2 + 5" answer="7"  />
+	<mdata template="TM"  name="1_d15" q="2 + 6" answer="8"  />
+	<mdata template="TM"  name="1_d16" q="2 + 7" answer="9"  />
+	<mdata template="TM"  name="1_d17" q="3 + 1" answer="4"  />
+	<mdata template="TM"  name="1_d18" q="3 + 2" answer="5"  />
+	<mdata template="TM"  name="1_d19" q="3 + 3" answer="6"  />
+	<mdata template="TM"  name="1_d20" q="3 + 4" answer="7"  />
+	<mdata template="TM"  name="1_d21" q="3 + 5" answer="8"  />
+	<mdata template="TM"  name="1_d22" q="3 + 6" answer="9"  />
+	<mdata template="TM"  name="1_d23" q="4 + 1" answer="5"  />
+	<mdata template="TM"  name="1_d24" q="4 + 2" answer="6"  />
+	<mdata template="TM"  name="1_d25" q="4 + 3" answer="7"  />
+	<mdata template="TM"  name="1_d26" q="4 + 4" answer="8"  />
+	<mdata template="TM"  name="1_d27" q="4 + 5" answer="9"  />
+	<mdata template="TM"  name="1_d28" q="5 + 0" answer="5"  />
+	<mdata template="TM"  name="1_d29" q="5 + 1" answer="6"  />
+	<mdata template="TM"  name="1_d30" q="5 + 2" answer="7"  />
+	<mdata template="TM"  name="1_d31" q="5 + 3" answer="8"  />
+	<mdata template="TM"  name="1_d32" q="5 + 4" answer="9"  />
+	<mdata template="TM"  name="1_d33" q="6 + 1" answer="7"  />
+	<mdata template="TM"  name="1_d34" q="6 + 2" answer="8"  />
+	<mdata template="TM"  name="1_d35" q="6 + 3" answer="9"  />
+	<mdata template="TM"  name="1_d36" q="7 + 1" answer="8"  />
+	<mdata template="TM"  name="1_d37" q="7 + 2" answer="9"  />
+	<mdata template="TM"  name="1_d38" q="8 + 1" answer="9"  />
+	<mdata template="TM"  name="1_d39" q="9 + 0" answer="9"  />
+	<mdata template="TM"  name="1_d40" q="7 + 0" answer="7"  />
+	<mdata template="TM"  name="1_d41" q="6 + 0" answer="6"  />
+	<mdata template="TM"  name="1_d42" q="4 + 0" answer="4"  />
+	<mdata template="TM"  name="1_d43" q="3 + 0" answer="3"  />
+	<mdata template="TM"  name="1_d44" q="2 + 0" answer="2"  />
+	<mdata template="TM"  name="1_d45" q="0 + 1" answer="1"  />
+	<mdata template="TM"  name="1_d46" q="0 + 4" answer="4"  />
+	<mdata template="TM"  name="1_d47" q="0 + 5" answer="5"  />
+	<mdata template="TM"  name="1_d48" q="0 + 7" answer="7"  />
+	<mdata template="TSUCCESS" name="EndEasyPlus"  next="Scoreboard" />
+	<mdata template="TSTART" name="StartEasy" milliseconds="60000" />
+	<mdata template="TM"  name="1_a1" q="12 - 5" answer="7"   />
+	<mdata template="TM"  name="1_a2" q="15 - 6" answer="9"  />
+	<mdata template="TM"  name="1_a3" q="11 - 8" answer="3"  />
+	<mdata template="TM"  name="1_a4" q="14 - 7" answer="7"  />
+	<mdata template="TM"  name="1_a5" q="15 - 8" answer="7"  />
+	<mdata template="TM"  name="1_a6" q="12 - 8" answer="4"  />
+	<mdata template="TM"  name="1_a7" q="12 - 7" answer="5"  />>
+	<mdata template="TM"  name="1_a8" q="14 - 6" answer="8"  />
+	<mdata template="TM"  name="1_a9" q="14 - 9" answer="5"  />
+	<mdata template="TM"  name="1_a10" q="14 - 6" answer="8"  />
+	<mdata template="TM"  name="1_a11" q="13 - 9" answer="4"  />
+	<mdata template="TM"  name="1_a12" q="12 - 6" answer="6"  />
+	<mdata template="TM"  name="1_a13" q="12 - 3" answer="9"  />
+	<mdata template="TM"  name="1_a14" q="15 - 7" answer="8"  />
+	<mdata template="TM"  name="1_a15" q="11 - 5" answer="6"  />
+	<mdata template="TM"  name="1_a16" q="16 - 9" answer="7"  />
+	<mdata template="TM"  name="1_a17" q="12 - 4" answer="8"  />
+	<mdata template="TM"  name="1_a18" q="14 - 8" answer="6"  />
+	<mdata template="TM"  name="1_a19" q="16 - 8" answer="8"  />
+	<mdata template="TM"  name="1_a20" q="13 - 7" answer="6"  />
+	<mdata template="TM"  name="1_a21" q="18 - 9" answer="9"  />
+	<mdata template="TM"  name="1_a22" q="15 - 9" answer="6"  />
+	<mdata template="TM"  name="1_a23" q="13 - 5" answer="8"  />
+	<mdata template="TM"  name="1_a24" q="11 - 7" answer="4"  />
+	<mdata template="TM"  name="1_a25" q="13 - 8" answer="5"  />
+	<mdata template="TM"  name="1_a26" q="13 - 6" answer="7"  />
+	<mdata template="TM"  name="1_a27" q="11 - 4" answer="7"  />
+	<mdata template="TM"  name="1_a28" q="17 - 9" answer="8"  />
+	<mdata template="TM"  name="1_a29" q="14 - 5" answer="9"  />
+	<mdata template="TM"  name="1_a30" q="11 - 3" answer="8"  />
+	<mdata template="TM"  name="1_a31" q="12 - 9" answer="3"  />
+	<mdata template="TM"  name="1_a32" q="11 - 2" answer="9"  />
+	<mdata template="TM"  name="1_a33" q="13 - 4" answer="9"  />
+	<mdata template="TM"  name="1_a34" q="11 - 6" answer="5"  />
+	<mdata template="TM"  name="1_a35" q="17 - 8" answer="9"  />
+	<mdata template="TM"  name="1_a36" q="16 - 7" answer="9"  />
+	<mdata template="TM"  name="1_a37" q="11 - 9" answer="2"  />
+	<mdata template="TM"  name="1_a38" q="18 - 9" answer="9"  />
+	<mdata template="TM"  name="1_a39" q="12 - 7" answer="5"  />
+	<mdata template="TM"  name="1_a40" q="11 - 5" answer="6"  />
+	<mdata template="TSUCCESS" name="EndEasy"  next="Scoreboard" />
+	<mdata template="TSTART" name="StartMedium"  milliseconds="60000" />
+	<mdata template="TN"  name="2_a1" q="7 + 5" answer="12"   />
+	<mdata template="TN"  name="2_a2" q="9 + 6" answer="15"  />
+	<mdata template="TN"  name="2_a3" q="3 + 8" answer="11"  />
+	<mdata template="TN"  name="2_a4" q="7 + 7" answer="14"  />
+	<mdata template="TN"  name="2_a5" q="7 + 8" answer="15"  />
+	<mdata template="TN"  name="2_a6" q="4 + 8" answer="12"  />
+	<mdata template="TN"  name="2_a7" q="5 + 7" answer="12"  />>
+	<mdata template="TN"  name="2_a8" q="8 + 6" answer="14"  />
+	<mdata template="TN"  name="2_a9" q="5 + 9" answer="14"  />
+	<mdata template="TN"  name="2_a10" q="8 + 6" answer="14"  />
+	<mdata template="TN"  name="2_a11" q="4 + 9" answer="13"  />
+	<mdata template="TN"  name="2_a12" q="6 + 6" answer="12"  />
+	<mdata template="TN"  name="2_a13" q="9 + 3" answer="12"  />
+	<mdata template="TN"  name="2_a14" q="8 + 7" answer="15"  />
+	<mdata template="TN"  name="2_a15" q="6 + 5" answer="11"  />
+	<mdata template="TN"  name="2_a16" q="7 + 9" answer="16"  />
+	<mdata template="TN"  name="2_a17" q="8 + 4" answer="12"  />
+	<mdata template="TN"  name="2_a18" q="6 + 8" answer="14"  />
+	<mdata template="TN"  name="2_a19" q="8 + 8" answer="16"  />
+	<mdata template="TN"  name="2_a20" q="6 + 7" answer="13"  />
+	<mdata template="TN"  name="2_a21" q="9 + 9" answer="18"  />
+	<mdata template="TN"  name="2_a22" q="6 + 9" answer="15"  />
+	<mdata template="TN"  name="2_a23" q="8 + 5" answer="13"  />
+	<mdata template="TN"  name="2_a24" q="4 + 7" answer="11"  />
+	<mdata template="TN"  name="2_a25" q="5 + 8" answer="13"  />
+	<mdata template="TN"  name="2_a26" q="7 + 6" answer="13"  />
+	<mdata template="TN"  name="2_a27" q="7 + 4" answer="11"  />
+	<mdata template="TN"  name="2_a28" q="8 + 9" answer="17"  />
+	<mdata template="TN"  name="2_a29" q="9 + 5" answer="14"  />
+	<mdata template="TN"  name="2_a30" q="8 + 3" answer="11"  />
+	<mdata template="TN"  name="2_a31" q="3 + 9" answer="12"  />
+	<mdata template="TN"  name="2_a32" q="9 + 2" answer="11"  />
+	<mdata template="TN"  name="2_a33" q="9 + 4" answer="13"  />
+	<mdata template="TN"  name="2_a34" q="5 + 6" answer="11"  />
+	<mdata template="TN"  name="2_a35" q="9 + 8" answer="17"  />
+	<mdata template="TN"  name="2_a36" q="9 + 7" answer="16"  />
+	<mdata template="TN"  name="2_a37" q="2 + 9" answer="11"  />
+	<mdata template="TN"  name="2_a38" q="9 + 9" answer="18"  />
+	<mdata template="TN"  name="2_a39" q="5 + 7" answer="12"  />
+	<mdata template="TN"  name="2_a40" q="6 + 5" answer="11"  />
+	<mdata template="TSUCCESS" name="EndMedium" next="Scoreboard" />
+	<mdata template="TSTART" name="StartHard"  milliseconds="60000" />
+	<mdata template="TP"  name="3_a1" a="36" b="38" c="40" d="43"  e="46" f="47" g="48" h="49" i="50" q="9 x 4" answer="a"   />
+	<mdata template="TP"  name="3_a2" a="22" b="24" c="26" d="28"  e="32" f="34" g="36" h="38" i="40" q="6 x 4" answer="b"   />
+	<mdata template="TP"  name="3_a3" a="9" b="10" c="12" d="14"  e="16" f="18" g="20" h="21" i="22" q="3 x 4" answer="c"   />
+	<mdata template="TP"  name="3_a4" a="30" b="35" c="38" d="40"  e="42" f="45" g="48" h="50" i="52" q="8 x 5" answer="d"   />
+	<mdata template="TP"  name="3_a5" a="48" b="49" c="52" d="54"  e="56" f="58" g="60" h="62" i="64" q="7 x 8" answer="e"   />
+	<mdata template="TP"  name="3_a6" a="9" b="12" c="17" d="18"  e="21" f="27" g="30" h="33" i="36" q="9 x 3" answer="f"   />
+	<mdata template="TP"  name="3_a7" a="6" b="7" c="8" d="9"  e="10" f="11" g="12" h="13" i="14" q="2 x 6" answer="g"   />
+	<mdata template="TP"  name="3_a8" a="13" b="16" c="19" d="25"  e="26" f="28" g="35" h="42" i="46" q="6 x 7" answer="h"   />
+	<mdata template="TP"  name="3_a9" a="5" b="6" c="11" d="12"  e="16" f="20" g="24" h="25" i="30" q="5 x 6" answer="i"   />
+	<mdata template="TP"  name="3_a10" a="7" b="8" c="11" d="17"  e="19" f="21" g="25" h="27" i="71" q="1 x 7" answer="a"   />
+	<mdata template="TP"  name="3_a11" a="5" b="12" c="13" d="15"  e="19" f="21" g="22" h="23" i="25" q="6 x 2" answer="b"   />
+	<mdata template="TP"  name="3_a12" a="8" b="17" c="72" d="73"  e="81" f="83" g="87" h="89" i="98" q="9 x 8" answer="c"   />
+	<mdata template="TP"  name="3_a13" a="2" b="4" c="8" d="42"  e="49" f="57" g="61" h="73" i="83" q="7 x 6" answer="d"   />
+	<mdata template="TP"  name="3_a14" a="15" b="18" c="19" d="20"  e="21" f="22" g="37" h="41" i="43" q="3 x 7" answer="e"   />
+	<mdata template="TP"  name="3_a15" a="16" b="24" c="34" d="56"  e="60" f="64" g="68" h="72" i="76" q="8 x 8" answer="f"   />
+	<mdata template="TP"  name="3_a16" a="4" b="5" c="6" d="7"  e="8" f="9" g="10" h="11" i="12" q="5 x 2" answer="g"   />
+	<mdata template="TP"  name="3_a17" a="5" b="6" c="7" d="8"  e="9" f="10" g="11" h="12" i="13" q="3 x 4" answer="h"   />
+	<mdata template="TP"  name="3_a18" a="4" b="6" c="8" d="10"  e="16" f="18" g="22" h="23" i="24" q="4 x 6" answer="i"   />
+	<mdata template="TP"  name="3_a19" a="18" b="22" c="24" d="28"  e="33" f="34" g="38" h="40" i="42" q="2 x 9" answer="a"   />
+	<mdata template="TP"  name="3_a20" a="16" b="63" c="66" d="71"  e="73" f="76" g="81" h="82" i="86" q="9 x 7" answer="b"   />
+	<mdata template="TP"  name="3_a21" a="14" b="42" c="48" d="52"  e="58" f="61" g="68" h="72" i="73" q="6 x 8" answer="c"   />
+	<mdata template="TSUCCESS" name="EndHard" next="Scoreboard" />
+	
+	<mdata template="TFINISH" name="FinalScreen"  />
+
+</mergeset>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<questionset  bgsound="audio/backsound4.mp3" fontcolor="0xFFFFFF" font="Marker Felt" stickyquestions="loader,start,options,about,scoreboard">
+      <question entryanim="none" qname="previewsplash" qback="start">
+            <prompt width="100" fsize="2" prompttext=" " y="0" fcolor="0xFFFFFF" bcolor="0x00" />
+            <button framecount="0" starty="73" clicksound="button9" name="gobutton" startx="10">
+                  <frame ftext="Try" width="40" src="resources/whitebox.png" fsize="3" height="20" fcolor="0x0000FF" bstate="0" type="button" action="back" />
+            </button>
+      </question>
+      <question entryanim="in"  qname="start" qback="options">
+            <prompt width="100" fsize="2" prompttext=" " y="0" fcolor="0xFFFFFF" />
+            <static framecount="0" starty="25" clicksound="button9" name="princessesbutton" startx="65">
+                  <frame  width="30" src="resources/2princesses.png" height="50" bstate="0" type="image"  />
+            </static>
+			<button framecount="0"  starty="4" clicksound="button9" name="easybutton" startx="35" >
+                  <frame ftext="ひき算" width="25" src="resources/woodenbanner.png" fsize="3" height="15" fcolor="0xFFFFFF" bstate="0" type="button"  >
+						<action type="shuffle" args="StartEasy|EndEasy"  />
+						<action type="loader" args="StartEasy"  />
+				  </frame>
+            </button>
+			<button framecount="0"  starty="33" clicksound="button9" name="mediumbutton" startx="35">
+                  <frame ftext="たし算" width="25" src="resources/woodenbanner.png" fsize="3" height="15" fcolor="0xFFFFFF" bstate="0" type="button" >
+						<action type="shuffle" args="StartMedium|EndMedium"  />
+						<action type="loader" args="StartMedium"  />
+				  </frame>
+			 </button>
+			<button framecount="0"  starty="58" clicksound="button9" name="hardbutton" startx="35">
+                  <frame ftext="かけ算" width="25" src="resources/woodenbanner.png" fsize="3" height="15" fcolor="0xFFFFFF" bstate="0" type="button"  >
+					<action type="shuffle" args="StartHard|EndHard"  />
+					<action type="loader" args="StartHard"  />
+				  </frame>
+			</button>
+            <button framecount="0" starty="80" clicksound="button9" name="helpbutton" startx="5">
+                  <frame ftext="ヘルプ" width="20" src="resources/woodenbanner.png" fsize="2" height="15" fcolor="0xFFFFFF" bstate="0" action="jump" type="button" args="about" />
+            </button>
+            <button framecount="0" starty="80" clicksound="button9" name="optionsbutton" startx="75">
+                  <frame ftext="オプション" width="20" src="resources/woodenbanner.png" fsize="2" height="15" fcolor="0xFFFFFF" bstate="0" action="back" type="button" />
+            </button>
+      </question>
+      <question qname="options" qback="start">
+            <prompt width="100" fsize="2" prompttext=" " y="0"  />
+            <button framecount="1" clicksound="button9" starty="30" systemproperty="XAplaysoundfx" name="soundfxbutton" startx="32" cantoggle="yes">
+                  <frame ftext="Sounds On" width="32" src="resources/woodenbanner.png" fsize="3" height="20" fcolor="0xFF" bstate="0" action="systemproperty" type="button" args="XAplaysoundfx:no" />
+                  <frame ftext="Sounds Off" width="32" src="resources/woodenbanner.png" fsize="3" height="20" fcolor="0xFF" bstate="1" action="systemproperty" type="button" args="XAplaysoundfx:yes" />
+            </button>
+            <button framecount="0" starty="70" clicksound="button9" name="returnbutton" startx="27">
+                  <frame ftext="Back" width="48" src="resources/woodenbanner.png" fsize="3" height="20" fcolor="0xFF" bstate="0" type="button" action="previous" />
+            </button>
+      </question>
+
+	<question entryanim="in" qname="about"  qback="start">
+            <prompt width="100" fsize="2" prompttext=" " y="0" fcolor="0xFFFFFF" />
+			<static framecount="0" starty="20" clicksound="button9" name="helpbutton" startx="0">
+                  <frame  width="100" src="resources/about.png" height="40" bstate="0" type="image"  />
+            </static>
+            <button framecount="0" starty="75" clicksound="button9" name="gobutton" startx="30">
+                  <frame ftext="Back" width="40" src="resources/woodenbanner.png" fsize="3" height="20" fcolor="0x0000FF" bstate="0" type="button" action="back" />
+            </button>
+	</question>
+	<question entryanim="none" timer="2000" timerarg="next" qnext="StartRound" qname="loader" hidetimer="true" qback="fail1">
+            <prompt fsize="2" width="100" fcolor="0xFFFFFF" y="0" prompttext=" "  />
+            <static name="loadinglogo" framecount="0" starty="20" startx="35">
+                  <frame type="button" src="resources/woodenbanner.png" action="next" fsize="3" width="40" height="24" fcolor="0xFFFFFF" ftext="考え中。。。" bstate="0" />
+            </static>
+      </question>
+	  <question entryanim="in" qname="scoreboard"  qback="start">
+            <prompt width="100" fsize="2" prompttext=" " y="0" fcolor="0xFFFFFF" />
+			<static framecount="0" starty="30" name="scorebutton" startx="20">
+                  <frame  width="75" fsize="7" ftext="ZAscore" height="65" fcolor="0x0000FF" bstate="0" src="resources/scoreframe.png" type="button"  />
+            </static>
+			<static framecount="0" starty="5" name="princessface" startx="5">
+                  <frame  width="15" fsize="7" height="20" fcolor="0x0000FF" bstate="0" src="ZAscorepng" type="image"  />
+            </static>
+            <!--
+			<static framecount="0" starty="45" clicksound="button9" name="hiscorebutton" startx="20">
+                  <frame  width="60" src="resources/woodenbanner.png" fsize="4" ftext="XAhiscore" height="20" bstate="0" type="button"  />
+            </static>
+            -->
+	</question>
+
+
+</questionset>

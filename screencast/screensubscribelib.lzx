@@ -12,9 +12,12 @@
 <attribute name="broadcastkey"  />  
 <attribute name="showwidth" />  
 <attribute name="showheight" />  
-<attribute name="courseid"  />  
+<attribute name="courseid"  /> 
+<attribute name="moodleid" />   
 <attribute name="mename" />    
-<attribute name="screencastidtag" value="'screencast01'" />  	
+<attribute name="screencastidtag" value="'screencast01'" />
+	
+
 
 
 <!-- methods to control stream -->
@@ -27,7 +30,11 @@
 	
 
 <!-- 	rtmpconnection  -->	
-<MessagingRtmpConnection  name="subscribecon" userid="${classroot.mename}" appprofileid="${classroot.screencastidtag}" src="${unescape(classroot.red5url) + '/' + classroot.courseid + '/' + classroot.screencastidtag}"   debug="false" autoconnect="true">
+<MessagingRtmpConnection  name="subscribecon" userid="${classroot.mename}" 
+	appprofileid="${classroot.screencastidtag}" 
+	src="${unescape(classroot.red5url)  + '/' + classroot.moodleid +  '/' +  classroot.courseid +  '/' + classroot.screencastidtag}"   
+	altsrc="${unescape(classroot.red5url)  + '/' + classroot.moodleid +  '/' +  classroot.courseid +  '/' + classroot.screencastidtag}" 
+	debug="false" autoconnect="true">
 
 	<handler name="onconnect">
         Debug.write("connected");

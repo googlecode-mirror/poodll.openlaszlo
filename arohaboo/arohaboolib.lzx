@@ -100,10 +100,12 @@
 								stringnode = stringnode.split('@' + na + '@').join(nodeAttrs[na]);
 								
 								//if the attribute key we are changing starts with what is specified in answerbutton, it will change that part
-								//to Z and then replace that too. This is so that anything set to say @c@ or @c_args@ will also get set to @Z@ or @Z_args@
+								//to Z and then replace that too. So if mergedata is @c@ or @c_args@ and "c" is answer 
+								//will c to "Z" in merge data and tthen can change whatever is in template answers button
 								//for keeping answer key in line with template of answer button 
 								if(answerbutton && na.indexOf(answerbutton)==0){
-									stringnode = stringnode.replace('@' + na.replace(answerbutton,'Z') + '@', nodeAttrs[na]);
+									//stringnode = stringnode.replace('@' + na.replace(answerbutton,'Z') + '@', nodeAttrs[na]);
+									stringnode = stringnode.split('@' + na.replace(answerbutton,'Z') + '@').join(nodeAttrs[na]);
 								}
 							}
 					}

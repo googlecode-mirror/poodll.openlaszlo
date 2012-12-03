@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<canvas>
+<canvas >
 	<include href="poodllcalclib.lzx"/>	
 	  <!-- Uncomment to include fonts for SWF -->
   <!-- fonts -->
@@ -8,4 +8,5 @@
   <font src="helmetr.ttf" name="displayText" />
   -->
 	<poodllcalc  width="${parent.width}" height="${parent.height}" />
+	
 </canvas>

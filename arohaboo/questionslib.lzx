@@ -436,6 +436,8 @@
 									
 						case 'condition': 
 									var next= this.qholder.evalCondition(args);
+									if (next=='next'){next=this.getNext();}
+									if (next=='back'){next=this.qback;}
 									this.qholder.switchQuestion(next,this.transitionTime);
 									if (this.nextsound){
 												this.qholder.nextbackaudio.setAttribute("audiosrc", this.nextsound);
@@ -458,7 +460,7 @@
 									break;
 						
 						case 'pngproperty': 
-									this.qholder.settings.setProperty(args + "png","resources/" + this.qholder.settings.getProperty(args) + ".png",false);
+									this.qholder.settings.setProperty(args + "png",canvas.datastub + "/resources/" + this.qholder.settings.getProperty(args) + ".png",false);
 									deebug(args + " " + this.qholder.settings.getProperty("args"));
 									break;
 						

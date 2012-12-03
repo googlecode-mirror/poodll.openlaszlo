@@ -16,6 +16,7 @@
 <attribute name="mename" />    
 <attribute name="mefullname" /> 
 <attribute name="courseid" /> 
+<attribute name="moodleid" />  
 <attribute name="mepictureurl"  />
 <attribute name="red5url"  />   
 <attribute name="chat"  />   
@@ -28,6 +29,8 @@
 <attribute name="useroles" value="false"  /> 
 <!-- our role. 0 = nothing, 1= Students A 2 = Student B -->
 <attribute name="role" value="0" />
+
+
 
 
 	<!--   Am empty dataset to be filled with information recieved by rtmp messaging -->
@@ -88,7 +91,12 @@
 </method>
 
 <!--rtmp connections -->
-<MessagingRtmpConnection id="paircon" name="paircon" connectiontimeout="15000" userid="${classroot.mename}" appprofileid="${classroot.pairsidtag}" altsrc="${unescape(classroot.red5url) + '/' + classroot.courseid + '/' + classroot.pairsidtag}" src="${unescape(classroot.red5url) + '/' + classroot.courseid + '/' + classroot.pairsidtag}"  debug="false" autoconnect="true">
+<MessagingRtmpConnection id="paircon" name="paircon" 
+	connectiontimeout="15000" userid="${classroot.mename}" 
+	appprofileid="${classroot.pairsidtag}" 
+	altsrc="${unescape(classroot.red5url)  + '/' + classroot.moodleid +  '/' +  classroot.courseid  + '/' + classroot.pairsidtag}" 
+	src="${unescape(classroot.red5url) + '/' + classroot.moodleid +  '/' +  classroot.courseid  + '/' + classroot.pairsidtag}"  debug="false" autoconnect="true">
+	
 	<!--on connecting we init the whiteboard shared object with the boardname -->
 	<handler name="onconnect">
 		if (classroot.whiteboard){

@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templateset>
+	  <question template="TM" qname="@name@" 
+					entryanim="left" qback="start" 
+					nextsound="audio/click" 
+					backsound="audio/beep" 
+					hinttext="Don't do that again">
+            <prompt promptaudio="audio/@prompt@.mp3" prompttext=" " fcolor="0x00" y="8" fsize="4" width="100"  />
+            <button name="1button" clicksound="null"   framecount="0" starty="10" startx="50">
+                  <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="1" fcolor="0x00FFFFF"  bstate="0" >
+                  	<action type="playback"  />
+                  </frame>
+            </button>
+            <button name="2button" clicksound="null" framecount="0" starty="10" startx="66">
+                  <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="2" fcolor="0x00FFFFF"  bstate="0" >
+                  	<action type="playback"  />
+                  </frame>	
+            </button>
+			<button name="3button" clicksound="null" framecount="0" starty="10" startx="83">
+                  <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="3" fcolor="0x00FFFFF"  bstate="0" >
+                  	<action type="playback"  />
+                  </frame>	
+            </button>	
+            <button name="4button" clicksound="null" framecount="0" starty="41" startx="50">
+                  <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="4" fcolor="0x00FFFFF"  bstate="0" >
+                  	<action type="playback"  />
+                  </frame>	
+            </button>
+			<button name="5button" clicksound="null" framecount="0" starty="41" startx="66">
+                  <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="5" fcolor="0x00FFFFF"  bstate="0" >
+                  	<action type="playback"  />
+                  </frame>	
+            </button>
+			<button name="6button" clicksound="null" framecount="0" starty="41" startx="83">
+               <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="6" fcolor="0x00FFFFF"  bstate="0" >
+                  	<action type="playback"  />
+                  </frame>	
+            </button>
+			<button name="7button" clicksound="null" framecount="0" starty="70" startx="50">
+                  <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="7" fcolor="0x00FFFFF"  bstate="0" >
+                  	<action type="playback"  />
+                  </frame>	
+            </button>
+			<button name="8button" clicksound="null" framecount="0" starty="70" startx="66">
+                 <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="8" fcolor="0x00FFFFF"  bstate="0" >
+                  	<action type="playback"  />
+                  </frame>
+            </button>
+			<button name="9button" clicksound="null" framecount="0" starty="70" startx="83">
+               <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="9" fcolor="0x00FFFFF"  bstate="0" >
+                  	<action type="playback"  />
+                  </frame>	
+            </button>
+			<static name="q" clicksound="null" framecount="0" starty="40" startx="2">
+                  <frame width="45" src="resources/woodenbanner.png" ftext="@q@" fsize="7" height="25" fcolor="0xFFFFFF" bstate="0" type="button"  />
+            </static>
+			
+			 <button name="Zbutton" clicksound="null" framecount="0" starty="25" startx="12">
+					<frame type="button" width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="@answer@" fcolor="0x00FFFF" bstate="0" >
+						<action type="incproperty" args="ZAscore" />
+						<action type="pngproperty" args="ZAscore" />
+						<action type="pausenext" args="200" />
+                  </frame>                
+            </button>
+      </question>
+      <question template="TN" qname="@name@" 
+					entryanim="left" qback="start" 
+					nextsound="audio/click" 
+					backsound="crowdgroan" 
+					hinttext="Don't do that again">
+            <prompt promptaudio="audio/@prompt@.mp3" prompttext=" " fcolor="0x00" y="8" fsize="4" width="100"  />
+            <button name="11button" clicksound="null"   framecount="0" starty="10" startx="50">
+                  <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="11" fcolor="0x00FFFFF"  bstate="0" />	
+            </button>
+            <button name="12button" clicksound="null" framecount="0" starty="10" startx="66">
+                  <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="12" fcolor="0x00FFFFF"  bstate="0" />	
+            </button>
+			<button name="13button" clicksound="null" framecount="0" starty="10" startx="83">
+                  <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="13" fcolor="0x00FFFFF"  bstate="0" />	
+            </button>	
+            <button name="14button" clicksound="null" framecount="0" starty="41" startx="50">
+                  <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="14" fcolor="0x00FFFFF"  bstate="0" />	
+            </button>
+			<button name="15button" clicksound="null" framecount="0" starty="41" startx="66">
+                  <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="15" fcolor="0x00FFFFF"  bstate="0" />	
+            </button>
+			<button name="16button" clicksound="null" framecount="0" starty="41" startx="83">
+               <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="16" fcolor="0x00FFFFF"  bstate="0" />	
+            </button>
+			<button name="17button" clicksound="null" framecount="0" starty="70" startx="50">
+                  <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="17" fcolor="0x00FFFFF"  bstate="0" />	
+            </button>
+			<button name="18button" clicksound="null" framecount="0" starty="70" startx="66">
+                 <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="18" fcolor="0x00FFFFF"  bstate="0" />	
+            </button>
+			<button name="19button" clicksound="null" framecount="0" starty="70" startx="83">
+               <frame type="button"  width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="19" fcolor="0x00FFFFF"  bstate="0" />	
+            </button>
+			<static name="q" clicksound="null" framecount="0" starty="40" startx="2">
+                  <frame width="45" src="resources/woodenbanner.png" ftext="@q@" fsize="7" height="25" fcolor="0xFFFFFF" bstate="0" type="button"  />
+            </static>
+			
+			 <button name="Zbutton" clicksound="null" framecount="0" starty="25" startx="12">
+					<frame type="button" width="15" height="15" src="resources/woodenplate.png" fsize="3" ftext="@answer@" fcolor="0x00FFFF" bstate="0" >
+						<action type="incproperty" args="ZAscore" />
+						<action type="pausenext" args="200" />
+                  </frame>                
+            </button>
+      </question>
+	  <question template="TP" qname="@name@" 
+					entryanim="left" qback="start" 
+					nextsound="crowdapplause" 
+					backsound="crowdgroan" 
+					hinttext="Don't do that again">
+            <prompt promptaudio="audio/@prompt@.mp3" prompttext=" " fcolor="0x00" y="8" fsize="4" width="100"  />
+            <button name="abutton" clicksound="null"   framecount="0" starty="10" startx="50">
+                  <frame type="button" ftext="@a@" src="resources/woodenplate.png" fsize="3" width="15" height="15" fcolor="0x00FFFF" bstate="0" />
+            </button>
+            <button name="bbutton" clicksound="null" framecount="0" starty="10" startx="66">
+                  <frame type="button" ftext="@b@" src="resources/woodenplate.png" fsize="3" width="15" height="15" fcolor="0x00FFFF" bstate="0" />	
+            </button>
+			<button name="cbutton" clicksound="null" framecount="0" starty="10" startx="83">
+                  <frame type="button" ftext="@c@" src="resources/woodenplate.png" fsize="3" width="15" height="15" fcolor="0x00FFFF" bstate="0" />
+            </button>
+            <button name="dbutton" clicksound="null" framecount="0" starty="43" startx="50">
+                  <frame type="button" ftext="@d@" src="resources/woodenplate.png" fsize="3" width="15" height="15" fcolor="0x00FFFF" bstate="0" />
+            </button>
+			<button name="ebutton" clicksound="null" framecount="0" starty="43" startx="66">
+                  <frame type="button" ftext="@e@" src="resources/woodenplate.png" fsize="3" width="15" height="15" fcolor="0x00FFFF" bstate="0" />
+            </button>
+			<button name="fbutton" clicksound="null" framecount="0" starty="43" startx="83">
+                  <frame type="button" ftext="@f@" src="resources/woodenplate.png" fsize="3" width="15" height="15" fcolor="0x00FFFF" bstate="0" />
+            </button>
+			<button name="gbutton" clicksound="null" framecount="0" starty="70" startx="50">
+                  <frame type="button" ftext="@g@" src="resources/woodenplate.png" fsize="3" width="15" height="15" fcolor="0x00FFFF" bstate="0" />
+            </button>
+			<button name="hbutton" clicksound="null" framecount="0" starty="70" startx="66">
+                  <frame type="button" ftext="@h@" src="resources/woodenplate.png" fsize="3" width="15" height="15" fcolor="0x00FFFF" bstate="0" />
+            </button>
+			<button name="ibutton" clicksound="null" framecount="0" starty="70" startx="83">
+                  <frame type="button" ftext="@i@" src="resources/woodenplate.png" fsize="3" width="15" height="15" fcolor="0x00FFFF" bstate="0" />
+            </button>
+			<static name="q" clicksound="null" framecount="0" starty="40" startx="2">
+                  <frame width="45" ftext="@q@" fsize="7" src="resources/woodenbanner.png" height="25" fcolor="0xFFFFFF" bstate="0" type="button"  />
+            </static>
+			
+			 <button name="Zbutton" clicksound="null" framecount="0" starty="25" startx="12">
+					<frame type="button" ftext="@Z@" src="resources/woodenplate.png" fsize="3" width="15" height="15" fcolor="0x00FFFF" bstate="0" >
+						<action type="incproperty" args="ZAscore" />
+						<action type="pausenext" args="200" />
+                  </frame>                
+            </button>
+      </question>
+	 <question template="TD9" qname="@name@" 
+					entryanim="left" qback="@back@" 
+					nextsound="crowdapplause" 
+					backsound="crowdgroan" 
+					hinttext="Don't do that again">
+            <prompt promptaudio="audio/@prompt@.mp3" prompttext=" " fcolor="0x00" y="8" fsize="4" width="100"  />
+            <button name="abutton" clicksound="null"   framecount="0" starty="5" startx="10">
+                  <frame type="image" width="21" height="28"  src="resources/@a@.png" bstate="0" />
+            </button>
+            <button name="bbutton" clicksound="null" framecount="0" starty="5" startx="35">
+                  <frame type="image" width="21" height="28" src="resources/@b@.png"  bstate="0" />	
+            </button>
+			<button name="cbutton" clicksound="null" framecount="0" starty="5" startx="60">
+                  <frame type="image" width="21" height="28" src="resources/@c@.png"  bstate="0" />	
+            </button>
+            <button name="dbutton" clicksound="null" framecount="0" starty="38" startx="10">
+                  <frame type="image" width="21" height="28" src="resources/@d@.png" bstate="0" />	
+            </button>
+			<button name="ebutton" clicksound="null" framecount="0" starty="38" startx="35">
+                  <frame type="image" width="21" height="28" src="resources/@e@.png" bstate="0" />	
+            </button>
+			<button name="fbutton" clicksound="null" framecount="0" starty="38" startx="60">
+                  <frame type="image" width="21" height="28" src="resources/@f@.png" bstate="0" />	
+            </button>
+			<button name="gbutton" clicksound="null" framecount="0" starty="70" startx="10">
+                  <frame type="image" width="21" height="28" src="resources/@g@.png" bstate="0" />	
+            </button>
+			<button name="hbutton" clicksound="null" framecount="0" starty="70" startx="35">
+                  <frame type="image" width="21" height="28" src="resources/@h@.png" bstate="0" />	
+            </button>
+			<button name="ibutton" clicksound="null" framecount="0" starty="70" startx="60">
+                  <frame type="image" width="21" height="28" src="resources/@i@.png" bstate="0" />	
+            </button>
+			
+			
+			 <button name="Zbutton" clicksound="null" framecount="0" starty="25" startx="12">
+					<frame type="image" width="21" height="28" src="resources/@Z@.png" bstate="0" >
+						<action type="incproperty" args="ZAscore" />
+						<action type="pausenext" args="200" />
+                  </frame>                
+            </button>
+      </question>
+	  	 <question template="TD15" qname="@name@" 
+					entryanim="left" qback="@back@" 
+					nextsound="crowdapplause" 
+					backsound="crowdgroan" 
+					hinttext="Don't do that again">
+            <prompt promptaudio="audio/@prompt@.mp3" prompttext=" " fcolor="0x00" y="8" fsize="4" width="100"  />
+            <button name="abutton" clicksound="null"   framecount="0" starty="5" startx="0">
+                  <frame type="image" width="18" height="24"  src="resources/@a@.png" bstate="0" />
+            </button>
+            <button name="bbutton" clicksound="null" framecount="0" starty="5" startx="20">
+                  <frame type="image" width="18" height="24" src="resources/@b@.png"  bstate="0" />	
+            </button>
+			<button name="cbutton" clicksound="null" framecount="0" starty="5" startx="40">
+                  <frame type="image" width="18" height="24" src="resources/@c@.png"  bstate="0" />	
+            </button>
+            <button name="dbutton" clicksound="null" framecount="0" starty="5" startx="60">
+                  <frame type="image" width="18" height="24" src="resources/@d@.png" bstate="0" />	
+            </button>
+			<button name="ebutton" clicksound="null" framecount="0" starty="5" startx="80">
+                  <frame type="image" width="18" height="24" src="resources/@e@.png" bstate="0" />	
+            </button>
+			<button name="fbutton" clicksound="null" framecount="0" starty="38" startx="0">
+                  <frame type="image" width="18" height="24" src="resources/@f@.png" bstate="0" />	
+            </button>
+			<button name="gbutton" clicksound="null" framecount="0" starty="38" startx="20">
+                  <frame type="image" width="18" height="24" src="resources/@g@.png" bstate="0" />	
+            </button>
+			<button name="hbutton" clicksound="null" framecount="0" starty="38" startx="40">
+                  <frame type="image" width="18" height="24" src="resources/@h@.png" bstate="0" />	
+            </button>
+			<button name="ibutton" clicksound="null" framecount="0" starty="38" startx="60">
+                  <frame type="image" width="18" height="24" src="resources/@i@.png" bstate="0" />	
+            </button>
+			<button name="jbutton" clicksound="null" framecount="0" starty="38" startx="80">
+                  <frame type="image" width="18" height="24" src="resources/@j@.png" bstate="0" />	
+            </button>
+			<button name="kbutton" clicksound="null" framecount="0" starty="70" startx="0">
+                  <frame type="image" width="18" height="24" src="resources/@k@.png" bstate="0" />	
+            </button>
+			<button name="lbutton" clicksound="null" framecount="0" starty="70" startx="20">
+                  <frame type="image" width="18" height="24" src="resources/@l@.png" bstate="0" />	
+            </button>
+			<button name="mbutton" clicksound="null" framecount="0" starty="70" startx="40">
+                  <frame type="image" width="18" height="24" src="resources/@m@.png" bstate="0" />	
+            </button>
+			<button name="nbutton" clicksound="null" framecount="0" starty="70" startx="60">
+                  <frame type="image" width="18" height="24" src="resources/@n@.png" bstate="0" />	
+            </button>
+			<button name="obutton" clicksound="null" framecount="0" starty="70" startx="80">
+                  <frame type="image" width="18" height="24" src="resources/@o@.png" bstate="0" />	
+            </button>
+			
+			
+			 <button name="Zbutton" clicksound="null" framecount="0" starty="25" startx="12">
+					<frame type="image" width="18" height="24" src="resources/@Z@.png" bstate="0" >
+						<action type="incproperty" args="ZAscore" />
+						<action type="pausenext" args="200" />
+                  </frame>                
+            </button>
+      </question>
+	 <question template="TSTART" qname="@name@" entryanim="in"  qback="previous">
+            <prompt prompttext=" " width="100" y="0" fsize="2" bcolor="0x000000" fcolor="0xFFFFFF" promptaudio="audio/@name@.mp3" />
+            <button startx="35" name="abutton" starty="20" framecount="0" >
+                  <frame  ftext="Begin" fsize="3" width="40" height="24" bstate="0" src="resources/woodenbanner.png" fcolor="0x00FF00" type="button" >
+						<action type="tempproperty" args="ZAscore:0"  />
+						<action type="next"  />
+						<action type="startbigtimer" args="@milliseconds@" />
+						
+				  </frame>
+            </button>
+      </question>
+	  <question template="TSUCCESS" qname="@name@" entryanim="in" slot="@slot@" qnext="@next@" qback="previous" timer="3000" timerarg="scoreboard">
+            <prompt prompttext=" " width="100" y="0" fsize="2" bcolor="0x000000" fcolor="0xFFFFFF" promptaudio="audio/hooray.mp3" />
+            <static startx="20" name="abutton" starty="20" framecount="0" >
+                  <frame  width="60" height="60" bstate="0" src="resources/hooray.gif" type="image" >
+						<action type="resetbigtimer" />
+						<action type="next"  />
+				  </frame>
+            </static>
+      </question>
+	  <question template="TFAIL" qname="@name@" entryanim="in" qback="@back@" timer="4000" timerarg="back">
+            <prompt prompttext="@prompt@" width="100" y="0" fsize="2" bcolor="0x000000" fcolor="0xFFFFFF" promptaudio="null" />
+            <button startx="20" name="abutton" starty="20" framecount="0" >
+                  <frame  width="60" height="60" bstate="0" src="resources/ohno.gif" type="image" >
+						<action type="back"  />
+				  </frame>
+            </button>
+      </question>
+	  <question template="TANIMATE" qname="@name@" entryanim="in" qback="start" timer="10000" timerarg="previous">
+            <prompt prompttext="@prompt@" width="100" y="0" fsize="2" bcolor="0x000000" fcolor="0xFFFFFF" promptaudio="audio/@name@.mp3" />
+            <button name="abutton" endx="5" endy="10" animtime="400" startx="-50" starty="-50" framecount="0" >
+                  <frame  width="60" height="60" bstate="0" src="@a@" src2="@b@" picspeed="3"  type="image" >
+						<action type="previous"  />
+				  </frame>
+            </button>
+      </question>
+	  <question template="TBOUNCE" qname="@name@" entryanim="in" qnext="@next@" qback="previous" timer="3000" timerarg="next">
+            <prompt prompttext=" " width="100" y="0" fsize="2" bcolor="0x000000" fcolor="0xFFFFFF" promptaudio="audio/@name@.mp3" />
+            <static startx="20" name="abutton" starty="20" framecount="0" >
+                  <frame  width="60" height="60" bstate="0" src="resources/tweety.gif" type="image" >
+						<action type="next"  />
+				  </frame>
+            </static>
+      </question>
+	  <question template="TFINISH" qname="@name@" bgimage="resource/finishedback.png" entryanim="in" qnext="start" qback="previous" >
+            <prompt prompttext=" FINISHED! " width="100" y="0" fsize="2" bcolor="0x000000" fcolor="0xFFFFFF" promptaudio="audio/@name@.mp3" />
+            <button startx="20" name="abutton" starty="20" framecount="0" >
+                  <frame  width="60" height="60" bstate="0" src="resources/happysun.png" type="image" >
+						<action type="resetbigtimer" />
+						<action type="next"  />
+				  </frame>
+            </button>
+      </question>
+
+</templateset>

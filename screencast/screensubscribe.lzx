@@ -9,7 +9,8 @@
 <attribute name="showwidth" value="lz.Browser.getInitArg('showwidth')" />  
 <attribute name="showheight" value="lz.Browser.getInitArg('showheight')"/>  
 <attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />  
-<attribute name="mename" value="lz.Browser.getInitArg('mename')" />  
+<attribute name="mename" value="lz.Browser.getInitArg('mename')" />
+<attribute name="moodleid" value="lz.Browser.getInitArg('moodleid')" />    
 
 	<!--object that handle communications with adminconsole  -->
 	<!--This crazily confused the screensubscribe *sometimes* which used it instead of its own rtmp so just commented it  -->
@@ -17,6 +18,7 @@
 			name="headercomm" 
 			mename="${canvas.mename}" 
 			courseid="${canvas.courseid}" 
+			moodleid="${canvas.moodleid}" 
 			red5url="${canvas.red5url}" 
 			headeridtag="'header01'" />
 			
@@ -31,9 +33,10 @@
 		showwidth="${canvas.showwidth}"
 		showheight="${canvas.showheight}"
 		courseid="${canvas.courseid}"
+		moodleid="${canvas.moodleid}" 
 		mename="${canvas.mename}"
 		width="${canvas.width-2}"
-		height="${canvas.height-2}"
+		height="${canvas.height-2}"	
 	/>	
 	</view>
  

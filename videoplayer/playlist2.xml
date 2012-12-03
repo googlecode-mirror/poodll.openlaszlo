@@ -1,5 +1,5 @@
 <audios>
-<audio audioname="02Unit-Conversation.mp3" playertype="rtmp" url="5/audio_success/02Unit-Conversation.mp3"/>
-<audio audioname="03Unit-Conversation.mp3" playertype="rtmp" url="5/audio_success/03Unit-Conversation.mp3"/>
-<audio audioname="04Unit-Conversation.mp3" playertype="rtmp" url="5/audio_success/04Unit-Conversation.mp3"/>
+<audio audioname="qone.mp3" playertype="http" url="http://poodll.com:443/ol471/my-apps/videoplayer/02_Question_01.mp3"/>
+<audio audioname="qtwo.mp3" playertype="http" url="http://poodll.com:443/ol471/my-apps/videoplayer/03_Question_02.mp3"/>
+<audio audioname="qthree.mp3" playertype="http" url="http://poodll.com:443/ol471/my-apps/videoplayer/04_Question_03.mp3"/>
 </audios>

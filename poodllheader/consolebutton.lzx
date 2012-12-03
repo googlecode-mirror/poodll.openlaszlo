@@ -37,7 +37,8 @@
     </resource>
 	
 	<!-- necessary to do resources and frames in this way, cos seems impossible to pass a resource or src string in -->
-	<class name="consoleiconbutton" extends="view" >
+		<!-- formerly consoliconbutton but conflicted with scribble paletter, and did not know which file was loading this -->
+	<class name="consoleibutton" extends="view" >
 		<attribute name="iconframe"  />
 		<attribute name="enabled" value="true"  />
 		<attribute name="text" type="string"/>
@@ -57,7 +58,8 @@
 
 	</class>
 
-    <class name="consoletogglebutton" 
+	<!-- formerly consoltogglebutton but conflicted with scribble paletter, and did not know which file was loading this -->
+    <class name="consoletbutton" 
 		resource="toggle_resource" frame="${this.frameTable[ (this.over ? 1 : 0) + (this.tracking ? 1 : 0) + (this.engaged ? 3 : 0)]}" extends="view"
 
     >

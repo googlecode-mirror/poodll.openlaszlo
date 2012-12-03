@@ -40,15 +40,17 @@
 					  break;
 			case '320': sizeIndex=1;
 					  break;
-			case '640': sizeIndex=2;
+			case '480': sizeIndex=2;
 					  break;
-			case '800': sizeIndex=3;
+			case '640': sizeIndex=3;
 					  break;
-			case '1024': sizeIndex=4;
+			case '800': sizeIndex=4;
 					  break;
-			case '1280': sizeIndex=5;
+			case '1024': sizeIndex=5;
 					  break;
-			case '1600': sizeIndex=6;
+			case '1280': sizeIndex=6;
+					  break;
+			case '1600': sizeIndex=7;
 					  break;
 
 		
@@ -113,11 +115,12 @@
 		<combobox name="shotsize"  width="130" editable="false" >
 			<textlistitem text="160x120" value="0"/>
 	        <textlistitem text="320x240" value="1"/>
-	        <textlistitem text="640x480" value="2"/>
-			<textlistitem text="800x600" value="3"/>
-	        <textlistitem text="1024x768" value="4"/>
-			<textlistitem text="1280x1024" value="5"/>
-			<textlistitem text="1600x1200" value="6"/>
+	        <textlistitem text="480x360" value="2"/>
+	        <textlistitem text="640x480" value="3"/>
+			<textlistitem text="800x600" value="4"/>
+	        <textlistitem text="1024x768" value="5"/>
+			<textlistitem text="1280x1024" value="6"/>
+			<textlistitem text="1600x1200" value="7"/>
 			  <handler name="onselect" args="v">
 				classroot.commandview.updateCameraMode();					
 			</handler>
@@ -148,23 +151,27 @@
 							classroot.thecam.setMode(320,240,
 										classroot.videosettings1.framesSlider.value,
 										classroot.videosettings2.aspectGroup.value);
-						}else if (v == 2 ){			
+						}else if (v == 2 ){								
+							classroot.thecam.setMode(480,360,
+										classroot.videosettings1.framesSlider.value,
+										classroot.videosettings2.aspectGroup.value);
+						}else if (v == 3 ){			
 							classroot.thecam.setMode(640,480,
 										classroot.videosettings1.framesSlider.value,
 										classroot.videosettings2.aspectGroup.value);
-						}else if (v == 3){								
+						}else if (v == 4){								
 							classroot.thecam.setMode(800,600,
 										classroot.videosettings1.framesSlider.value,
 										classroot.videosettings2.aspectGroup.value);	
-						}else if (v == 4){								
+						}else if (v == 5){								
 							classroot.thecam.setMode(1024,768,
 										classroot.videosettings1.framesSlider.value,
 										classroot.videosettings2.aspectGroup.value);	
-						}else if (v == 5){								
+						}else if (v == 6){								
 							classroot.thecam.setMode(1280,1024,
 										classroot.videosettings1.framesSlider.value,
 										classroot.videosettings2.aspectGroup.value);
-						}else if (v == 6){								
+						}else if (v == 7){								
 							classroot.thecam.setMode(1600,1200,
 										classroot.videosettings1.framesSlider.value,
 										classroot.videosettings2.aspectGroup.value);

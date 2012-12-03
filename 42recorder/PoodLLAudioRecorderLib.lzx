@@ -7,6 +7,8 @@
 	<include href="../talkback/justinav/audiosettings.lzx" />
 	<include href="../talkback/justinav/mediadevicesettings.lzx" />
 	<include href="explorerservicelib.lzx" />
+	<include href="../timers/stopwatchlib.lzx"/>
+	<include href="../timers/countdownlib.lzx"/>
 	<include href="lz" />
 
 <class name="poodllaudiorecorder" extends="view">
@@ -39,6 +41,12 @@
 	<attribute name="prefdevice" value="''" />
 	
 	<attribute name="haveRecorded" value="false" />
+	
+	<!-- timelimit attribute -->
+	<attribute name="timelimit" value="0" />
+	
+		<!-- autotryports -->
+	<attribute name="autotryports" value="false" />
 	
 	
 	<!-- A flag to tell us if we should be overwriting files -->
@@ -89,13 +97,36 @@
 				lz.Browser.loadJS(somejs);					
 	</method>
 	
-
+	<!-- Our counting up Timer -->
+	<stopwatch name="uptimer"  >
+		<handler name="countevent">
+			if(classroot.timelimit == 0){
+				classroot.recordinfo.infobar.talktime.format('%02d:%02d',this.showmin,this.showsec);
+			}
+		</handler>
+		<handler name="oninit">
+			this.resetTimer();
+		</handler>
+	</stopwatch>
+	 <!-- Our countdown Timer -->
+    <countdowntimer name="downtimer" inittime="${classroot.timelimit * 1000}" >
+		<handler name="countevent">
+			classroot.recordinfo.infobar.talktime.format('%02d:%02d',this.showmin,this.showsec);
+		</handler>
+		<handler name="stopevent">
+			classroot.buttonview.stopButton.stopAll();
+		</handler>
+		<handler name="oninit">
+			this.resetTimer();	
+		</handler>
+	</countdowntimer>
 	
 	<!-- The server connection -->
 	<rtmpconnection name="rtmpc" src="${unescape(classroot.red5url)}"  autoconnect="true" debug="false">
 		
 		<!-- reconnect timer delegate -->
 		<attribute name="timerdel" value="null" />
+		<attribute name="currentport" value="0" />
 		
 		<handler name="oninit" >
 			Debug.write("filename:" + classroot.filename);
@@ -118,6 +149,30 @@
 		<method name="confirmconnected" args="ignore=null">
 			//if we are in a disconnected state, call connect
 			if(this.stage==0){
+				
+				//the auto try ports if true, lets it try 2x on rec port, then begins cycling looking for an open port,1935 or 80
+				if(classroot.autotryports){
+					//Debug.write("autotryingports:currentport:" + this.currentport);
+					var newsrc="";
+					if(this.currentport==80){
+						newsrc = this.src.split(':80/').join(':1935/');
+						newsrc = newsrc.split('rtmpt://').join('rtmp://');
+						//Debug.write("newsrc:" + newsrc);
+						this.setAttribute("src",newsrc);
+						this.setAttribute("currentport",1935);
+					}else if(this.currentport==1935 || this.currentport==2){
+						newsrc = this.src.split(':1935/').join(':80/');
+						newsrc = newsrc.split('rtmp://').join('rtmpt://');
+						//Debug.write("newsrc:" + newsrc);
+						this.setAttribute("src",newsrc);
+						this.setAttribute("currentport",80);
+					}else{
+						this.setAttribute("currentport",currentport+1);
+						//Debug.write("currentport:" + currentport);
+					}
+					
+				}
+			
 				this.connect();
 			}
 			//Debug.write("timer");
@@ -190,6 +245,15 @@
 				classroot.setAttribute("haveRecorded",true);
         		classroot.ms.record();
 				
+				//timer
+				if(classroot.timelimit==0){
+					classroot.uptimer.resetTimer();
+					classroot.uptimer.startTimer();
+				}else{
+					classroot.downtimer.resetTimer();
+					classroot.downtimer.startTimer();
+				}
+				
 				//record the url on the html page
 				classroot.updatepage(classroot.filename);
 				
@@ -235,6 +299,17 @@
 				}else if (classroot.ms.recording){
 					classroot.ms.stop();
 					Debug.write("stopped recording");
+					
+					//handle our timers
+					if(classroot.timelimit==0){
+						classroot.uptimer.stopTimer();
+					}else{
+						if (classroot.downtimer.timer_state!='STOPPED'){
+							classroot.downtimer.stopTimer();
+							classroot.downtimer.resetTimer();
+						}
+					}
+					
 					if(classroot.itemid){
 						if(classroot.saveformat=="mp3"){
 							var usefilename = classroot.filename.substr(0,classroot.filename.length - 3);
@@ -263,11 +338,21 @@
 			<view name="infobar">
 				<!-- Talktime -->
 				<simplelayout axis="x" spacing="10" />
-				<rtmpstatus rtmpc="${classroot.rtmpc}" />	
+				<rtmpstatus rtmpc="${classroot.rtmpc}" />
+				<!-- Made it possible to set format on recorder itself -->
+				<checkbox  name="mp3box" text="mp3" value="$once{classroot.saveformat=='mp3'}" >
+					<handler name="onchanged">
+						if(this.value){
+							classroot.setAttribute("saveformat","mp3");					
+						}else{
+							classroot.setAttribute("saveformat","flv");
+						}		
+					</handler>
+				</checkbox>		
 				<!-- Talktime -->
 				<!-- The maths is just to round the number to 1 place, and not throw errors on zero -->
-				<text text="talk time: " /> 
-				<text text="${Math.round(((1 + classroot.ms.totaltime) * 10) / 10)-1}" />
+				<text name="talktimelabel" text="Time: " /> 
+				<text name="talktime" fgcolor="${classroot.timelimit ? 0xFF0000 : 0x0}" />
 			</view>
 			
 			<!-- Indicator for microphone level -->
@@ -275,9 +360,11 @@
 			<view width="184" resource="volumemeter.gif" height="12" bgcolor="black">       
 				<!-- To show micvolume always: mic.level * 1.8  -->
 				<view x="${parent.width - this.width}" y="0"  bgcolor="black" width="${parent.width - ( classroot.ms.recording ? classroot.mic.level * 1.8 : 0)}" height="12"/>
-			</view>			
+			</view>	
+				
 	</view> 
-	<button name="settingsbutton" width="${classroot.recordinfo.height}" height="${classroot.recordinfo.height}" options="ignorelayout" y="${classroot.recordinfo.y}" x="${classroot.width - this.width}">
+	
+	<button name="settingsbutton" width="${classroot.recordinfo.height}" height="${classroot.recordinfo.height}" options="ignorelayout" y="${classroot.recordinfo.y}" x="${classroot.width - this.width}" >
 				<handler name="onclick">
 					classroot.settingswindow.open();
 				</handler>

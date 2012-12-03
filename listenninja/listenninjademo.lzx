@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Setup our canvas -->
+<!-- iphonewidth and height -->
+<!-- canvas width="480" height="320" -->
+<canvas width="100%" height="100%">
+
+	 
+	<include href="../arohaboo/arohaboolib.lzx" />
+	
+	<!-- Comment this to use runtime image resources -->
+	<!-- Also see arohaboolib -> superloader instance around ln 80 -->
+	<!-- Also see arohaboolib -> currentqname around ln 169 -->
+	<!-- Also see arohaboolib -> dataset questions  around ln 12 -->
+	<include href="embedimages.lzx" />
+	
+	<!-- Comment this to use runtime sound(embedded avail for swf only) resources -->
+	<include href="embedsounds.lzx" />
+
+	
+	<switch>
+		<when property="$dhtml">
+			<script><![CDATA[
+				function deebug(message){
+					if (lz.Browser.getOS().indexOf('iP')>-1){
+						console.log(message);
+					}else{
+						Debug.write(message);
+					}
+					
+				}
+				function printtime(message){
+	
+					var d= new Date();
+					var pt = d.getMinutes() + ":" + d.getSeconds() + ":" + d.getMilliseconds();
+					if (lz.Browser.getOS().indexOf('iP')>-1){
+						console.log(message + ":" + pt) ;
+					}else{
+						Debug.write(message + ":" + pt);
+					}
+				
+				}
+				
+			]]>
+			</script>
+		</when>
+		<otherwise>
+			<script><![CDATA[
+				function deebug(message){
+						Debug.write(message);					
+				}
+				function printtime(message){
+					var d= new Date();
+					var pt = d.getMinutes() + ":" + d.getSeconds() + ":" + d.getMilliseconds();
+					Debug.write(message + ":" + pt);
+				}
+			]]>
+			</script>
+		
+		</otherwise>
+	
+		
+	</switch>
+	
+	<!-- Our dataset of questions -->
+	<dataset name="questions" src="./lndemoset.xml" />
+	
+
+
+	
+	<!-- stub to give us some control of resource load path -->
+	<!-- attribute name="basefile" value="'http://poodll.com:443/ol49/my-apps/arohaboo'" -->
+	<attribute name="basefile" value="''" />
+
+	
+	 <node id="callback">
+		<attribute name="phonegapready" value="false" />
+	 	<method name="phoneGapLoaded" args="ignore=null">
+			this.setAttribute("phonegapready",true);
+			Debug.write("phonegaploaded");
+		</method>
+	 </node>
+
+	
+	<!-- Load up our quiz palette -->
+	<font name="sans">
+	   <face src="lzsans8.ttf"/> 
+	   <face style="bold" src="lzsans8b.ttf"/>
+	   <face style="italic" src="lzsans8i.ttf"/>
+	</font>
+
+	<!-- For demo version embedres = true -->
+	<arohabooview id="mainpanel" name="mainpanel" embedres="true" width="100%" height="100%" />
+	
+</canvas>

@@ -18,6 +18,7 @@
 <attribute name="red5url" />   
 <attribute name="coursedataurl" />
 <attribute name="courseid" />
+<attribute name="moodleid" />
 <attribute name="mename" />    
 
  <!-- other variables-->

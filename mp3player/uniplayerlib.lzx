@@ -8,6 +8,9 @@
 		<!-- flag to show the state of the player -->
 		<attribute name="now_playing" value="false"/>
 		
+		<attribute name="audioloaded" value="false" />
+
+		
 		<!-- if we have finished make sure to reset the buttons -->
 		<method name="finished">      
 		  this.setAttribute('now_playing',false);
@@ -28,6 +31,7 @@
 			this.setAttribute('now_playing', false);
 		 </method>
 		 
+
 		
 		<!-- Play the track -->
 		  <method name="playTrack" args="ignore=null">
@@ -63,7 +67,9 @@
 		<handler name="onstop">
 			classroot.finished();
 		</handler>
-		
+		<handler name="onframesloadratio">
+			if(this.framesloadratio==1){classroot.setAttribute("audioloaded",true);}
+		</handler>
 	  </view>
 		
 		<!-- mediastream for playing back flv audio files -->
@@ -74,6 +80,9 @@
 			<handler name="onstop" >
 				Debug.write("ms stopped:");
 				classroot.finished();
+			</handler>
+			<handler name="onprogress">
+				if(this.progress==1){classroot.setAttribute("audioloaded",true);}
 			</handler>
 		</mediastream>
 		

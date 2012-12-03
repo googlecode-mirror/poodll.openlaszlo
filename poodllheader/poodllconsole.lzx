@@ -35,6 +35,7 @@
 	<attribute name="mename"  value="lz.Browser.getInitArg('mename')" />
 	<attribute name="usestyle"  value="'goldstyle'" />
 	<attribute name="courseid" value="lz.Browser.getInitArg('courseid')" />
+	<attribute name="moodleid" value="lz.Browser.getInitArg('moodleid')" />
 	
 	<!-- screencast attributes -->
 	<attribute name="broadcastkey" value="lz.Browser.getInitArg('broadcastkey')" />  
@@ -77,7 +78,8 @@
 	<headercommunications 
 			name="headercomm" 
 			mename="${canvas.mename}" 
-			courseid="${canvas.courseid}" 
+			courseid="${canvas.courseid}"
+			moodleid="${canvas.moodleid}" 
 			red5url="${canvas.red5url}" 
 			headeridtag="'header01'"
 			presenceinterval="${1000 * settingsviewholder.thesettingspalette.presenceview.interval.value}" />
@@ -86,7 +88,8 @@
 	<headercommunications 
 			name="phpheadercomm" 
 			mename="${canvas.mename}" 
-			courseid="${canvas.courseid}" 
+			courseid="${canvas.courseid}"
+			moodleid="${canvas.moodleid}" 
 			red5url="${canvas.red5url}" 
 			headeridtag="'phpheader01'"
 			presenceinterval="${1000 * settingsviewholder.thesettingspalette.presenceview.interval.value}" />		
@@ -95,7 +98,8 @@
 	<headercommunications 
 			name="screencastheadercomm" 
 			mename="${canvas.mename}" 
-			courseid="${canvas.courseid}" 
+			courseid="${canvas.courseid}"
+			moodleid="${canvas.moodleid}"
 			red5url="${canvas.red5url}" 
 			headeridtag="'screencast01'"
 			presenceinterval="${1000 * settingsviewholder.thesettingspalette.presenceview.interval.value}" />		
@@ -105,6 +109,7 @@
 			name="scribbleheadercomm" 
 			mename="${canvas.mename}" 
 			courseid="${canvas.courseid}" 
+			moodleid="${canvas.moodleid}"
 			red5url="${canvas.red5url}" 
 			headeridtag="'scribble01'"
 			presenceinterval="${1000 * settingsviewholder.thesettingspalette.presenceview.interval.value}" />		
@@ -114,6 +119,7 @@
 			name="pairsheadercomm" 
 			mename="${canvas.mename}" 
 			courseid="${canvas.courseid}" 
+			moodleid="${canvas.moodleid}"
 			red5url="${canvas.red5url}" 
 			headeridtag="'pairs01'"
 			presenceinterval="${1000 * settingsviewholder.thesettingspalette.presenceview.interval.value}" />			
@@ -419,6 +425,7 @@
 						<memberlist 
 							name="memberlist"	
 							courseid="${canvas.courseid}"
+							moodleid="${canvas.moodleid}"
 							red5url="${unescape(canvas.red5url)}" 
 							coursedataurl="${canvas.coursedataurl}" 
 							headercomm="${canvas.phpheadercomm}"
@@ -465,6 +472,7 @@
 								headercomm="${canvas.headercomm}"
 								mename="${canvas.mename}"
 								courseid="${canvas.courseid}"
+								moodleid="${canvas.moodleid}"
 								width="350"
 						/>	
 				</animatedview>	
@@ -477,6 +485,7 @@
 							id="thepairlist"
 							name="pairs"	
 							courseid="${canvas.courseid}"
+							moodleid="${canvas.moodleid}"
 							red5url="${unescape(canvas.red5url)}" 
 							teacherpairstreamname="${canvas.teacherpairstreamname}" 				
 							coursedataurl="${canvas.coursedataurl}" 
@@ -496,6 +505,7 @@
 						<memberlist 
 							name="memberlist"	
 							courseid="${canvas.courseid}"
+							moodleid="${canvas.moodleid}"
 							red5url="${unescape(canvas.red5url)}" 
 							coursedataurl="${canvas.coursedataurl}" 
 							headercomm="${settingsviewholder.thesettingspalette.clienttypeview.clienttype.value}"
@@ -512,6 +522,7 @@
 						<memberlist 
 							name="memberlist"	
 							courseid="${canvas.courseid}"
+							moodleid="${canvas.moodleid}"
 							red5url="${unescape(canvas.red5url)}" 
 							coursedataurl="${canvas.coursedataurl}" 
 							headercomm="${settingsviewholder.thesettingspalette.clienttypeview.clienttype.value}"
